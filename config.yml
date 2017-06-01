@@ -8,10 +8,10 @@
 
 """     Compilation Configuration       """
 # Filename to save final data to
-final_data_filename: "~amcarthu/summer-research-2017/ai-trust-testbed/data.csv"
+final_data_filename: "data.csv"
 
 # Path to the folder containing the raw data to be compiled
-raw_data_pathname: "~amcarthu/summer-research-2017/data/"
+raw_data_path: "~amcarthu/summer-research-2017/data/"
 
 # The AI that the data is being compiled for.
 # This can be one of three options, which can be seen in the variables below.

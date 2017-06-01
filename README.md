@@ -6,14 +6,14 @@ This will contain data from the forumlator website, as it was downloaded.  A use
 
 This data will be compiled for one of three problems, each to by solved by their own AI (and therefore requiring different forms of the data).  In the config file, these problems are referred to as `PREDICT_TIME_AI`, `PREDICT_BSF_AI`, and `PREDICT_WINNER_AI`.  
 
-- `PREDICT_TIME_AI`: 
+- (1) `PREDICT_TIME_AI`: 
     - Input: Information on a horse for a specific race, as well as the race conditions
     - Output: The horse's finishing time for that race
 
-- `PREDICT_BSF_AI`: 
+- (2) `PREDICT_BSF_AI`: 
     - Input: Information on a horse for a specific race, as well as the race conditions
     - Output: The horse's Beyer Speed Figure for that race
 
-- `PREDICT_WINNER_AI`: 
+- (3) `PREDICT_WINNER_AI`: 
     - Input: information on two horses for a specific race, as well as the race conditions
     - Output: Indication which horse wins the race
