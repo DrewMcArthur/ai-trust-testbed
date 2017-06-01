@@ -1,12 +1,12 @@
-"""
- * Drew McArthur, Geo Engel, Risa Ulinski, Judy Zhou
- * 6/1/17
- * This file is used to configure the project.  Initially, it will contain 
-   variables used in the compilation script, however it can and likely will 
-   expand to be used within other files.
-"""
+#####
+# * Drew McArthur, Geo Engel, Risa Ulinski, Judy Zhou
+# * 6/1/17
+# * This file is used to configure the project.  Initially, it will contain 
+#   variables used in the compilation script, however it can and likely will 
+#   expand to be used within other files.
+#####
 
-"""     Compilation Configuration       """
+###     Compilation Configuration       ###
 # Filename to save final data to
 final_data_filename: "data.csv"
 
