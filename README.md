@@ -3,3 +3,17 @@ A program designed for a study involving participants' trust in an artificial in
 
 Data used for the AI will be located in `../data`, which allows read access to everyone (`774`).  On gemini, this directory is `~amcarthu/summer-research-2017/data`.
 This will contain data from the forumlator website, as it was downloaded.  A user can run `compile_data.py` (after configuring the compilation in `config.py`), which scrapes the data found in `../data` to generate a single (large) data file for use for a given AI, depending on the settings found in the config file.  This file can be found at `data.csv` by default.
+
+This data will be compiled for one of three problems, each to by solved by their own AI (and therefore requiring different forms of the data).  In the config file, these problems are referred to as `PREDICT_TIME_AI`, `PREDICT_BSF_AI`, and `PREDICT_WINNER_AI`.  
+
+- `PREDICT_TIME_AI`: 
+    - Input: Information on a horse for a specific race, as well as the race conditions
+    - Output: The horse's finishing time for that race
+
+- `PREDICT_BSF_AI`: 
+    - Input: Information on a horse for a specific race, as well as the race conditions
+    - Output: The horse's Beyer Speed Figure for that race
+
+- `PREDICT_WINNER_AI`: 
+    - Input: information on two horses for a specific race, as well as the race conditions
+    - Output: Indication which horse wins the race
