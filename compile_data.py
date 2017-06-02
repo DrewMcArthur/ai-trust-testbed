@@ -17,16 +17,16 @@ DATA = config['raw_data_path']
 ENDFILENAME = config['final_data_filename']
 ENDFILE = open(ENDFILENAME, 'w')
 
+headers = config['data_col_headers'].split(',')
+headers[-1] = headers[-1][:-1]
+
 # create an object which writes data to files as a csv, using column headers 
 # from config.yml and ignoring extra data
-ENDFILEWRITER = csv.DictWriter(ENDFILE, fieldnames=config['data_col_headers'], 
-                               extrasaction='ignore')
-
-print("column headers: ")
-print(config['data_col_headers'].split(','))
+ENDFILEWRITER = csv.DictWriter(ENDFILE, fieldnames=headers, 
+                               extrasaction='ignore', dialect='unix')
 
 # if ENDFILE is empty, then write the header columns to the file.
-if os.stat(ENDFILENAME).st_size == 0 and False:
+if os.stat(ENDFILENAME).st_size == 0:
     ENDFILEWRITER.writeheader()
 
 # iterate through files in data directory
@@ -37,8 +37,6 @@ for d in os.listdir(DATA):
             # then open the file with a csv reader
             path = DATA + "/" + d + "/" + f
             with open(path, newline='') as csvfile:
-                reader = csv.DictReader(csvfile)
+                reader = csv.DictReader(csvfile, dialect='unix')
                 for row in reader:
-                    #print(row)
-                    #ENDFILEWRITER.writerow(row)
-                    quit()
+                    ENDFILEWRITER.writerow(row)
