@@ -16,15 +16,21 @@ config = yaml.safe_load(open("config.yml"))
 DATA = config['raw_data_path']
 ENDFILENAME = config['final_data_filename']
 ENDFILE = open(ENDFILENAME, 'w')
-#ENDFILEWRITER = csv.DictWriter(ENDFILE, config['data_col_headers'])
+
+# create an object which writes data to files as a csv, 
+# and write the column headers to the file.
+ENDFILEWRITER = csv.DictWriter(ENDFILE, fieldnames=config['data_col_headers'])
+ENDFILEWRITER.writeheader()
 
 # iterate through files in data directory
 for d in os.listdir(DATA):
     for f in os.listdir(DATA + d):
+        # if the file is a *.csv file,
         if f.endswith('.csv'):
+            # then open the file with a csv reader
             path = DATA + "/" + d + "/" + f
             with open(path, newline='') as csvfile:
                 reader = csv.DictReader(csvfile)
                 for row in reader:
                     print(row)
-                    quit()
+        quit()
