@@ -64,7 +64,10 @@ for d in os.listdir(DATA):
                 path = DATA + "/" + d + "/" + f
                 with open(path, newline='') as csvfile:
                     reader = csv.DictReader(csvfile, dialect='unix')
+
+                    # iterate through the data in the file we're reading,
                     for row in reader:
+                        # and write that data to its respective files
                         if not rowEmpty(row, raceHeaders):
                             RACEFILEWRITER.writerow(row)
                         if not rowEmpty(row, horseHeaders):
