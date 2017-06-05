@@ -422,7 +422,7 @@ horse_data_col_headers: >
     W_Race_11, W_DistUnit_11, W_TimeUnit_11,  W_Track_12, W_Date_12,
     W_Surface_12, W_Distance_12, W_TrkCond_12, W_WorkType_12,
     W_WorkTime_12, W_Bullet_12, W_Comment_12, W_Rank_12, W_RankIn_12,
-    W_Race_12,W_DistUnit_12,W_TimeUnit_12
+    W_Race_12, W_DistUnit_12, W_TimeUnit_12
 # end horse_data_col_headers
 
 # These headers need to be adjusted
