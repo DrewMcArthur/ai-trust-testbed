@@ -20,13 +20,13 @@ DATA = config['raw_data_path']
 ENDFILENAME = config['final_data_filename']
 ENDFILE = open(ENDFILENAME, 'w')
 RACEFILENAME = "RACES." + ENDFILENAME
-RACEFILE = open(RACEFILENAME, 'w')
+RACEFILE = open(RACEFILENAME, 'w+')
 HORSEFILENAME = "HORSES." + ENDFILENAME
 HORSEFILE = open(HORSEFILENAME, 'w')
 
-raceHeaders = config['race_data_col_headers'].split(',')
+raceHeaders = config['race_data_col_headers'].split(', ')
 raceHeaders[-1] = raceHeaders[-1][:-1]
-horseHeaders = config['horse_data_col_headers'].split(',')
+horseHeaders = config['horse_data_col_headers'].split(', ')
 horseHeaders[-1] = horseHeaders[-1][:-1]
 
 # create an object which writes data to files as a csv, using column headers 
@@ -46,6 +46,14 @@ if os.stat(RACEFILENAME).st_size == 0:
 if os.stat(HORSEFILENAME).st_size == 0:
     HORSEFILEWRITER.writeheader()
 
+def rowEmpty(row, headers):
+    """ given a row (dictionary of headers:vals), and a list of headers, 
+        check if the row contains any data in the columns specified. """
+    for col in headers:
+        if row[col] != '':
+            return False
+    return True
+
 # iterate through files in data directory
 for d in os.listdir(DATA):
     if os.path.isdir(DATA + d):
@@ -57,5 +65,7 @@ for d in os.listdir(DATA):
                 with open(path, newline='') as csvfile:
                     reader = csv.DictReader(csvfile, dialect='unix')
                     for row in reader:
-                        RACEFILEWRITER.writerow(row)
-                        HORSEFILEWRITER.writerow(row)
+                        if not rowEmpty(row, raceHeaders):
+                            RACEFILEWRITER.writerow(row)
+                        if not rowEmpty(row, horseHeaders):
+                            HORSEFILEWRITER.writerow(row)
