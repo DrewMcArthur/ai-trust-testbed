@@ -17,34 +17,25 @@ config = yaml.safe_load(open("config.yml"))
 
 # get root folder, as well as pathname and file objects for the final product.
 DATA = config['raw_data_path']
-ENDFILENAME = config['final_data_filename']
-ENDFILE = open(ENDFILENAME, 'w')
-RACEFILENAME = "RACES." + ENDFILENAME
-RACEFILE = open(RACEFILENAME, 'w+')
-HORSEFILENAME = "HORSES." + ENDFILENAME
-HORSEFILE = open(HORSEFILENAME, 'w')
 
+# create filenames
+ENDFILENAME = config['final_data_filename']
+RACEFILENAME = "RACES." + ENDFILENAME
+HORSEFILENAME = "HORSES." + ENDFILENAME
+
+def combineList(a, b):
+    c = a[:]
+    for x in b:
+        if x not in c:
+            c.append(x)
+    return c
+
+# get a list of headers for various files
 raceHeaders = config['race_data_col_headers'].split(', ')
 raceHeaders[-1] = raceHeaders[-1][:-1]
 horseHeaders = config['horse_data_col_headers'].split(', ')
 horseHeaders[-1] = horseHeaders[-1][:-1]
-
-# create an object which writes data to files as a csv, using column headers 
-# from config.yml and ignoring extra data
-#ENDFILEWRITER = csv.DictWriter(ENDFILE, fieldnames=headers, 
-#                               extrasaction='ignore', dialect='unix')
-RACEFILEWRITER = csv.DictWriter(RACEFILE, fieldnames=raceHeaders, 
-                               extrasaction='ignore', dialect='unix')
-HORSEFILEWRITER = csv.DictWriter(HORSEFILE, fieldnames=horseHeaders, 
-                               extrasaction='ignore', dialect='unix')
-
-# if ENDFILE is empty, then write the header columns to the file.
-#if os.stat(ENDFILENAME).st_size == 0:
-#    ENDFILEWRITER.writeheader()
-if os.stat(RACEFILENAME).st_size == 0:
-    RACEFILEWRITER.writeheader()
-if os.stat(HORSEFILENAME).st_size == 0:
-    HORSEFILEWRITER.writeheader()
+headers = combineList(raceHeaders, horseHeaders)
 
 def rowEmpty(row, headers):
     """ given a row (dictionary of headers:vals), and a list of headers, 
@@ -54,21 +45,92 @@ def rowEmpty(row, headers):
             return False
     return True
 
-# iterate through files in data directory
-for d in os.listdir(DATA):
-    if os.path.isdir(DATA + d):
-        for f in os.listdir(DATA + d):
-            # if the file is a *.csv file,
-            if f.endswith('.csv'):
-                # then open the file with a csv reader
-                path = DATA + "/" + d + "/" + f
-                with open(path, newline='') as csvfile:
-                    reader = csv.DictReader(csvfile, dialect='unix')
+def create_middle_files():
+    # open the files for writing
+    ENDFILE = open(ENDFILENAME, 'w')
+    HORSEFILE = open(HORSEFILENAME, 'w')
+    RACEFILE = open(RACEFILENAME, 'w+')
 
-                    # iterate through the data in the file we're reading,
-                    for row in reader:
-                        # and write that data to its respective files
-                        if not rowEmpty(row, raceHeaders):
-                            RACEFILEWRITER.writerow(row)
-                        if not rowEmpty(row, horseHeaders):
-                            HORSEFILEWRITER.writerow(row)
+    # create an object which writes data to files as a csv, using column headers
+    # from config.yml and ignoring extra data
+    # ENDFILEWRITER = csv.DictWriter(ENDFILE, fieldnames=headers, 
+    #                               extrasaction='ignore', dialect='unix')
+    RACEFILEWRITER = csv.DictWriter(RACEFILE, fieldnames=raceHeaders, 
+                                   extrasaction='ignore', dialect='unix')
+    HORSEFILEWRITER = csv.DictWriter(HORSEFILE, fieldnames=horseHeaders, 
+                                   extrasaction='ignore', dialect='unix')
+
+    # if ENDFILE is empty, then write the header columns to the file.
+    #if os.stat(ENDFILENAME).st_size == 0:
+    #    ENDFILEWRITER.writeheader()
+    if os.stat(RACEFILENAME).st_size == 0:
+        RACEFILEWRITER.writeheader()
+    if os.stat(HORSEFILENAME).st_size == 0:
+        HORSEFILEWRITER.writeheader()
+
+    # iterate through files in data directory
+    for d in os.listdir(DATA):
+        if os.path.isdir(DATA + d):
+            print("Adding files in folder:",d)
+            for subd in os.listdir(DATA + d):
+                folder = DATA + d + "/" + subd
+                if os.path.isdir(folder):
+                    print("Adding files in subfolder:",subd)
+                    for f in os.listdir(folder):
+                        # if the file is a *.csv file,
+                        if f.endswith('sf.csv'):
+                            # then open the file with a csv reader
+                            path = folder + "/" + f
+                            print("opening file:", path)
+                            with open(path, newline='') as csvfile:
+                                reader = csv.DictReader(csvfile, dialect='unix')
+                                raceIDInfo = {}
+                                # iterate through the data in the file we're reading,
+                                for row in reader:
+                                    # and write that data to its respective files
+                                    if not rowEmpty(row, raceHeaders):
+                                        RACEFILEWRITER.writerow(row)
+
+                                    if row["R_RCTrack"] != "":
+                                        raceIDInfo["R_RCTrack"] = row["R_RCTrack"]
+                                        raceIDInfo["R_RCDate"] = row["R_RCDate"]
+                                        raceIDInfo["R_RCRace"] = row["R_RCRace"]
+                                    else:
+                                        row["R_RCTrack"] = raceIDInfo["R_RCTrack"]
+                                        row["R_RCDate"] = raceIDInfo["R_RCDate"]
+                                        row["R_RCRace"] = raceIDInfo["R_RCRace"]
+            
+                                    if not rowEmpty(row, horseHeaders):
+                                        HORSEFILEWRITER.writerow(row)
+
+def generate_data(n_horse):
+    raceID = ""
+    race = {}
+
+    with open(RACEFILENAME) as RACEFILE,\
+         open(HORSEFILENAME) as HORSEFILE,\
+         open(ENDFILENAME, 'w') as ENDFILE:
+        hReader = csv.DictReader(HORSEFILE, dialect='unix')
+        rReader = csv.DictReader(RACEFILE, dialect='unix')
+        writer = csv.DictWriter(ENDFILE, fieldnames=headers, 
+                                     extrasaction='ignore', dialect='unix')
+        for horse in hReader:
+            horseRaceID = horse["R_RCTrack"] + " " + horse["R_RCDate"] + " " + \
+                          horse["R_RCRace"]
+            # when we move on to a new race, get that updated info
+            if raceID != horseRaceID:
+                # read the next race info from racefile
+                race = next(rReader)
+                # update raceid
+                raceID = horseRaceID
+                print("Merging information for race:", raceID)
+        
+            # combine information from each file
+            fullRow = horse.copy()
+            fullRow.update(race)
+
+            # write race and horse info to file
+            writer.writerow(fullRow)
+
+create_middle_files()
+generate_data(1)
