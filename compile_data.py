@@ -3,6 +3,9 @@
  *  6/1/17
  *  a script to produce a single datafile from the race and horse information 
     located in the raw data folder (defined in config) for use with an AI
+ *  this is done by first writing the data to a few files for organization, 
+    categorizing information for the races, horses, and labels,
+    to then be used to compile the final datafile.
  *  note: use python3
 """
 
