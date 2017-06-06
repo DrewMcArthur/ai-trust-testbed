@@ -112,17 +112,27 @@ def writeLabelInfo(f, folder, LABELWRITER):
         # add the data in the beyer label file to the list, 
         # and simultaneously add ID and rank info for the race to the row
         rank = 1
-        for row in beyerreader:
-            row.update(raceIDInfo))
-            row.update({"rank": rank})
-            labeldata.append(row)
+        for entry in beyerreader:
+            # add race ID and horse's rank to entry
+            entry.update(raceIDInfo))
+            entry.update({"rank": rank})
+
+            # read one line from timereader and add time to entry
+            row = next(timereader)
+            if row['Horse'] != entry['Horse']:
+                print("Error! reading entries from two label files and ")
+                print("       the horse names don't match! You screwed up!")
+                print("Race: " + str(raceIDInfo))
+                print("time's horse: " + row['Horse'])
+                print("beyer's horse: " + entry['Horse'])
+            entry.update(row)
+
+            # add entry to list and update rank
+            labeldata.append(entry)
             rank += 1
 
-        # add data from the timereader to the dictionaries in that list
-        for row in timereader:
-            for entry in labeldata:
-                if row['Horse'] == entry['Horse']
-                    entry.update(row)
+            # instead of adding to list, if it's right then just write to file 
+            # LABELWRITER.writerow(entry)
 
         print("is this label data right???")
         print(labeldata)
@@ -188,12 +198,16 @@ def create_middle_files():
 def generate_data(n_horse):
     raceID = ""
     race = {}
+    labelID = ""
+    label = {}
 
     with open(RACEFILENAME) as RACEFILE,\
          open(HORSEFILENAME) as HORSEFILE,\
+         open(LABELFILENAME) as LABELFILE,\
          open(ENDFILENAME, 'w') as ENDFILE:
-        hReader = csv.DictReader(HORSEFILE, dialect='unix')
         rReader = csv.DictReader(RACEFILE, dialect='unix')
+        hReader = csv.DictReader(HORSEFILE, dialect='unix')
+        lReader = csv.DictReader(LABELFILE, dialect='unix')
         writer = csv.DictWriter(ENDFILE, fieldnames=headers, 
                                      extrasaction='ignore', dialect='unix')
         for horse in hReader:
@@ -206,10 +220,23 @@ def generate_data(n_horse):
                 # update raceid
                 raceID = horseRaceID
                 print("Merging information for race:", raceID)
+
+            # we also have to keep reading labels
+            if labelID != horseRaceID:
+                label = next(lReader)
+                labelID = horseRaceID
+
+            # error checking to make sure the labels and horse line up
+            if (label['R_RCRace'] != horse['R_RCRace'] or
+                label['B_Horse'] != horse['B_Horse']):
+                print("Error! label and horse mismatch :(")
+                print(" Race:   " + str(race))
+                print("Label:   " + str(label))
         
             # combine information from each file
             fullRow = horse.copy()
             fullRow.update(race)
+            fullRow.update(label)
 
             # write race and horse info to file
             writer.writerow(fullRow)
