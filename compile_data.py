@@ -48,7 +48,7 @@ def rowEmpty(row, headers):
 def writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER):
     # then open the file with a csv reader
     path = folder + "/" + f
-    print("opening file:", path)
+    print("         ", f)
     with open(path, newline='') as csvfile:
         reader = csv.DictReader(csvfile, dialect='unix')
         raceIDInfo = {}
