@@ -74,6 +74,14 @@ def writeLabelInfo(f, folder, LABELWRITER):
     """ Scrapes data from file f in folder, and writes the data to 
         a labels file, using the object LABELWRITER """
     print('writing from',folder + "/" + f, 'to labelwriter')
+    path = folder + "/" _ f
+    print("         ", f)
+    with open(path, newline='') as csvfile:
+        reader = csv.Dictreader(csvfile, dialect='unix')
+        raceIDInfo = {}
+        # TODO: write to LABELS.data.csv
+        #       create LABELWRITER and correct file to pass to this function
+        quit()
 
 def create_middle_files():
     """ iterate through files in DATA directory and create 
