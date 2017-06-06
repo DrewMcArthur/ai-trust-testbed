@@ -1,6 +1,6 @@
 """
  *  Drew McArthur, Geo Engel, Risa Ulinski, Judy Zhou
- *  6/1/17
+ *  6/6/17
  *  a script to produce a single datafile from the race and horse information 
     located in the raw data folder (defined in config) for use with an AI
  *  this is done by first writing the data to a few files for organization, 
@@ -45,7 +45,39 @@ def rowEmpty(row, headers):
             return False
     return True
 
+def writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER):
+    # then open the file with a csv reader
+    path = folder + "/" + f
+    print("opening file:", path)
+    with open(path, newline='') as csvfile:
+        reader = csv.DictReader(csvfile, dialect='unix')
+        raceIDInfo = {}
+        # iterate through the data in the file we're reading,
+        for row in reader:
+            # and write that data to its respective files
+            if not rowEmpty(row, raceHeaders):
+                RACEWRITER.writerow(row)
+
+            if row["R_RCTrack"] != "":
+                raceIDInfo["R_RCTrack"] = row["R_RCTrack"]
+                raceIDInfo["R_RCDate"] = row["R_RCDate"]
+                raceIDInfo["R_RCRace"] = row["R_RCRace"]
+            else:
+                row["R_RCTrack"] = raceIDInfo["R_RCTrack"]
+                row["R_RCDate"] = raceIDInfo["R_RCDate"]
+                row["R_RCRace"] = raceIDInfo["R_RCRace"]
+
+            if not rowEmpty(row, horseHeaders):
+                HORSEWRITER.writerow(row)
+
+def writeLabelInfo(f, folder, LABELWRITER):
+    """ Scrapes data from file f in folder, and writes the data to 
+        a labels file, using the object LABELWRITER """
+    print('writing from',folder + "/" + f, 'to labelwriter')
+
 def create_middle_files():
+    """ iterate through files in DATA directory and create 
+        {RACES, HORSES, LABELS}.data.csv """
     # open the files for writing
     ENDFILE = open(ENDFILENAME, 'w')
     HORSEFILE = open(HORSEFILENAME, 'w')
@@ -53,55 +85,38 @@ def create_middle_files():
 
     # create an object which writes data to files as a csv, using column headers
     # from config.yml and ignoring extra data
-    # ENDFILEWRITER = csv.DictWriter(ENDFILE, fieldnames=headers, 
+    # ENDWRITER = csv.DictWriter(ENDFILE, fieldnames=headers, 
     #                               extrasaction='ignore', dialect='unix')
-    RACEFILEWRITER = csv.DictWriter(RACEFILE, fieldnames=raceHeaders, 
+    RACEWRITER = csv.DictWriter(RACEFILE, fieldnames=raceHeaders, 
                                    extrasaction='ignore', dialect='unix')
-    HORSEFILEWRITER = csv.DictWriter(HORSEFILE, fieldnames=horseHeaders, 
+    HORSEWRITER = csv.DictWriter(HORSEFILE, fieldnames=horseHeaders, 
                                    extrasaction='ignore', dialect='unix')
 
     # if ENDFILE is empty, then write the header columns to the file.
     #if os.stat(ENDFILENAME).st_size == 0:
-    #    ENDFILEWRITER.writeheader()
+    #    ENDWRITER.writeheader()
     if os.stat(RACEFILENAME).st_size == 0:
-        RACEFILEWRITER.writeheader()
+        RACEWRITER.writeheader()
     if os.stat(HORSEFILENAME).st_size == 0:
-        HORSEFILEWRITER.writeheader()
+        HORSEWRITER.writeheader()
 
     # iterate through files in data directory
+    print(DATA)
     for d in os.listdir(DATA):
         if os.path.isdir(DATA + d):
-            print("Adding files in folder:",d)
+            print(" ",d)
             for subd in os.listdir(DATA + d):
+                # note: DATA includes a trailing "/" but most dirs don't.
                 folder = DATA + d + "/" + subd
                 if os.path.isdir(folder):
-                    print("Adding files in subfolder:",subd)
+                    print("     ",subd)
                     for f in os.listdir(folder):
-                        # if the file is a *.csv file,
-                        if f.endswith('sf.csv'):
-                            # then open the file with a csv reader
-                            path = folder + "/" + f
-                            print("opening file:", path)
-                            with open(path, newline='') as csvfile:
-                                reader = csv.DictReader(csvfile, dialect='unix')
-                                raceIDInfo = {}
-                                # iterate through the data in the file we're reading,
-                                for row in reader:
-                                    # and write that data to its respective files
-                                    if not rowEmpty(row, raceHeaders):
-                                        RACEFILEWRITER.writerow(row)
-
-                                    if row["R_RCTrack"] != "":
-                                        raceIDInfo["R_RCTrack"] = row["R_RCTrack"]
-                                        raceIDInfo["R_RCDate"] = row["R_RCDate"]
-                                        raceIDInfo["R_RCRace"] = row["R_RCRace"]
-                                    else:
-                                        row["R_RCTrack"] = raceIDInfo["R_RCTrack"]
-                                        row["R_RCDate"] = raceIDInfo["R_RCDate"]
-                                        row["R_RCRace"] = raceIDInfo["R_RCRace"]
-            
-                                    if not rowEmpty(row, horseHeaders):
-                                        HORSEFILEWRITER.writerow(row)
+                        # if file is single file export of race info
+                        if f.endswith('sf.csv') :
+                            writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER)
+                        # if the file contains labels for races
+                        elif f.endswith('lb.csv') or f.endswith('lt.csv'):
+                            writeLabelInfo(f, folder, LABELWRITER)
 
 def generate_data(n_horse):
     raceID = ""
