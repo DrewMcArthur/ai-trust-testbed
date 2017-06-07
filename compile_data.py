@@ -28,9 +28,16 @@ config = yaml.safe_load(open("config.yml"))
 
 # future mode for verbosity toggling
 VERBOSEMODE = True
+
+# allow/disallow printing.  errors must turn on printing
+def allowPrinting():
+    sys.stdout = sys.__stdout__   
+def blockPrinting():
+    sys.stdout = open(os.devnull, 'w')
+
 if not ("-v" in sys.argv or "--verbose" in sys.argv):
     VERBOSEMODE = False
-    sys.stdout = open(os.devnull, 'w')
+    blockPrinting()
 
 # get root folder, as well as pathname and file objects for the final product.
 DATA = config['raw_data_path']
@@ -48,6 +55,14 @@ horseHeaders = config['horse_data_col_headers'].split(', ')
 horseHeaders[-1] = horseHeaders[-1][:-1]
 labelHeaders = config['label_data_col_headers'].split(', ')
 labelHeaders[-1] = labelHeaders[-1][:-1]
+
+def getNextRow(csvreader):
+    """ given a csv reader, gets the next row available, 
+        returns empty dictionary/list if at EOF """
+    try:
+        return next(csvreader)
+    except StopIteration:
+        return {} if type(csvreader) == csv.DictWriter else []
 
 def rowEmpty(row, headers):
     """ given a row (dictionary of headers:vals), and a list of headers, 
@@ -144,11 +159,13 @@ def writeLabelInfo(f, folder, LABELWRITER):
             # read one line from timereader and add time to entry
             row = next(timereader)
             if row['Horse'] != entry['Horse']:
+                allowPrinting()
                 print("Error! reading entries from two label files and ")
                 print("       the horse names don't match! You screwed up!")
                 print("Race: " + str(raceIDInfo))
                 print("time's horse: " + row['Horse'])
                 print("beyer's horse: " + entry['Horse'])
+                blockPrinting()
             entry.update(row)
 
             # add entry to list and update rank
@@ -249,14 +266,14 @@ def generate_data(n_horse):
             # when we move on to a new race, get that updated info
             if raceID != horseRaceID:
                 # read the next race info from racefile
-                race = next(rReader)
+                race = getNextRow(rReader)
                 # update raceid
                 raceID = horseRaceID
                 print("Merging information for race:", raceID)
 
             # we also have to keep reading labels, same deal
             if labelID != horseRaceID:
-                label = next(lReader)
+                label = getNextRow(lReader)
                 labelID = horseRaceID
 
             # error checking to make sure the labels and horse line up
