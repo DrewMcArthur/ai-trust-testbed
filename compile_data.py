@@ -189,14 +189,14 @@ def create_middle_files():
 
     # iterate through files in data directory
     print(DATA)
-    for d in os.listdir(DATA):
-        if os.path.isdir(DATA + d):
-            print(" ",d)
-            for subd in os.listdir(DATA + d):
+    for place in os.listdir(DATA):
+        if os.path.isdir(DATA + place):
+            print(" ", place)
+            for date in os.listdir(DATA + place):
                 # note: DATA includes a trailing "/" but most dirs don't.
-                folder = DATA + d + "/" + subd
+                folder = DATA + place + "/" + date
                 if os.path.isdir(folder):
-                    print("     ",subd)
+                    print("     ",date)
                     for f in os.listdir(folder):
                         # if file is single file export of race info
                         if f.endswith('sf.csv') :
