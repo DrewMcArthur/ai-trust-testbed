@@ -35,27 +35,6 @@ def allowPrinting():
 def blockPrinting():
     sys.stdout = open(os.devnull, 'w')
 
-if not ("-v" in sys.argv or "--verbose" in sys.argv):
-    VERBOSEMODE = False
-    blockPrinting()
-
-# get root folder, as well as pathname and file objects for the final product.
-DATA = config['raw_data_path']
-
-# create filenames
-ENDFILENAME = config['final_data_filename']
-RACEFILENAME = "RACES." + ENDFILENAME
-HORSEFILENAME = "HORSES." + ENDFILENAME
-LABELFILENAME = "LABELS." + ENDFILENAME
-
-# get a list of headers for various files
-raceHeaders = config['race_data_col_headers'].split(', ')
-raceHeaders[-1] = raceHeaders[-1][:-1]
-horseHeaders = config['horse_data_col_headers'].split(', ')
-horseHeaders[-1] = horseHeaders[-1][:-1]
-labelHeaders = config['label_data_col_headers'].split(', ')
-labelHeaders[-1] = labelHeaders[-1][:-1]
-
 def getNextRow(csvreader):
     """ given a csv reader, gets the next row available, 
         returns empty dictionary/list if at EOF """
@@ -81,9 +60,6 @@ def combineList(a, *b):
             if x not in c:
                 c.append(x)
     return c
-
-# generate the headers for the final file as a combination of the middle files'
-headers = combineList(labelHeaders, raceHeaders, horseHeaders)
 
 def writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER):
     """ given a *_sf.csv file, write the respective information 
@@ -280,9 +256,11 @@ def generate_data(n_horse):
             # checks horse name and race number, two most likely to be different
             if (label['R_RCRace'] != horse['R_RCRace'] or
                 label['B_Horse'] != horse['B_Horse']):
+                allowPrinting()
                 print("Error! label and horse mismatch :(")
                 print(" Race:   " + str(race))
                 print("Label:   " + str(label))
+                blockPrinting()
         
             # combine information from each file into one entry
             fullRow = horse.copy()
@@ -292,5 +270,32 @@ def generate_data(n_horse):
             # write race and horse info to file
             writer.writerow(fullRow)
 
-create_middle_files()
-generate_data(1)
+if __name__ == "__main__":
+    # get root folder and pathname and file objects for the final product.
+    DATA = config['raw_data_path']
+
+    # set verbosity settings
+    if not ("-v" in sys.argv or "--verbose" in sys.argv):
+        VERBOSEMODE = False
+        blockPrinting()
+
+    # create filenames
+    ENDFILENAME = config['final_data_filename']
+    RACEFILENAME = "RACES." + ENDFILENAME
+    HORSEFILENAME = "HORSES." + ENDFILENAME
+    LABELFILENAME = "LABELS." + ENDFILENAME
+
+    # get a list of headers for various files
+    raceHeaders = config['race_data_col_headers'].split(', ')
+    raceHeaders[-1] = raceHeaders[-1][:-1]
+    horseHeaders = config['horse_data_col_headers'].split(', ')
+    horseHeaders[-1] = horseHeaders[-1][:-1]
+    labelHeaders = config['label_data_col_headers'].split(', ')
+    labelHeaders[-1] = labelHeaders[-1][:-1]
+
+    # generate the headers for data.csv as a combination of the middle files'
+    headers = combineList(labelHeaders, raceHeaders, horseHeaders)
+
+    # okay, go!
+    create_middle_files()
+    generate_data(1)
