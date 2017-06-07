@@ -143,22 +143,25 @@ def writeLabelInfo(f, folder, LABELWRITER):
         # add the data in the beyer label file to the list, 
         # and simultaneously add ID and rank info for the race to the row
         rank = 1
-        for entry in beyerreader:
+        for b in beyerreader:
             # add race ID and horse's rank to entry
-            entry.update(raceIDInfo)
-            entry.update({"rank": rank})
+            entry = raceIDInfo.copy()
+            entry.update({"L_Rank": rank, 
+                          "B_Horse": b["Horse"],          
+                          "L_BSF": b["Chart"]
+                         })
 
             # read one line from timereader and add time to entry
-            row = next(timereader)
-            if row['Horse'] != entry['Horse']:
+            t = next(timereader)
+            if t['Horse'] != entry['B_Horse']:
                 allowPrinting()
                 print("Error! reading entries from two label files and ")
                 print("       the horse names don't match! You screwed up!")
                 print("Race: " + str(raceIDInfo))
-                print("time's horse: " + row['Horse'])
+                print("time's horse: " + t['Horse'])
                 print("beyer's horse: " + entry['Horse'])
                 blockPrinting()
-            entry.update(row)
+            entry.update({"L_Time": t["fin"]})
 
             # add entry to list and update rank
             labeldata.append(entry)
