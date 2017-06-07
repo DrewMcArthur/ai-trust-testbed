@@ -15,11 +15,22 @@
             this way, reading from the middle files to merge them is easier
 """
 
-import yaml, os, csv, re
+# yaml: for loading config file
+#  sys: for args access and toggling of printing
+#   os: for dealing with files in the os
+#  csv: for reading and writing csv files
+#   re: for regex parsing of filenames
+import yaml, sys, os, csv, re
 config = yaml.safe_load(open("config.yml"))
 
 # right way to access config vars
 # config['raw_data_path']
+
+# future mode for verbosity toggling
+VERBOSEMODE = True
+if not ("-v" in sys.argv or "--verbose" in sys.argv):
+    VERBOSEMODE = False
+    sys.stdout = open(os.devnull, 'w')
 
 # get root folder, as well as pathname and file objects for the final product.
 DATA = config['raw_data_path']
@@ -30,13 +41,6 @@ RACEFILENAME = "RACES." + ENDFILENAME
 HORSEFILENAME = "HORSES." + ENDFILENAME
 LABELFILENAME = "LABELS." + ENDFILENAME
 
-def combineList(a, b):
-    c = a[:]
-    for x in b:
-        if x not in c:
-            c.append(x)
-    return c
-
 # get a list of headers for various files
 raceHeaders = config['race_data_col_headers'].split(', ')
 raceHeaders[-1] = raceHeaders[-1][:-1]
@@ -44,7 +48,6 @@ horseHeaders = config['horse_data_col_headers'].split(', ')
 horseHeaders[-1] = horseHeaders[-1][:-1]
 labelHeaders = config['label_data_col_headers'].split(', ')
 labelHeaders[-1] = labelHeaders[-1][:-1]
-headers = combineList(raceHeaders, horseHeaders)
 
 def rowEmpty(row, headers):
     """ given a row (dictionary of headers:vals), and a list of headers, 
@@ -53,6 +56,18 @@ def rowEmpty(row, headers):
         if row[col] != '':
             return False
     return True
+
+def combineList(a, *b):
+    """ given a number of lists, output a the combination without duplicates.
+        [1, 3, 5] + [1, 2, 3] => [1, 2, 3, 5]                               """
+    c = a[:]
+    for l in b:
+        for x in l:
+            if x not in c:
+                c.append(x)
+    return c
+
+headers = combineList(labelHeaders, raceHeaders, horseHeaders)
 
 def writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER):
     # then open the file with a csv reader
@@ -114,7 +129,7 @@ def writeLabelInfo(f, folder, LABELWRITER):
         rank = 1
         for entry in beyerreader:
             # add race ID and horse's rank to entry
-            entry.update(raceIDInfo))
+            entry.update(raceIDInfo)
             entry.update({"rank": rank})
 
             # read one line from timereader and add time to entry
@@ -156,8 +171,6 @@ def create_middle_files():
 
     # create an object which writes data to files as a csv, using column headers
     # from config.yml and ignoring extra data
-    # ENDWRITER = csv.DictWriter(ENDFILE, fieldnames=headers, 
-    #                               extrasaction='ignore', dialect='unix')
     RACEWRITER = csv.DictWriter(RACEFILE, fieldnames=raceHeaders, 
                                    extrasaction='ignore', dialect='unix')
     HORSEWRITER = csv.DictWriter(HORSEFILE, fieldnames=horseHeaders, 
@@ -167,8 +180,6 @@ def create_middle_files():
 
 
     # if ENDFILE is empty, then write the header columns to the file.
-    #if os.stat(ENDFILENAME).st_size == 0:
-    #    ENDWRITER.writeheader()
     if os.stat(RACEFILENAME).st_size == 0:
         RACEWRITER.writeheader()
     if os.stat(HORSEFILENAME).st_size == 0:
@@ -190,29 +201,42 @@ def create_middle_files():
                             writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER)
                         # if the file contains labels for races
                         # elif f.endswith('lb.csv') or f.endswith('lt.csv'):
-                        # only looking for one of the label files, to avoid dups
+                        # only looking for one of two label files, to avoid dups
                         # the other filename is generated in the function below.
                         elif f.endswith('lt.csv'):
                             writeLabelInfo(f, folder, LABELWRITER)
+                        # notification for verbosity
+                        else:
+                            print("Skipping file - unknown type:", f)
 
 def generate_data(n_horse):
+    """ from the preliminary {RACES, HORSES, LABELS}.data.csv files, 
+        this function generates the final data file as a culmination 
+        of the data from each source.       """
+
+    # identifying info for races and labels
     raceID = ""
     race = {}
     labelID = ""
     label = {}
 
+    # open relevant files for reading/writing
     with open(RACEFILENAME) as RACEFILE,\
          open(HORSEFILENAME) as HORSEFILE,\
          open(LABELFILENAME) as LABELFILE,\
          open(ENDFILENAME, 'w') as ENDFILE:
+        # create csv reader/writer objects for the respective files
         rReader = csv.DictReader(RACEFILE, dialect='unix')
         hReader = csv.DictReader(HORSEFILE, dialect='unix')
         lReader = csv.DictReader(LABELFILE, dialect='unix')
         writer = csv.DictWriter(ENDFILE, fieldnames=headers, 
                                      extrasaction='ignore', dialect='unix')
+
+        # read through the horse entries
         for horse in hReader:
             horseRaceID = horse["R_RCTrack"] + " " + horse["R_RCDate"] + " " + \
                           horse["R_RCRace"]
+            # ensure we have info on the correct race, and
             # when we move on to a new race, get that updated info
             if raceID != horseRaceID:
                 # read the next race info from racefile
@@ -221,12 +245,13 @@ def generate_data(n_horse):
                 raceID = horseRaceID
                 print("Merging information for race:", raceID)
 
-            # we also have to keep reading labels
+            # we also have to keep reading labels, same deal
             if labelID != horseRaceID:
                 label = next(lReader)
                 labelID = horseRaceID
 
             # error checking to make sure the labels and horse line up
+            # checks horse name and race number, two most likely to be different
             if (label['R_RCRace'] != horse['R_RCRace'] or
                 label['B_Horse'] != horse['B_Horse']):
                 print("Error! label and horse mismatch :(")
