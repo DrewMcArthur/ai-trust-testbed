@@ -67,10 +67,13 @@ def combineList(a, *b):
                 c.append(x)
     return c
 
+# generate the headers for the final file as a combination of the middle files'
 headers = combineList(labelHeaders, raceHeaders, horseHeaders)
 
 def writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER):
-    # then open the file with a csv reader
+    """ given a *_sf.csv file, write the respective information 
+        to {RACES, HORSES}.data.csv files                       """
+    # open the file and create a csv reader
     path = folder + "/" + f
     print("         ", f)
     with open(path, newline='') as csvfile:
@@ -82,15 +85,21 @@ def writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER):
             if not rowEmpty(row, raceHeaders):
                 RACEWRITER.writerow(row)
 
-            if row["R_RCTrack"] != "":
-                raceIDInfo["R_RCTrack"] = row["R_RCTrack"]
-                raceIDInfo["R_RCDate"] = row["R_RCDate"]
-                raceIDInfo["R_RCRace"] = row["R_RCRace"]
-            else:
+            # if, in the file we're reading, the race information is empty,
+            # then use whatever info we used last.
+            if row["R_RCTrack"] == "":
                 row["R_RCTrack"] = raceIDInfo["R_RCTrack"]
                 row["R_RCDate"] = raceIDInfo["R_RCDate"]
                 row["R_RCRace"] = raceIDInfo["R_RCRace"]
 
+            # otherwise, update the race info we have to match what was read.
+            else:
+                raceIDInfo["R_RCTrack"] = row["R_RCTrack"]
+                raceIDInfo["R_RCDate"] = row["R_RCDate"]
+                raceIDInfo["R_RCRace"] = row["R_RCRace"]
+
+            # note: rowEmpty checks if, given the column headers, at least
+            #       one of the keys has a value in the dictionary given (row).
             if not rowEmpty(row, horseHeaders):
                 HORSEWRITER.writerow(row)
 
@@ -258,7 +267,7 @@ def generate_data(n_horse):
                 print(" Race:   " + str(race))
                 print("Label:   " + str(label))
         
-            # combine information from each file
+            # combine information from each file into one entry
             fullRow = horse.copy()
             fullRow.update(race)
             fullRow.update(label)
