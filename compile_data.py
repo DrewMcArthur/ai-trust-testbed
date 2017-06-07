@@ -67,6 +67,11 @@ def writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER):
     # open the file and create a csv reader
     path = folder + "/" + f
     print("         ", f)
+
+    # lists of entries to write to file
+    races = []
+    horses = []
+
     with open(path, newline='') as csvfile:
         reader = csv.DictReader(csvfile, dialect='unix')
         raceIDInfo = {}
@@ -74,7 +79,7 @@ def writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER):
         for row in reader:
             # and write that data to its respective files
             if not rowEmpty(row, raceHeaders):
-                RACEWRITER.writerow(row)
+                races.append(row)
 
             # if, in the file we're reading, the race information is empty,
             # then use whatever info we used last.
@@ -92,7 +97,18 @@ def writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER):
             # note: rowEmpty checks if, given the column headers, at least
             #       one of the keys has a value in the dictionary given (row).
             if not rowEmpty(row, horseHeaders):
-                HORSEWRITER.writerow(row)
+                horses.append(row)
+
+    # sort the data by race number, then horse name. Track and date are ignored
+    # because they should be identical for the data in one file
+    races.sort(key=lambda x: (x["R_RCRace"], x["B_Horse"]))
+    horses.sort(key=lambda x: (x["R_RCRace"], x["B_Horse"]))
+    
+    # finally, write the data to the middle files
+    for race in races:
+        RACEWRITER.writerow(race)
+    for horse in horses:
+        HORSEWRITER.writerow(horse)
 
 def writeLabelInfo(f, folder, LABELWRITER):
     """ Scrapes data from file f in folder, and writes the data to 
@@ -157,6 +173,8 @@ def writeLabelInfo(f, folder, LABELWRITER):
         # TODO: write to LABELS.data.csv
         #       create LABELWRITER and correct file to pass to this function
         quit()
+
+    labeldata.sort(key=lambda x: (x["R_RCRace"], x["B_Horse"]))
 
     # write the entries in labeldata to file
     for entry in labeldata:
@@ -252,20 +270,28 @@ def generate_data(n_horse):
                 label = getNextRow(lReader)
                 labelID = horseRaceID
 
-            # error checking to make sure the labels and horse line up
-            # checks horse name and race number, two most likely to be different
-            if (label['R_RCRace'] != horse['R_RCRace'] or
-                label['B_Horse'] != horse['B_Horse']):
+            if not label:
                 allowPrinting()
-                print("Error! label and horse mismatch :(")
-                print(" Race:   " + str(race))
-                print("Label:   " + str(label))
+                print("ERROR: LABELS.data.csv EOF reached.")  
+                print("You don't have enough labels for your data!")
                 blockPrinting()
+
+                else:
+                # error checking to make sure the labels and horse line up
+                # checks horse name and race number, two most likely to differ
+                if (label['R_RCRace'] != horse['R_RCRace'] or
+                    label['B_Horse'] != horse['B_Horse']):
+                    allowPrinting()
+                    print("Error! label and horse mismatch :(")
+                    print(" Race:   " + str(race))
+                    print("Label:   " + str(label))
+                    blockPrinting()
         
             # combine information from each file into one entry
             fullRow = horse.copy()
             fullRow.update(race)
-            fullRow.update(label)
+            if label:
+                fullRow.update(label)
 
             # write race and horse info to file
             writer.writerow(fullRow)
