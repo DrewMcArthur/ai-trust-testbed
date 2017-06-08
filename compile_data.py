@@ -26,14 +26,24 @@ config = yaml.safe_load(open("config.yml"))
 # right way to access config vars
 # config['raw_data_path']
 
-# future mode for verbosity toggling
-VERBOSEMODE = True
-
 # allow/disallow printing.  errors must turn on printing
 def allowPrinting():
     sys.stdout = sys.__stdout__   
 def blockPrinting():
     sys.stdout = open(os.devnull, 'w')
+
+def fixDate(d):
+    """ given a date d, return the same date in YYMMDD format. """
+    if d == "":
+        return ""
+    if "/" not in d or not d:
+        return d
+    r = d[-2:]
+    d = d[:5]
+    r += d[:2]
+    r += d[-2:]
+
+    return r
 
 def getNextRow(csvreader):
     """ given a csv reader, gets the next row available, 
@@ -47,7 +57,7 @@ def rowEmpty(row, headers):
     """ given a row (dictionary of headers:vals), and a list of headers, 
         check if the row contains any data in the columns specified. """
     for col in headers:
-        if row[col] != '':
+        if row[col] != "":
             return False
     return True
 
@@ -77,7 +87,8 @@ def writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER):
         raceIDInfo = {}
         # iterate through the data in the file we're reading,
         for row in reader:
-            # and write that data to its respective files
+            row['R_RCDate'] = fixDate(row['R_RCDate'])
+            # and write that data to the race file
             if not rowEmpty(row, raceHeaders):
                 races.append(row)
 
@@ -106,7 +117,12 @@ def writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER):
     
     # finally, write the data to the middle files
     for race in races:
-        RACEWRITER.writerow(race)
+        if not rowEmpty(race, raceHeaders):
+            for k in raceHeaders:
+                allowPrinting()
+                print(k,":          ",race[k])
+                blockPrinting()
+            RACEWRITER.writerow(race)
     for horse in horses:
         HORSEWRITER.writerow(horse)
 
@@ -145,7 +161,7 @@ def writeLabelInfo(f, folder, LABELWRITER):
         for b in beyerreader:
             # add race ID and horse's rank to entry
             entry = raceIDInfo.copy()
-            entry.update({"L_Rank": rank, 
+            entry.update({"L_Position": rank, 
                           "B_Horse": b["Horse"],          
                           "L_BSF": b["Chart"]
                          })
@@ -199,16 +215,17 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
     # i.e., filename, column header prefix, number of columns to skip
     # last boolean is for ct, which contains multiple rows of trainer info per 
     # horse entry.  
-    filelist = [[base + ".cr.csv", "R_", 0, False],
-                [base + ".pgh.csv", "B_", 3, False],
-                [base + ".ch.csv", "H_", 3, False],
-                [base + ".cs.csv", "S_", 5, False],
-                [base + ".ct.csv", "T_", 4, True]
+    filelist = [["cr", "R_", False],
+                ["pgh", "B_", False],
+                ["ch", "H_", False],
+                ["cs", "S_", False],
+                ["ct", "T_", True]
                 ]
 
     for info in filelist:
         # open the file
-        r = csv.DictReader(open(folder + info[0]), dialect='unix')
+        r = csv.DictReader(open(folder + base + "." + info[0] +".csv"), 
+                           dialect='unix')
         lastHorse = ""              # name of the last horse dealt with
         count = 0                   # count of the number of entries so far
         samecount = 1               # which trainer we're on
@@ -217,7 +234,7 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
             entry = {}
 
             # if the current horse is the same as the last, then 
-            if info[3] and row['Horse'] == lastHorse:
+            if info[2] and row['Horse'] == lastHorse:
                 samecount += 1
                 count -= 1
             # but when we get to a new horse, increment count & reset samecount
@@ -225,7 +242,7 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
                 samecount = 1
 
             for k, v in row.items():
-                if info[3]:
+                if info[2]:
                     entry[info[1] + k + "_" + str(samecount)] = v
                 else:
                     entry[info[1] + k] = v
@@ -236,36 +253,37 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
             print(entry)
             print()
 
+            if info[0] == "cr":
+                for _ in range(int(row['Starters'])):
+                    entries.append(entry)
             # if there already exists an entry, update it
-            if len(entries) > count:
-                entries[count].update(entry)
-            # otherwise, add this one to the list
             else:
-                entries.append(entry)
+                entries[count].update(entry)
+                count += 1
 
-            count += 1
-
-            if info[3]:
+            if info[2]:
                 lastHorse = row['Horse']
 
     # write the entries to file
     for entry in entries:
+        entry['R_RCDate'] = fixDate(entry['R_RCDate'])
         print()
         print()
         print("example entry to be written: ")
         print(entry)
         print("if this looks right, take out the quit() on line 258")
-        HORSEWRITER.writerow(entry)
-        RACEWRITER.writerow(entry)
+        if not rowEmpty(entry, horseHeaders):
+            HORSEWRITER.writerow(entry)
+        if not rowEmpty(entry, raceHeaders):
+            RACEWRITER.writerow(entry)
         #quit()
 
 def create_middle_files():
     """ iterate through files in DATA directory and create 
         {RACES, HORSES, LABELS}.data.csv """
     # open the files for writing
-    ENDFILE = open(ENDFILENAME, 'w')
     HORSEFILE = open(HORSEFILENAME, 'w')
-    RACEFILE = open(RACEFILENAME, 'w+')
+    RACEFILE = open(RACEFILENAME, 'w')
     LABELFILE = open(LABELFILENAME, 'w')
 
     # create an object which writes data to files as a csv, using column headers
@@ -283,6 +301,8 @@ def create_middle_files():
         RACEWRITER.writeheader()
     if os.stat(HORSEFILENAME).st_size == 0:
         HORSEWRITER.writeheader()
+    if os.stat(LABELFILENAME).st_size == 0:
+        LABELWRITER.writeheader()
 
     # iterate through files in data directory
     print(DATA)
@@ -296,7 +316,7 @@ def create_middle_files():
                     print("     ",date)
                     for f in os.listdir(folder):
                         # if file is single file export of race info
-                        if f.endswith('sf.csv') :
+                        if f.endswith('sf.csv'):
                             writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER)
                         # if the file contains labels for races
                         # elif f.endswith('lb.csv') or f.endswith('lt.csv'):
@@ -363,13 +383,26 @@ def generate_data(n_horse):
             else:
                 # error checking to make sure the labels and horse line up
                 # checks horse name and race number, two most likely to differ
-                if (label['R_RCRace'] != horse['R_RCRace'] or
-                    label['B_Horse'] != horse['B_Horse']):
+                try: 
+                    if (label['R_RCRace'] != horse['R_RCRace'] or
+                        label['B_Horse'] != horse['B_Horse']):
+                        p=lambda x: str(x['R_RCTrack']) + \
+                                    str(x['R_RCDate']) + str(x['R_RCRace'])
+                        allowPrinting()
+                        print("Error! label and race mismatch:")
+                        print(" Race:   " + p(race))
+                        print("Label:   " + p(label))
+                        print("Horse:   " + p(horse))
+                        print()
+                        blockPrinting()
+                except KeyError:
                     allowPrinting()
-                    print("Error! label and horse mismatch :(")
-                    print(" Race:   " + str(race))
-                    print("Label:   " + str(label))
+                    print("label")
+                    print(label)
+                    print("horse")
+                    print(horse)
                     blockPrinting()
+                    quit()
         
             # combine information from each file into one entry
             fullRow = horse.copy()
@@ -384,8 +417,11 @@ if __name__ == "__main__":
     # get root folder and pathname and file objects for the final product.
     DATA = config['raw_data_path']
 
+    # future mode for verbosity toggling
+    VERBOSEMODE = True
+
     # set verbosity settings
-    if not ("-v" in sys.argv or "--verbose" in sys.argv):
+    if "-v" not in sys.argv:
         VERBOSEMODE = False
         blockPrinting()
 
@@ -407,5 +443,7 @@ if __name__ == "__main__":
     headers = combineList(labelHeaders, raceHeaders, horseHeaders)
 
     # okay, go!
-    create_middle_files()
-    generate_data(1)
+    if "-g" not in sys.argv:
+        create_middle_files()
+    if "-m" not in sys.argv:
+        generate_data(1)
