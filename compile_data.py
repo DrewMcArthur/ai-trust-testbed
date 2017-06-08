@@ -195,7 +195,19 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
     """
 
     # list of dictionary entries to be added to RACES and HORSES
-    entries = []
+    entries = {}
+
+    def getKey(e):
+        """ returns a unique identifier for the entry """
+        keys = ['RCTrack','RCDate','RCRace','Horse']
+        r = ""
+        for key in keys:
+            if key in e:
+                r += e[key]
+        r = r.replace("/", "")
+        r = r.replace("'", "")
+        r = r.replace(" ", "")
+        return r
 
     # parse track and date from filename
     m = re.match("([a-zA-Z]{2,3})(.?)([0-9]{6}).*", f)
@@ -215,12 +227,12 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
     # i.e., filename, column header prefix, number of columns to skip
     # last boolean is for ct, which contains multiple rows of trainer info per 
     # horse entry.  
-    filelist = [["cr", "R_", False],
+    filelist = [["ch", "H_", False],
+                ["cr", "R_", False],
                 ["pgh", "B_", False],
-                ["ch", "H_", False],
                 ["cs", "S_", False],
                 ["ct", "T_", True]
-                ]
+               ]
 
     for info in filelist:
         # open the file
@@ -231,15 +243,18 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
         samecount = 1               # which trainer we're on
 
         for row in r:
-            entry = {}
+            if 'Horse' not in row.keys() or getKey(row) not in entries.keys():
+                entries[getKey(row)] = {}
+            entry = entries[getKey(row)]
 
             # if the current horse is the same as the last, then 
             if info[2] and row['Horse'] == lastHorse:
                 samecount += 1
-                count -= 1
             # but when we get to a new horse, increment count & reset samecount
             else:
                 samecount = 1
+
+            row['RCDate'] = fixDate(row['RCDate'])
 
             for k, v in row.items():
                 if info[2]:
@@ -247,29 +262,30 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
                 else:
                     entry[info[1] + k] = v
 
-            print("row that was read from", info[0], ": ")
-            print(row)
-            print("info to be added to entry: ")
-            print(entry)
-            print()
-
             if info[0] == "cr":
-                for _ in range(int(row['Starters'])):
-                    entries.append(entry)
-            # if there already exists an entry, update it
+                print("row that was read from", info[0], ": ")
+                print(row)
+                print("info to be added to entry: ")
+                print(entry)
+
+            if 'Horse' in row.keys():
+                entries.update({getKey(row): entry})
             else:
-                entries[count].update(entry)
-                count += 1
+                # if this needs to occur for all horses
+                for key in entries.keys():
+                    if getKey(row) in key:
+                        h = key.replace(getKey(row), '')
+                        entries[getKey(row) + h] = entry
 
             if info[2]:
                 lastHorse = row['Horse']
 
     # write the entries to file
-    for entry in entries:
-        entry['R_RCDate'] = fixDate(entry['R_RCDate'])
+    for key, entry in entries.items():
         print()
         print()
-        print("example entry to be written: ")
+        print("entry to be written: ")
+        print(key)
         print(entry)
         print("if this looks right, take out the quit() on line 258")
         if not rowEmpty(entry, horseHeaders):
