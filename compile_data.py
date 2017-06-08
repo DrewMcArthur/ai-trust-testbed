@@ -65,7 +65,7 @@ def writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER):
     """ given a *_sf.csv file, write the respective information 
         to {RACES, HORSES}.data.csv files                       """
     # open the file and create a csv reader
-    path = folder + "/" + f
+    path = folder + f
     print("         ", f)
 
     # lists of entries to write to file
@@ -114,13 +114,6 @@ def writeLabelInfo(f, folder, LABELWRITER):
     """ Scrapes data from file f in folder, and writes the data to 
         a labels file, using the object LABELWRITER """
 
-    print('writing from',folder + "/" + f, 'to labelwriter')
-    print("         ", f)
-
-    raceIDInfo = {"R_RCTrack": track, "R_RCDate": date, "R_RCRace": race}
-    print("dealing with this race: ")
-    print(raceIDInfo)
-
     # list of dictionaries, each dict is a data entry to be written to LABELS
     labeldata = []
 
@@ -130,9 +123,15 @@ def writeLabelInfo(f, folder, LABELWRITER):
     date = m.group(2)
     race = m.group(3)
 
+    print('writing from',folder + f, 'to labelwriter')
+    print("         ", f)
+    raceIDInfo = {"R_RCTrack": track, "R_RCDate": date, "R_RCRace": race}
+    print("dealing with this race: ")
+    print(raceIDInfo)
+
     # generate pathnames for the desired files
-    beyerpath = folder + "/" + track + date + "_" + race + "_lb.csv"
-    timepath = folder + "/" + track + date + "_" + race + "_lt.csv"
+    beyerpath = folder + track + date + "_" + race + "_lb.csv"
+    timepath = folder + track + date + "_" + race + "_lt.csv"
 
     # open files for reading and create respective csv.DictReader objects
     with open(beyerpath, newline='') as beyerfile, \
@@ -161,27 +160,102 @@ def writeLabelInfo(f, folder, LABELWRITER):
                 print("time's horse: " + t['Horse'])
                 print("beyer's horse: " + entry['Horse'])
                 blockPrinting()
-            entry.update({"L_Time": t["fin"]})
+            entry.update({"L_Time": t["Fin"]})
 
             # add entry to list and update rank
             labeldata.append(entry)
             rank += 1
-
-            # instead of adding to list, if it's right then just write to file 
-            # LABELWRITER.writerow(entry)
-
-        print("is this label data right???")
-        print(labeldata)
-
-        # TODO: write to LABELS.data.csv
-        #       create LABELWRITER and correct file to pass to this function
-        quit()
 
     labeldata.sort(key=lambda x: (x["R_RCRace"], x["B_Horse"]))
 
     # write the entries in labeldata to file
     for entry in labeldata:
         LABELWRITER.writerow(entry)
+
+def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
+    """ given a file (*.cr.csv), gather data from it and 4 other related files
+        (*.{pgh,ch,cs,ct}.csv) and write the data to {RACES, HORSES}.data.csv
+    """
+
+    # list of dictionary entries to be added to RACES and HORSES
+    entries = []
+
+    # parse track and date from filename
+    m = re.match("([a-zA-Z]{2,3}).?([0-9]{6}).*", f)
+    track = m.group(1)
+    date = m.group(2)
+
+    # get base filename
+    base = track + date  # BEL170605
+
+    # check if single file exists, in which case we can skip these files
+    if os.path.isfile(folder + base + ".sf.csv"):
+        print("Found single file for this data, skipping", f)
+        return None
+
+    # create 2d list of relevant information
+    # i.e., filename, column header prefix, number of columns to skip
+    # last boolean is for ct, which contains multiple rows of trainer info per 
+    # horse entry.  
+    filelist = [[base + ".cr.csv", "R_", 0, False],
+                [base + ".pgh.csv", "B_", 3, False],
+                [base + ".ch.csv", "H_", 3, False],
+                [base + ".cs.csv", "S_", 5, False],
+                [base + ".ct.csv", "T_", 4, True]
+                ]
+
+    for info in filelist:
+        # open the file
+        r = csv.DictReader(open(folder + info[0]), dialect='unix')
+        lastHorse = ""              # name of the last horse dealt with
+        count = 0                   # count of the number of entries so far
+        samecount = 1               # which trainer we're on
+
+        for row in r:
+            entry = {}
+
+            # if the current horse is the same as the last, then 
+            if info[3] and row['Horse'] == lastHorse:
+                samecount += 1
+                count -= 1
+            # but when we get to a new horse, increment count & reset samecount
+            else:
+                samecount = 1
+
+            for k, v in row.items():
+                if info[3]:
+                    entry[info[1] + k + "_" + str(samecount)] = v
+                else:
+                    entry[info[1] + k] = v
+
+            print("row that was read from", info[0], ": ")
+            print(row)
+            print("info to be added to entry: ")
+            print(entry)
+            print()
+
+            # if there already exists an entry, update it
+            if len(entries) > count:
+                entries[count].update(entry)
+            # otherwise, add this one to the list
+            else:
+                entries.append(entry)
+
+            count += 1
+
+            if info[3]:
+                lastHorse = row['Horse']
+
+    # write the entries to file
+    for entry in entries:
+        print()
+        print()
+        print("example entry to be written: ")
+        print(entry)
+        print("if this looks right, take out the quit() on line 258")
+        HORSEWRITER.writerow(entry)
+        RACEWRITER.writerow(entry)
+        #quit()
 
 def create_middle_files():
     """ iterate through files in DATA directory and create 
@@ -215,7 +289,7 @@ def create_middle_files():
             print(" ", place)
             for date in os.listdir(DATA + place):
                 # note: DATA includes a trailing "/" but most dirs don't.
-                folder = DATA + place + "/" + date
+                folder = DATA + place + "/" + date + "/"
                 if os.path.isdir(folder):
                     print("     ",date)
                     for f in os.listdir(folder):
@@ -228,9 +302,14 @@ def create_middle_files():
                         # the other filename is generated in the function below.
                         elif f.endswith('lt.csv'):
                             writeLabelInfo(f, folder, LABELWRITER)
+
+                        # deals with files exported as multiple files
+                        elif f.endswith('cr.csv'):
+                            writePreRaceMulFile(f, folder, RACEWRITER, 
+                                                           HORSEWRITER)
                         # notification for verbosity
                         else:
-                            print("Skipping file - unknown type:", f)
+                            print("Skipping file - unnecessary type:", f)
 
 def generate_data(n_horse):
     """ from the preliminary {RACES, HORSES, LABELS}.data.csv files, 
@@ -279,7 +358,7 @@ def generate_data(n_horse):
                 print("You don't have enough labels for your data!")
                 blockPrinting()
 
-                else:
+            else:
                 # error checking to make sure the labels and horse line up
                 # checks horse name and race number, two most likely to differ
                 if (label['R_RCRace'] != horse['R_RCRace'] or
