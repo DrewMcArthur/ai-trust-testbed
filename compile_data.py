@@ -118,7 +118,7 @@ def writeLabelInfo(f, folder, LABELWRITER):
     labeldata = []
 
     # parse track and date from filename
-    m = re.match("([a-zA-Z]{2,3})([0-9]{6})_([0-9]).*", f)
+    m = re.match("([a-zA-Z]{2,3})([0-9]{6})_([0-9]{1,2}).*", f)
     track = m.group(1)
     date = m.group(2)
     race = m.group(3)
@@ -152,7 +152,7 @@ def writeLabelInfo(f, folder, LABELWRITER):
 
             # read one line from timereader and add time to entry
             t = next(timereader)
-            if t['Horse'] != entry['B_Horse']:
+            if t['Horse'] != entry['B_Horse'] or not entry['B_Horse']:
                 allowPrinting()
                 print("Error! reading entries from two label files and ")
                 print("       the horse names don't match! You screwed up!")
@@ -166,6 +166,7 @@ def writeLabelInfo(f, folder, LABELWRITER):
             labeldata.append(entry)
             rank += 1
 
+    [print(x) for x in labeldata]
     labeldata.sort(key=lambda x: (x["R_RCRace"], x["B_Horse"]))
 
     # write the entries in labeldata to file
@@ -181,12 +182,13 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
     entries = []
 
     # parse track and date from filename
-    m = re.match("([a-zA-Z]{2,3}).?([0-9]{6}).*", f)
+    m = re.match("([a-zA-Z]{2,3})(.?)([0-9]{6}).*", f)
     track = m.group(1)
-    date = m.group(2)
+    separator = m.group(2)
+    date = m.group(3)
 
     # get base filename
-    base = track + date  # BEL170605
+    base = track + separator + date  # BEL170605 or Rp_170427
 
     # check if single file exists, in which case we can skip these files
     if os.path.isfile(folder + base + ".sf.csv"):
