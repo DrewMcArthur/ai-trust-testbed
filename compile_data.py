@@ -29,8 +29,9 @@ config = yaml.safe_load(open("config.yml"))
 # allow/disallow printing.  errors must turn on printing
 def allowPrinting():
     sys.stdout = sys.__stdout__   
-def blockPrinting():
-    sys.stdout = open(os.devnull, 'w')
+def blockPrinting(VERBOSE):
+    if not VERBOSE:
+        sys.stdout = open(os.devnull, 'w')
 
 def fixDate(d):
     """ given a date d, return the same date in YYMMDD format. """
@@ -121,7 +122,7 @@ def writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER):
             for k in raceHeaders:
                 allowPrinting()
                 print(k,":          ",race[k])
-                blockPrinting()
+                blockPrinting(VERBOSEMODE)
             RACEWRITER.writerow(race)
     for horse in horses:
         HORSEWRITER.writerow(horse)
@@ -175,7 +176,7 @@ def writeLabelInfo(f, folder, LABELWRITER):
                 print("Race: " + str(raceIDInfo))
                 print("time's horse: " + t['Horse'])
                 print("beyer's horse: " + entry['Horse'])
-                blockPrinting()
+                blockPrinting(VERBOSEMODE)
             entry.update({"L_Time": t["Fin"]})
 
             # add entry to list and update rank
@@ -343,8 +344,9 @@ def create_middle_files():
 
                         # deals with files exported as multiple files
                         elif f.endswith('cr.csv'):
-                            writePreRaceMulFile(f, folder, RACEWRITER, 
-                                                           HORSEWRITER)
+                            if "--skip-multi" not in sys.argv:
+                                writePreRaceMulFile(f, folder, RACEWRITER, 
+                                                               HORSEWRITER)
                         # notification for verbosity
                         else:
                             print("Skipping file - unnecessary type:", f)
@@ -356,6 +358,8 @@ def sort_middle_files():
     horses = []
     labels = []
 
+    import time
+
     # open the middle files and create csv reader objects
     with open(RACEFILENAME) as RACEFILE,\
          open(HORSEFILENAME) as HORSEFILE,\
@@ -365,17 +369,24 @@ def sort_middle_files():
         lReader = csv.DictReader(LABELFILE, dialect='unix')
 
         # obtain sorted lists of the data
+        t0 = time.time()
         races = sorted(rReader, key=lambda row:(row['R_RCTrack'], 
                                                 row['R_RCDate'], 
                                                 row['R_RCRace']))
+        t1 = time.time()
+        print("Finished sorting races, that took", str(t1 - t0), "seconds.")
         horses = sorted(hReader, key=lambda row:(row['R_RCTrack'], 
                                                  row['R_RCDate'], 
                                                  row['R_RCRace'],
                                                  row['B_Horse']))
+        t2 = time.time()
+        print("Finished sorting horses, that took", str(t2 - t1), "seconds.")
         labels = sorted(lReader, key=lambda row:(row['R_RCTrack'], 
                                                  row['R_RCDate'], 
                                                  row['R_RCRace'],
                                                  row['B_Horse']))
+        t3 = time.time()
+        print("Finished sorting labels, that took", str(t3 - t2), "seconds.")
 
     with open(RACEFILENAME, 'w') as RACEFILE,\
          open(HORSEFILENAME, 'w') as HORSEFILE,\
@@ -440,7 +451,7 @@ def generate_data(n_horse):
                 allowPrinting()
                 print("ERROR: LABELS.data.csv EOF reached.")  
                 print("You don't have enough labels for your data!")
-                blockPrinting()
+                blockPrinting(VERBOSEMODE)
 
             else:
                 # error checking to make sure the labels and horse line up
@@ -456,14 +467,14 @@ def generate_data(n_horse):
                         print("Label:   " + p(label))
                         print("Horse:   " + p(horse))
                         print()
-                        blockPrinting()
+                        blockPrinting(VERBOSEMODE)
                 except KeyError:
                     allowPrinting()
                     print("label")
                     print(label)
                     print("horse")
                     print(horse)
-                    blockPrinting()
+                    blockPrinting(VERBOSEMODE)
                     quit()
         
             # combine information from each file into one entry
@@ -485,7 +496,7 @@ if __name__ == "__main__":
     # set verbosity settings
     if "-v" not in sys.argv:
         VERBOSEMODE = False
-        blockPrinting()
+        blockPrinting(VERBOSEMODE)
 
     # create filenames
     ENDFILENAME = config['final_data_filename']
@@ -507,7 +518,6 @@ if __name__ == "__main__":
     # okay, go!
     if "-g" not in sys.argv:
         create_middle_files()
-    if "-s" in sys.argv:
         sort_middle_files()
     if "-m" not in sys.argv:
         generate_data(1)
