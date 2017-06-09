@@ -57,7 +57,7 @@ def rowEmpty(row, headers):
     """ given a row (dictionary of headers:vals), and a list of headers, 
         check if the row contains any data in the columns specified. """
     for col in headers:
-        if row[col] != "":
+        if col in row.keys() and row[col] != "":
             return False
     return True
 
@@ -349,6 +349,52 @@ def create_middle_files():
                         else:
                             print("Skipping file - unnecessary type:", f)
 
+def sort_middle_files():
+    """ sorts the middle files by trackname, date, race number, and horse name. 
+    """
+    races = []
+    horses = []
+    labels = []
+
+    # open the middle files and create csv reader objects
+    with open(RACEFILENAME) as RACEFILE,\
+         open(HORSEFILENAME) as HORSEFILE,\
+         open(LABELFILENAME) as LABELFILE:
+        rReader = csv.DictReader(RACEFILE, dialect='unix')
+        hReader = csv.DictReader(HORSEFILE, dialect='unix')
+        lReader = csv.DictReader(LABELFILE, dialect='unix')
+
+        # obtain sorted lists of the data
+        races = sorted(rReader, key=lambda row:(row['R_RCTrack'], 
+                                                row['R_RCDate'], 
+                                                row['R_RCRace']))
+        horses = sorted(hReader, key=lambda row:(row['R_RCTrack'], 
+                                                 row['R_RCDate'], 
+                                                 row['R_RCRace'],
+                                                 row['B_Horse']))
+        labels = sorted(lReader, key=lambda row:(row['R_RCTrack'], 
+                                                 row['R_RCDate'], 
+                                                 row['R_RCRace'],
+                                                 row['B_Horse']))
+
+    with open(RACEFILENAME, 'w') as RACEFILE,\
+         open(HORSEFILENAME, 'w') as HORSEFILE,\
+         open(LABELFILENAME, 'w') as LABELFILE:
+
+        # create csv writer objects
+        RACEWRITER = csv.DictWriter(RACEFILE, fieldnames=raceHeaders, 
+                                    extrasaction='ignore', dialect='unix')
+        HORSEWRITER = csv.DictWriter(HORSEFILE, fieldnames=horseHeaders, 
+                                     extrasaction='ignore', dialect='unix')
+        LABELWRITER = csv.DictWriter(LABELFILE, fieldnames=labelHeaders, 
+                                     extrasaction='ignore', dialect='unix')
+
+        # rewrite the files
+        [w.writeheader() for w in [RACEWRITER, HORSEWRITER, LABELWRITER]]
+        [RACEWRITER.writerow(race) for race in races]
+        [HORSEWRITER.writerow(horse) for horse in horses]
+        [LABELWRITER.writerow(label) for label in labels]
+
 def generate_data(n_horse):
     """ from the preliminary {RACES, HORSES, LABELS}.data.csv files, 
         this function generates the final data file as a culmination 
@@ -461,5 +507,7 @@ if __name__ == "__main__":
     # okay, go!
     if "-g" not in sys.argv:
         create_middle_files()
+    if "-s" in sys.argv:
+        sort_middle_files()
     if "-m" not in sys.argv:
         generate_data(1)
