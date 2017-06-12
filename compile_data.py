@@ -229,5 +229,5 @@ if __name__ == "__main__":
     headers = labelHeaders
 
     # okay, go!
-    #create_labels()
+    create_labels()
     get_input_data(ENDFILENAME, LABELFILENAME)
