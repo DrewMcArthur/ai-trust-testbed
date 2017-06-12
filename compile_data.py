@@ -57,8 +57,10 @@ def getNextRow(csvreader):
 def rowEmpty(row, headers):
     """ given a row (dictionary of headers:vals), and a list of headers, 
         check if the row contains any data in the columns specified. """
+    skip = ['from_filetype', 'from_filename', 
+            'R_RCTrack', 'R_RCDate', 'R_RCRace']
     for col in headers:
-        if col in row.keys() and row[col] != "":
+        if col in row.keys() and col not in skip and row[col] != "":
             return False
     return True
 
@@ -89,6 +91,7 @@ def writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER):
         # iterate through the data in the file we're reading,
         for row in reader:
             row['R_RCDate'] = fixDate(row['R_RCDate'])
+            row['from_filename'] = f
             # and write that data to the race file
             if not rowEmpty(row, raceHeaders):
                 races.append(row)
@@ -118,13 +121,15 @@ def writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER):
     
     # finally, write the data to the middle files
     for race in races:
+        race['from_filetype'] = 'sf'
         if not rowEmpty(race, raceHeaders):
             for k in raceHeaders:
-                allowPrinting()
+                #allowPrinting()
                 print(k,":          ",race[k])
-                blockPrinting(VERBOSEMODE)
+                #blockPrinting(VERBOSEMODE)
             RACEWRITER.writerow(race)
     for horse in horses:
+        horse['from_filetype'] = 'sf'
         HORSEWRITER.writerow(horse)
 
 def writeLabelInfo(f, folder, LABELWRITER):
@@ -164,7 +169,8 @@ def writeLabelInfo(f, folder, LABELWRITER):
             entry = raceIDInfo.copy()
             entry.update({"L_Position": rank, 
                           "B_Horse": b["Horse"],          
-                          "L_BSF": b["Chart"]
+                          "L_BSF": b["Chart"],
+                          "from_filename": f
                          })
 
             # read one line from timereader and add time to entry
@@ -188,6 +194,7 @@ def writeLabelInfo(f, folder, LABELWRITER):
 
     # write the entries in labeldata to file
     for entry in labeldata:
+        entry['from_filetype'] = 'lb/lt'
         LABELWRITER.writerow(entry)
 
 def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
@@ -256,6 +263,7 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
                 samecount = 1
 
             row['RCDate'] = fixDate(row['RCDate'])
+            row['from_filename'] = f
 
             for k, v in row.items():
                 if info[2]:
@@ -289,6 +297,7 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
         print(key)
         print(entry)
         print("if this looks right, take out the quit() on line 258")
+        entry['from_filetype'] = 'mul'
         if not rowEmpty(entry, horseHeaders):
             HORSEWRITER.writerow(entry)
         if not rowEmpty(entry, raceHeaders):
@@ -433,14 +442,24 @@ def generate_data(n_horse):
         for horse in hReader:
             horseRaceID = horse["R_RCTrack"] + " " + horse["R_RCDate"] + " " + \
                           horse["R_RCRace"]
+
+            # if we don't know what race this horse was in, then skip this data.
+            if horseRaceID == "  ":
+                continue
+
             # ensure we have info on the correct race, and
             # when we move on to a new race, get that updated info
+            print("checking last race read vs the race that this horse was in")
+            print(raceID, "vs", horseRaceID)
             if raceID != horseRaceID:
                 # read the next race info from racefile
                 race = getNextRow(rReader)
                 # update raceid
                 raceID = horseRaceID
                 print("Merging information for race:", raceID)
+
+            print('current race: ')
+            print(race)
 
             # we also have to keep reading labels, same deal
             if labelID != horseRaceID:
@@ -460,7 +479,9 @@ def generate_data(n_horse):
                     if (label['R_RCRace'] != horse['R_RCRace'] or
                         label['B_Horse'] != horse['B_Horse']):
                         p=lambda x: str(x['R_RCTrack']) + \
-                                    str(x['R_RCDate']) + str(x['R_RCRace'])
+                                    str(x['R_RCDate']) + \
+                                    str(x['R_RCRace']) + " " + \
+                                    str(x['B_Horse'])
                         allowPrinting()
                         print("Error! label and race mismatch:")
                         print(" Race:   " + p(race))
@@ -470,6 +491,9 @@ def generate_data(n_horse):
                         blockPrinting(VERBOSEMODE)
                 except KeyError:
                     allowPrinting()
+                    print('key error, dang')
+                    print("race")
+                    print(race)
                     print("label")
                     print(label)
                     print("horse")
@@ -518,6 +542,7 @@ if __name__ == "__main__":
     # okay, go!
     if "-g" not in sys.argv:
         create_middle_files()
+    if "--no-sort" not in sys.argv:
         sort_middle_files()
     if "-m" not in sys.argv:
         generate_data(1)
