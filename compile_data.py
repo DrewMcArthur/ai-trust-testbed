@@ -194,12 +194,13 @@ def writeLabelInfo(f, folder, LABELWRITER):
             rank += 1
 
     [print(x) for x in labeldata]
-    labeldata.sort(key=lambda x: (x["R_RCRace"], x["B_Horse"]))
+    labeldata.sort(key=lambda x: (x["B_Horse"]))
 
     # write the entries in labeldata to file
     for entry in labeldata:
-        entry['from_filetype'] = 'lb/lt'
-        LABELWRITER.writerow(entry)
+        #entry['from_filetype'] = 'lb/lt'
+        if len(entry['B_Horse']) < 30:
+            LABELWRITER.writerow(entry)
 
 def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
     """ given a file (*.cr.csv), gather data from it and 4 other related files
@@ -329,29 +330,27 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
             RACEWRITER.writerow(entry)
     quit()
 
-def create_middle_files():
+def create_labels():
     """ iterate through files in DATA directory and create 
         {RACES, HORSES, LABELS}.data.csv """
     # open the files for writing
-    HORSEFILE = open(HORSEFILENAME, 'w')
-    RACEFILE = open(RACEFILENAME, 'w')
     LABELFILE = open(LABELFILENAME, 'w')
 
     # create an object which writes data to files as a csv, using column headers
     # from config.yml and ignoring extra data
-    RACEWRITER = csv.DictWriter(RACEFILE, fieldnames=raceHeaders, 
-                                   extrasaction='ignore', dialect='unix')
-    HORSEWRITER = csv.DictWriter(HORSEFILE, fieldnames=horseHeaders, 
-                                   extrasaction='ignore', dialect='unix')
+    #RACEWRITER = csv.DictWriter(RACEFILE, fieldnames=raceHeaders, 
+    #                               extrasaction='ignore', dialect='unix')
+    #HORSEWRITER = csv.DictWriter(HORSEFILE, fieldnames=horseHeaders, 
+    #                               extrasaction='ignore', dialect='unix')
     LABELWRITER = csv.DictWriter(LABELFILE, fieldnames=labelHeaders, 
                                    extrasaction='ignore', dialect='unix')
 
 
     # if ENDFILE is empty, then write the header columns to the file.
-    if os.stat(RACEFILENAME).st_size == 0:
-        RACEWRITER.writeheader()
-    if os.stat(HORSEFILENAME).st_size == 0:
-        HORSEWRITER.writeheader()
+    #if os.stat(RACEFILENAME).st_size == 0:
+    #    RACEWRITER.writeheader()
+    #if os.stat(HORSEFILENAME).st_size == 0:
+    #    HORSEWRITER.writeheader()
     if os.stat(LABELFILENAME).st_size == 0:
         LABELWRITER.writeheader()
 
@@ -366,21 +365,13 @@ def create_middle_files():
                 if os.path.isdir(folder):
                     print("     ",date)
                     for f in os.listdir(folder):
-                        # if file is single file export of race info
-                        if f.endswith('sf.csv'):
-                            writePreRaceInfo(f, folder, RACEWRITER, HORSEWRITER)
                         # if the file contains labels for races
                         # elif f.endswith('lb.csv') or f.endswith('lt.csv'):
                         # only looking for one of two label files, to avoid dups
                         # the other filename is generated in the function below.
-                        elif f.endswith('lt.csv'):
+                        if f.endswith('lt.csv'):
                             writeLabelInfo(f, folder, LABELWRITER)
 
-                        # deals with files exported as multiple files
-                        elif f.endswith('cr.csv'):
-                            if "--skip-multi" not in sys.argv:
-                                writePreRaceMulFile(f, folder, RACEWRITER, 
-                                                               HORSEWRITER)
                         # notification for verbosity
                         else:
                             print("Skipping file - unnecessary type:", f)
@@ -535,6 +526,19 @@ def generate_data(n_horse):
             # write race and horse info to file
             writer.writerow(fullRow)
 
+def get_input_data(INPUTFN, LABELFN):
+    with open(LABELFN) as LABELFILE, open(INPUTFN, 'w') as INPUTFILE:
+        labelReader = csv.DictReader(LABELFILE, dialect='unix')
+        inputWriter = csv.DictWriter(INPUTFILE, fieldnames=inputHeaders, 
+                                     extrasaction='ignore', dialect='unix')
+        for label in labelReader:
+            track = label['R_RCTrack']
+            date = label['R_RCDate']
+            race = label['R_RCRace']
+            horsename = label['B_Horse']
+            print("need to find input info on the following: ")
+            print(track, date, race, horsename)
+
 if __name__ == "__main__":
     # get root folder and pathname and file objects for the final product.
     DATA = config['raw_data_path']
@@ -549,25 +553,19 @@ if __name__ == "__main__":
 
     # create filenames
     ENDFILENAME = config['final_data_filename']
-    RACEFILENAME = "RACES." + ENDFILENAME
-    HORSEFILENAME = "HORSES." + ENDFILENAME
+    #RACEFILENAME = "RACES." + ENDFILENAME
+    #HORSEFILENAME = "HORSES." + ENDFILENAME
     LABELFILENAME = "LABELS." + ENDFILENAME
 
-    # get a list of headers for various files
-    raceHeaders = config['race_data_col_headers'].split(', ')
-    raceHeaders[-1] = raceHeaders[-1][:-1]
-    horseHeaders = config['horse_data_col_headers'].split(', ')
-    horseHeaders[-1] = horseHeaders[-1][:-1]
+    # get a list of label headers for various files
     labelHeaders = config['label_data_col_headers'].split(', ')
     labelHeaders[-1] = labelHeaders[-1][:-1]
+    inputHeaders = config['input_data_col_headers'].split(', ')
+    inputHeaders[-1] = inputHeaders[-1][:-1]
 
     # generate the headers for data.csv as a combination of the middle files'
-    headers = combineList(labelHeaders, raceHeaders, horseHeaders)
+    headers = labelHeaders#combineList(labelHeaders, raceHeaders, horseHeaders)
 
     # okay, go!
-    if "-g" not in sys.argv:
-        create_middle_files()
-    if "--no-sort" not in sys.argv:
-        sort_middle_files()
-    if "-m" not in sys.argv:
-        generate_data(1)
+    create_labels()
+    get_input_data(ENDFILENAME, LABELFILENAME)
