@@ -35,15 +35,19 @@ def blockPrinting(VERBOSE):
 
 def fixDate(d):
     """ given a date d, return the same date in YYMMDD format. """
+    [print() for _ in range(10)]
+    print("fixing date: ", d)
     if d == "":
         return ""
-    if "/" not in d or not d:
+    if "/" not in d or not d or d[:2] == "17":
         return d
     r = d[-2:]
     d = d[:5]
     r += d[:2]
     r += d[-2:]
 
+    print("Fixed date: ", r)
+    [print() for _ in range(10)]
     return r
 
 def getNextRow(csvreader):
@@ -201,20 +205,25 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
     """ given a file (*.cr.csv), gather data from it and 4 other related files
         (*.{pgh,ch,cs,ct}.csv) and write the data to {RACES, HORSES}.data.csv
     """
+    allowPrinting()
 
     # list of dictionary entries to be added to RACES and HORSES
     entries = {}
 
-    def getKey(e):
+    def getKey(e, keys=['RCTrack','RCDate','RCRace','Horse']):
         """ returns a unique identifier for the entry """
-        keys = ['RCTrack','RCDate','RCRace','Horse']
+        if 'RCDate' in e:
+            e['RCDate'] = fixDate(e['RCDate'])
         r = ""
         for key in keys:
             if key in e:
-                r += e[key]
+                r += e[key].upper()
         r = r.replace("/", "")
         r = r.replace("'", "")
         r = r.replace(" ", "")
+        r = r.replace(".00", "")
+        if r == "":
+            return getKey(e, ["R_RCTrack", "R_RCDate", "R_RCRace", "B_Horse"])
         return r
 
     # parse track and date from filename
@@ -253,7 +262,9 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
         for row in r:
             if 'Horse' not in row.keys() or getKey(row) not in entries.keys():
                 entries[getKey(row)] = {}
-            entry = entries[getKey(row)]
+                entry = {}
+            else:
+                entry = entries[getKey(row)]
 
             # if the current horse is the same as the last, then 
             if info[2] and row['Horse'] == lastHorse:
@@ -263,7 +274,7 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
                 samecount = 1
 
             row['RCDate'] = fixDate(row['RCDate'])
-            row['from_filename'] = f
+            entry['from_filename'] = f
 
             for k, v in row.items():
                 if info[2]:
@@ -271,38 +282,52 @@ def writePreRaceMulFile(f, folder, RACEWRITER, HORSEWRITER):
                 else:
                     entry[info[1] + k] = v
 
-            if info[0] == "cr":
-                print("row that was read from", info[0], ": ")
-                print(row)
-                print("info to be added to entry: ")
-                print(entry)
+            print("row that was read from", info[0], ": ")
+            print(row)
+            print("info to be added to entry: ")
+            print(entry)
+            print()
+            print()
+            print()
 
+            # do we put this in entries for one horse, or for multiple horses?
             if 'Horse' in row.keys():
                 entries.update({getKey(row): entry})
+                print("entry so far: ")
+                print("we've read up to the filetype", info[0])
+                print(entries[getKey(row)])
             else:
                 # if this needs to occur for all horses
                 for key in entries.keys():
                     if getKey(row) in key:
                         h = key.replace(getKey(row), '')
-                        entries[getKey(row) + h] = entry
+                        entries.update({getKey(row) + h: entry})
+                        print("entry so far: ")
+                        print("we've read up to the filetype", info[0])
+                        print(entries[getKey(row) + h])
+            
 
+            # keep track of the horse names, for trainer file 
+            # with multiple rows per horse
             if info[2]:
                 lastHorse = row['Horse']
 
     # write the entries to file
     for key, entry in entries.items():
-        print()
-        print()
-        print("entry to be written: ")
-        print(key)
-        print(entry)
-        print("if this looks right, take out the quit() on line 258")
+        if key != getKey(entry):
+            print()
+            print()
+            print("row key, vs entry key")
+            print(key, "vs", getKey(entry))
+            print("entry to be written: ")
+            print(entry)
+            print("if this looks right, take out the quit() on line 258")
         entry['from_filetype'] = 'mul'
         if not rowEmpty(entry, horseHeaders):
             HORSEWRITER.writerow(entry)
         if not rowEmpty(entry, raceHeaders):
             RACEWRITER.writerow(entry)
-        #quit()
+    quit()
 
 def create_middle_files():
     """ iterate through files in DATA directory and create 
