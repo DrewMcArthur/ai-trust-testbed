@@ -149,11 +149,11 @@ def writeLabelInfo(f, folder, LABELWRITER):
     date = m.group(2)
     race = m.group(3)
 
-    print('writing from',folder + f, 'to labelwriter')
+    #print('writing from',folder + f, 'to labelwriter')
     print("         ", f)
     raceIDInfo = {"R_RCTrack": track, "R_RCDate": date, "R_RCRace": race}
-    print("dealing with this race: ")
-    print(raceIDInfo)
+    #print("dealing with this race: ")
+    #print(raceIDInfo)
 
     # generate pathnames for the desired files
     beyerpath = folder + track + date + "_" + race + "_lb.csv"
@@ -193,7 +193,7 @@ def writeLabelInfo(f, folder, LABELWRITER):
             labeldata.append(entry)
             rank += 1
 
-    [print(x) for x in labeldata]
+    #[print(x) for x in labeldata]
     labeldata.sort(key=lambda x: (x["B_Horse"]))
 
     # write the entries in labeldata to file
@@ -357,11 +357,11 @@ def create_labels():
     # iterate through files in data directory
     print(DATA)
     for place in os.listdir(DATA):
-        if os.path.isdir(DATA + place):
+        if os.path.isdir(DATA + '/' + place):
             print(" ", place)
-            for date in os.listdir(DATA + place):
+            for date in os.listdir(DATA + '/' + place):
                 # note: DATA includes a trailing "/" but most dirs don't.
-                folder = DATA + place + "/" + date + "/"
+                folder = DATA + '/' + place + "/" + date + "/"
                 if os.path.isdir(folder):
                     print("     ",date)
                     for f in os.listdir(folder):
@@ -465,17 +465,12 @@ def generate_data(n_horse):
 
             # ensure we have info on the correct race, and
             # when we move on to a new race, get that updated info
-            print("checking last race read vs the race that this horse was in")
-            print(raceID, "vs", horseRaceID)
             if raceID != horseRaceID:
                 # read the next race info from racefile
                 race = getNextRow(rReader)
                 # update raceid
                 raceID = horseRaceID
-                print("Merging information for race:", raceID)
 
-            print('current race: ')
-            print(race)
 
             # we also have to keep reading labels, same deal
             if labelID != horseRaceID:
@@ -526,18 +521,78 @@ def generate_data(n_horse):
             # write race and horse info to file
             writer.writerow(fullRow)
 
+def get_data_fn(label):
+    track = label['R_RCTrack']
+    date = label['R_RCDate']
+    race = label['R_RCRace']
+    horsename = label['B_Horse']
+    separator = "" if len(track) == 3 else "_"
+    return DATA+"/"+track+"/"+date+"/"+track+separator+date+"_SF.CSV"
+
+def get_race_info(row):
+    r = {}
+    keys = ["R_RCTrack", "R_RCDate", "R_RCRace","R_Starters","R_TrackName",
+            "R_RaceState","R_Division","R_RaceBred","R_StateBred","R_RaceSex",
+            "R_RaceAge","R_Class","R_Purse","R_HiClaim","R_LoClaim",
+            "R_Distance","R_Inner","R_Surface","R_RaceType","R_GradedRace",
+            "R_GradedRaceDesc","R_SimTrack","R_SimRace","R_TrackRecord",
+            "R_DayOfWeek","R_PostTime","R_LongClass","R_TrkAbbrev","R_DistUnit",
+            "R_TimeUnit","R_Conditions"
+           ]
+    for key in keys:
+        r.update({key: row[key]})
+    return r
+
 def get_input_data(INPUTFN, LABELFN):
+
+    #debugging purposes, delete later
+    missingfiles = []
+
     with open(LABELFN) as LABELFILE, open(INPUTFN, 'w') as INPUTFILE:
         labelReader = csv.DictReader(LABELFILE, dialect='unix')
         inputWriter = csv.DictWriter(INPUTFILE, fieldnames=inputHeaders, 
                                      extrasaction='ignore', dialect='unix')
+
+        inputWriter.writeheader()
+
+        # the current datafilename we're scraping, and the object itself
+        currfn = ""
+        datafile = None
+
+        # used for copying race info to rows missing this data
+        raceInfo = {}
+
+        # iterate through each label
         for label in labelReader:
-            track = label['R_RCTrack']
-            date = label['R_RCDate']
-            race = label['R_RCRace']
-            horsename = label['B_Horse']
-            print("need to find input info on the following: ")
-            print(track, date, race, horsename)
+            # if we aren't looking at the right file, fix that
+            if currfn != get_data_fn(label):
+                currfn = get_data_fn(label)
+                if os.path.isfile(currfn):
+                    datafile = csv.DictReader(open(currfn), dialect='unix')
+                else:
+                    print("Error! sf file not found for this data. I'll keep track of how many of these there are.")
+                    missingfiles.append(currfn)
+
+            # iterate through the data, and
+            for row in datafile:
+                # first, we add race info to each row where its missing
+                if row["R_RCTrack"] == "":
+                    row.update(raceInfo)
+                else:
+                    raceInfo = get_race_info(row)
+                
+                # when we reach the right entry, we write it to file
+                if (label['B_Horse'] == row['B_Horse'] and 
+                    label['R_RCRace'] == row['R_RCRace']):
+                    # write this row to inputWriter
+                    inputWriter.writerow(row)
+
+    print("Here's the",len(missingfiles),"files we couldn't find for the labels:")
+    for f in missingfiles:
+        print(f)
+        tocheck = f[:-5]
+        
+
 
 if __name__ == "__main__":
     # get root folder and pathname and file objects for the final product.
@@ -567,5 +622,5 @@ if __name__ == "__main__":
     headers = labelHeaders#combineList(labelHeaders, raceHeaders, horseHeaders)
 
     # okay, go!
-    create_labels()
+    #create_labels()
     get_input_data(ENDFILENAME, LABELFILENAME)
