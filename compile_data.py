@@ -153,10 +153,8 @@ def get_race_info(row):
     return r
 
 def get_input_data(INPUTFN, LABELFN):
-
-    #debugging purposes, delete later
-    missingfiles = []
-
+    """ reads the labels file, and uses the information there to find
+        input data """
     with open(LABELFN) as LABELFILE, open(INPUTFN, 'w') as INPUTFILE:
         labelReader = csv.DictReader(LABELFILE, dialect='unix')
         inputWriter = csv.DictWriter(INPUTFILE, fieldnames=inputHeaders, 
@@ -173,14 +171,14 @@ def get_input_data(INPUTFN, LABELFN):
 
         # iterate through each label
         for label in labelReader:
+            labelWritten = False
             # if we aren't looking at the right file, fix that
             if currfn != get_data_fn(label):
                 currfn = get_data_fn(label)
                 if os.path.isfile(currfn):
                     datafile = csv.DictReader(open(currfn), dialect='unix')
                 else:
-                    print("Error! sf file not found for this data. I'll keep track of how many of these there are.")
-                    missingfiles.append(currfn)
+                    print("Error! sf file not found for", currfn)
 
             # iterate through the data, and
             for row in datafile:
@@ -195,11 +193,11 @@ def get_input_data(INPUTFN, LABELFN):
                     label['R_RCRace'] == row['R_RCRace']):
                     # write this row to inputWriter
                     inputWriter.writerow(row)
+                    labelWritten = True
 
-    print("Here's the",len(missingfiles),"files we couldn't find for the labels:")
-    for f in missingfiles:
-        print(f)
-        tocheck = f[:-5]
+            if not labelWritten:
+                print("Error! the input info for this label was never written!")
+                print(label)
 
 if __name__ == "__main__":
     # get root folder and pathname and file objects for the final product.
