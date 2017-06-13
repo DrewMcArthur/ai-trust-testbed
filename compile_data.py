@@ -205,6 +205,7 @@ def get_input_data(INPUTFN, LABELFN):
                 # when we reach the right entry, we write it to file
                 if (label['B_Horse'] == row['B_Horse'] and 
                     label['R_RCRace'] == row['R_RCRace']):
+                    row.update(label)
                     inputWriter.writerow(row)
                     labelWritten = True
 
@@ -247,6 +248,8 @@ if __name__ == "__main__":
 
     inputHeaders = config['input_data_col_headers'].split(', ')
     inputHeaders[-1] = inputHeaders[-1][:-1]
+
+    [inputHeaders.append(l) for l in labelHeaders]
 
     # okay, go!
     create_labels()
