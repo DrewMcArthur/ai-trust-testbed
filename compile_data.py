@@ -127,8 +127,8 @@ def create_labels():
                         if f.endswith('lt.csv'):
                             writeLabelInfo(f, folder, LABELWRITER)
                         # notification for verbosity
-                        else:
-                            print("Skipping file - unnecessary type:", f)
+                        #else:
+                            #print("Skipping file - unnecessary type:", f)
 
 def get_data_fn(label):
     track = label['R_RCTrack']
@@ -155,6 +155,9 @@ def get_race_info(row):
 def get_input_data(INPUTFN, LABELFN):
     """ reads the labels file, and uses the information there to find
         input data """
+
+    labelsmissingdata = []
+
     with open(LABELFN) as LABELFILE, open(INPUTFN, 'w') as INPUTFILE:
         labelReader = csv.DictReader(LABELFILE, dialect='unix')
         inputWriter = csv.DictWriter(INPUTFILE, fieldnames=inputHeaders, 
@@ -176,9 +179,12 @@ def get_input_data(INPUTFN, LABELFN):
             if currfn != get_data_fn(label):
                 currfn = get_data_fn(label)
                 if os.path.isfile(currfn):
-                    datafile = csv.DictReader(open(currfn), dialect='unix')
+                    data = open(currfn)
+                    datafile = csv.DictReader(data, dialect='unix')
                 else:
                     print("Error! sf file not found for", currfn)
+            else:
+                data.seek(0)
 
             # iterate through the data, and
             for row in datafile:
@@ -198,6 +204,15 @@ def get_input_data(INPUTFN, LABELFN):
             if not labelWritten:
                 print("Error! the input info for this label was never written!")
                 print(label)
+                print("we thought it'd be in this file:", currfn)
+                print()
+                labelsmissingdata.append((currfn, label))
+                row = raceInfo.copy()
+                row.update({"missing":1})
+                inputWriter.writerow(row)
+
+    print("we couldn't find input info for", len(labelsmissingdata),
+          "labels. :(")
 
 if __name__ == "__main__":
     # get root folder and pathname and file objects for the final product.
