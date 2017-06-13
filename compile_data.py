@@ -26,13 +26,6 @@ config = yaml.safe_load(open("config.yml"))
 # right way to access config vars
 # config['raw_data_path']
 
-# allow/disallow printing.  errors must turn on printing
-def allowPrinting():
-    sys.stdout = sys.__stdout__   
-def blockPrinting(VERBOSE):
-    if not VERBOSE:
-        sys.stdout = open(os.devnull, 'w')
-
 def writeLabelInfo(f, folder, LABELWRITER):
     """ Scrapes data from file f in folder, and writes the data to 
         a labels file, using the object LABELWRITER """
@@ -46,8 +39,9 @@ def writeLabelInfo(f, folder, LABELWRITER):
     date = m.group(2)
     race = m.group(3)
 
-    #print('writing from',folder + f, 'to labelwriter')
-    print("         ", f)
+    if VERBOSEMODE:
+        print("         ", f)
+
     raceIDInfo = {"R_RCTrack": track, "R_RCDate": date, "R_RCRace": race}
 
     # generate pathnames for the desired files
@@ -75,25 +69,24 @@ def writeLabelInfo(f, folder, LABELWRITER):
             # read one line from timereader and add time to entry
             t = next(timereader)
             if t['Horse'] != entry['B_Horse'] or not entry['B_Horse']:
-                allowPrinting()
                 print("Error! reading entries from two label files and ")
                 print("       the horse names don't match! You screwed up!")
                 print("Race: " + str(raceIDInfo))
                 print("time's horse: " + t['Horse'])
                 print("beyer's horse: " + entry['Horse'])
-                blockPrinting(VERBOSEMODE)
+
             entry.update({"L_Time": t["Fin"]})
 
             # add entry to list and update rank
             labeldata.append(entry)
             rank += 1
 
-    #[print(x) for x in labeldata]
+    # sort the data by horse name (track, race #, date are all identical)
     labeldata.sort(key=lambda x: (x["B_Horse"]))
 
     # write the entries in labeldata to file
     for entry in labeldata:
-        #entry['from_filetype'] = 'lb/lt'
+        # make sure the name isn't actually a comment on the race conditions
         if len(entry['B_Horse']) < 30:
             LABELWRITER.writerow(entry)
 
@@ -112,14 +105,17 @@ def create_labels():
     LABELWRITER.writeheader()
 
     # iterate through files in data directory, PLACE/DATE/Files
-    print(DATA)
+    if VERBOSEMODE:
+        print(DATA)
     for place in os.listdir(DATA):
         if os.path.isdir(DATA + '/' + place):
-            print(" ", place)
+            if VERBOSEMODE:
+                print(" ", place)
             for date in os.listdir(DATA + '/' + place):
                 folder = DATA + '/' + place + "/" + date + "/"
                 if os.path.isdir(folder):
-                    print("     ",date)
+                    if VERBOSEMODE:
+                        print("     ",date)
                     for f in os.listdir(folder):
                         # if the file contains label information, write to file
                         # only looking for one of two label files, to avoid dups
@@ -127,18 +123,25 @@ def create_labels():
                         if f.endswith('lt.csv'):
                             writeLabelInfo(f, folder, LABELWRITER)
                         # notification for verbosity
-                        #else:
-                            #print("Skipping file - unnecessary type:", f)
+                        elif VERBOSEMODE:
+                            print("Skipping file - unnecessary type:", f)
 
 def get_data_fn(label):
+    """ given a label (dict), return the path to the file that would hold
+        the right input data. """
+
     track = label['R_RCTrack']
     date = label['R_RCDate']
     race = label['R_RCRace']
-    horsename = label['B_Horse']
+
     separator = "" if len(track) == 3 else "_"
+
     return DATA+"/"+track+"/"+date+"/"+track+separator+date+"_SF.CSV"
 
 def get_race_info(row):
+    """ returns a dictionary, given a row, of all the race-specific information.
+        this is used to copy race info from the first row of a race to the next
+        """
     r = {}
     keys = ["R_RCTrack", "R_RCDate", "R_RCRace","R_Starters","R_TrackName",
             "R_RaceState","R_Division","R_RaceBred","R_StateBred","R_RaceSex",
@@ -154,15 +157,17 @@ def get_race_info(row):
 
 def get_input_data(INPUTFN, LABELFN):
     """ reads the labels file, and uses the information there to find
-        input data """
+        input data and write it to file """
 
     labelsmissingdata = []
 
+    # open the relevant files and CSV objects
     with open(LABELFN) as LABELFILE, open(INPUTFN, 'w') as INPUTFILE:
         labelReader = csv.DictReader(LABELFILE, dialect='unix')
         inputWriter = csv.DictWriter(INPUTFILE, fieldnames=inputHeaders, 
                                      extrasaction='ignore', dialect='unix')
 
+        # write the headers to data.csv
         inputWriter.writeheader()
 
         # the current datafilename we're scraping, and the object itself
@@ -175,14 +180,16 @@ def get_input_data(INPUTFN, LABELFN):
         # iterate through each label
         for label in labelReader:
             labelWritten = False
+
             # if we aren't looking at the right file, fix that
             if currfn != get_data_fn(label):
                 currfn = get_data_fn(label)
                 if os.path.isfile(currfn):
                     data = open(currfn)
                     datafile = csv.DictReader(data, dialect='unix')
-                else:
-                    print("Error! sf file not found for", currfn)
+                elif VERBOSEMODE:
+                    print("Error! .SF file not found for", currfn)
+            # otherwise, start over looking at the beginning of the same file
             else:
                 data.seek(0)
 
@@ -191,28 +198,33 @@ def get_input_data(INPUTFN, LABELFN):
                 # first, we add race info to each row where its missing
                 if row["R_RCTrack"] == "":
                     row.update(raceInfo)
+                # or update the info for the current row's race
                 else:
                     raceInfo = get_race_info(row)
                 
                 # when we reach the right entry, we write it to file
                 if (label['B_Horse'] == row['B_Horse'] and 
                     label['R_RCRace'] == row['R_RCRace']):
-                    # write this row to inputWriter
                     inputWriter.writerow(row)
                     labelWritten = True
 
+            # if we never found the right data for the label
             if not labelWritten:
-                print("Error! the input info for this label was never written!")
-                print(label)
-                print("we thought it'd be in this file:", currfn)
-                print()
+                if VERBOSEMODE:
+                    print("Error! the input info for this label was never written!")
+                    print(label)
+                    print("we thought it'd be in this file:", currfn)
+                    print()
                 labelsmissingdata.append((currfn, label))
+
+                # put in an empty row as a placeholder
                 row = raceInfo.copy()
-                row.update({"missing":1})
+                row.update({"missing":1, "B_Horse":label['B_Horse']})
                 inputWriter.writerow(row)
 
-    print("we couldn't find input info for", len(labelsmissingdata),
-          "labels. :(")
+    if VERBOSEMODE:
+        print("we couldn't find input info for", len(labelsmissingdata), 
+              "labels. :(")
 
 if __name__ == "__main__":
     # get root folder and pathname and file objects for the final product.
@@ -224,22 +236,17 @@ if __name__ == "__main__":
     # set verbosity settings
     if "-v" not in sys.argv:
         VERBOSEMODE = False
-        blockPrinting(VERBOSEMODE)
 
     # create filenames
     ENDFILENAME = config['final_data_filename']
-    #RACEFILENAME = "RACES." + ENDFILENAME
-    #HORSEFILENAME = "HORSES." + ENDFILENAME
     LABELFILENAME = "LABELS." + ENDFILENAME
 
     # get a list of label headers for various files
     labelHeaders = config['label_data_col_headers'].split(', ')
     labelHeaders[-1] = labelHeaders[-1][:-1]
+
     inputHeaders = config['input_data_col_headers'].split(', ')
     inputHeaders[-1] = inputHeaders[-1][:-1]
-
-    # generate the headers for data.csv as a combination of the middle files'
-    headers = labelHeaders
 
     # okay, go!
     create_labels()
