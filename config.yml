@@ -12,16 +12,13 @@
 final_data_filename: "data.csv"
 
 # the names of each column for the final file
-race_data_col_headers: >
-    R_RCTrack, R_RCDate, R_RCRace, R_Starters, R_TrackName,
+input_data_col_headers: >
+    R_RCTrack, R_RCDate, R_RCRace, B_Horse, missing, R_Starters, R_TrackName,
     R_RaceState, R_Division, R_RaceBred, R_StateBred, R_RaceSex,
     R_RaceAge, R_Class, R_Purse, R_HiClaim, R_LoClaim, R_Distance,
     R_Inner, R_Surface, R_RaceType, R_GradedRace, R_GradedRaceDesc,
     R_SimTrack, R_SimRace, R_TrackRecord, R_DayOfWeek, R_PostTime,
-    R_LongClass, R_TrkAbbrev, R_DistUnit, R_TimeUnit, R_Conditions
-
-horse_data_col_headers: >
-    R_RCTrack, R_RCDate, R_RCRace, B_Horse,
+    R_LongClass, R_TrkAbbrev, R_DistUnit, R_TimeUnit, R_Conditions,
     B_ProgNum, B_PostPosition, B_Jockey, B_MLOdds, H_AeMto,
     H_Weight, H_Horse, H_FD, H_TripleCrown, H_Sex, H_YBorn, H_MBorn,
     H_State, H_Breeder, H_Color, H_Sire, H_SireSire, H_Dam,
@@ -425,13 +422,13 @@ horse_data_col_headers: >
     W_Race_12, W_DistUnit_12, W_TimeUnit_12
 # end horse_data_col_headers
 
-# These headers need to be adjusted
+# headers for LABELS.data.csv
 label_data_col_headers: >
     R_RCTrack, R_RCDate, R_RCRace, B_Horse,
-    Place, Time, BSF
+    L_Position, L_Time, L_BSF
 
 # Path to the folder containing the raw data to be compiled
-raw_data_path: "data/"
+raw_data_path: "data"
 
 # The AI that the data is being compiled for.
 # This can be one of three options, which can be seen in the variables below.
