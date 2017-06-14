@@ -206,10 +206,47 @@ def get_input_data(INPUTFN, LABELFN):
                 print(label)
                 print("we thought it'd be in this file:", currfn)
                 print()
-                labelsmissingdata.append((currfn, label))
-                row = raceInfo.copy()
-                row.update({"missing":1})
-                inputWriter.writerow(row)
+
+                #make a list of all of the horse names in the race and how 
+                #similar to the label they are
+                names = []
+                potNames = []
+                
+                #go back to the beginning of the file
+                data.seek(0)
+                
+                #go through each row to find the ones with a matching race
+                for row in datafile:
+
+                    # make sure that each row has its race data
+                    if row["R_RCTrack"] == "":
+                        row.update(raceInfo)
+                    else:
+                        raceInfo = get_race_info(row)
+
+                    #go through each row and store each horse from the label's race
+                    if label['R_RCRace'] == row['R_RCRace']:
+                        potNames.append(row['B_Horse'])
+                        
+                        #create a ratio of the number of letters from the original name
+                        #that are in the label name and put them into a list
+                        lettersInCommon = 0
+                        for letter in row['B_Horse']:
+                            if letter in label['B_Horse']:
+                                lettersInCommon += 1
+                        ratio = lettersInCommon / len(row['B_Horse'])
+                        names.append((row, ratio))
+               
+                #find the row with the largest ratio of common letters
+                closestRow = max(names, key=lambda x:x[1], default=0)
+
+                #write the closestRow to the file if it passes a threshold and exists
+                if closestRow == 0 or closestRow[1] < .7:
+                    labelsmissingdata.append((currfn, label))
+                    row = raceInfo.copy()
+                    row.update({"missing":1})
+                else:
+                    inputWriter.writerow(closestRow[0])
 
     print("we couldn't find input info for", len(labelsmissingdata),
           "labels. :(")
