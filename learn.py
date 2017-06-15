@@ -6,12 +6,14 @@
 from sklearn import svm
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction import FeatureHasher
+from sklearn.feature_selection import SelectKBest
 import yaml, csv, random
 
 def read_data(filename):
     """ returns an array of the data """
     with open(filename) as dataFile:
-        datareader = csv.DictReader(dataFile, dialect='unix')
+        datareader = csv.reader(dataFile, dialect='unix')
+        next(datareader)
         r = []
         for row in datareader:
             r.append(row)
@@ -45,8 +47,16 @@ if __name__ == "__main__":
     inputs = read_data(config['final_data_filename'])
     outputs = read_output("LABELS." + config['final_data_filename'])
     print("                 Loaded!")
+    
+    print("Here's a sample of the inputs and outputs: ")
+    [print(inputs[i],outputs[i]) for i in range(10)]
 
-    print("Vectorizing data ... ")
+    print("Selecting features ... ")
+    selector = SelectKBest(k=100)
+    inputs = selector.fit_transform(inputs, outputs).toarray()
+    print("                 Selected!")
+
+    print("Transforming data ... ")
     # dictionary vectorizor method, which throws a MemoryError
     # vec = DictVectorizer()
     # inputs = vec.fit_transform(inputs).toarray()
@@ -54,7 +64,7 @@ if __name__ == "__main__":
     # feature hasher, apparently lower on memory
     fh = FeatureHasher()
     inputs = fh.fit_transform(inputs).toarray()
-    print("                 Vectorized!")
+    print("                 Transformed!")
 
     print("Splitting data ... ")
     data = [(inputs[i], outputs[i]) for i in range(len(inputs))]
