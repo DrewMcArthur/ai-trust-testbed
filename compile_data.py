@@ -273,7 +273,7 @@ def get_input_data(INPUTFN, LABELFN):
                 inputWriter.writerow(closestRow[0])
             if VFLAG:
                 numPlaces += 1
-                print("Fetched roughly {0:.2f}% of labels.".format(numPlaces / 270), 
+                print("Fetched data for roughly {0:.2f}% of labels.".format(numPlaces / 270), 
                       end="\r")
         if VFLAG:
             print()
