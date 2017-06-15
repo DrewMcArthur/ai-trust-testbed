@@ -41,12 +41,12 @@ def split_data(d, r):
 if __name__ == "__main__":
     config = yaml.safe_load(open("./config.yml"))
 
-    print("Loading data ... ", end='')
+    print("Loading data ... ")
     inputs = read_data(config['final_data_filename'])
     outputs = read_output("LABELS." + config['final_data_filename'])
-    print("Loaded!")
+    print("                 Loaded!")
 
-    print("Vectorizing data ... ", end='')
+    print("Vectorizing data ... ")
     # dictionary vectorizor method, which throws a MemoryError
     # vec = DictVectorizer()
     # inputs = vec.fit_transform(inputs).toarray()
@@ -54,35 +54,36 @@ if __name__ == "__main__":
     # feature hasher, apparently lower on memory
     fh = FeatureHasher()
     inputs = fh.fit_transform(inputs).toarray()
-    print("Vectorized!")
+    print("                 Vectorized!")
 
-    print("Splitting data ... ", end='')
+    print("Splitting data ... ")
     data = [(inputs[i], outputs[i]) for i in range(len(inputs))]
     training, test = split_data(data, .75)
 
     trainX = [x[0] for x in training]
     trainY = [y[1] for y in training]
-    print("Split!")
+    print("                 Split!")
+
     for _ in range(10):
         print()
 
     [print(x) for x in trainX]
     [print(y) for y in trainY]
 
-    print("Training regression model ... ", end='')
+    print("Training regression model ... ")
     clf = svm.SVR()
     clf.fit(trainX, trainY)
-    print("Trained!")
+    print("                 Trained!")
 
     nCorrect = 0.0
     nTotal = 0
 
-    print("Testing model ... ", end='')
+    print("Testing model ... ")
     for x, y in test:
         yP = clf.predict(datum)
         if y == yP:
             nCorrect += 1.0
         nTotal += 1
-    print("Tested!")
+    print("                 Tested!")
 
     print("Accuracy:", str(nCorrect/nTotal))
