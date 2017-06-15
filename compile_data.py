@@ -77,6 +77,8 @@ def writeLabelInfo(f, folder, LABELWRITER):
 
             entry.update({"L_Time": t["Fin"]})
 
+            entry = formatData(entry)
+
             # add entry to list and update rank
             labeldata.append(entry)
             rank += 1
@@ -137,6 +139,26 @@ def get_data_fn(label):
     separator = "" if len(track) == 3 else "_"
 
     return DATA+"/"+track+"/"+date+"/"+track+separator+date+"_SF.CSV"
+
+def formatData(row):
+    """function which returns a row that is formatted nicely for the AI"""
+
+    if row['L_Time'] == None or row['L_Time'] == '':
+        return row
+
+    #when there's just a 1 return 60 seconds
+    if row['L_Time'] == '1':
+        row['L_Time'] = 60
+    
+    #case if it is already in seconds with a colon in front of it
+    elif row['L_Time'][0] == ':':
+        row['L_Time'] = float(row['L_Time'][1:])
+
+    #case if they ran over a minute
+    elif row['L_Time'][1:2] == ':':
+        row['L_Time'] = float(60 * int(row['L_Time'][0]) + float(row['L_Time'][2:]))
+        
+    return row
 
 def get_race_info(row):
     """ returns a dictionary, given a row, of all the race-specific information.
