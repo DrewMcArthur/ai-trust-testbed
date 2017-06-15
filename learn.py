@@ -5,6 +5,7 @@
 """
 from sklearn import svm
 from sklearn.feature_extraction import DictVectorizer
+from sklearn.feature_extraction import FeatureHasher
 import yaml, csv, random
 
 def read_data(filename):
@@ -46,8 +47,13 @@ if __name__ == "__main__":
     print("Loaded!")
 
     print("Vectorizing data ... ", end='')
-    vec = DictVectorizer()
-    inputs = vec.fit_transform(inputs).toarray()
+    # dictionary vectorizor method, which throws a MemoryError
+    # vec = DictVectorizer()
+    # inputs = vec.fit_transform(inputs).toarray()
+
+    # feature hasher, apparently lower on memory
+    fh = FeatureHasher()
+    inputs = fh.fit_transform(inputs).toarray()
     print("Vectorized!")
 
     print("Splitting data ... ", end='')
