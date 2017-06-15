@@ -140,6 +140,23 @@ def get_data_fn(label):
 
     return DATA+"/"+track+"/"+date+"/"+track+separator+date+"_SF.CSV"
 
+def fixDate(d):
+    """ given a date d, return the same date in YYMMDD format. """
+    #[print() for _ in range(10)]
+    #print("fixing date: ", d)
+    if d == "":
+        return ""
+    if "/" not in d or not d or d[:2] == "17":
+        return d
+    r = d[-2:]
+    d = d[:5]
+    r += d[:2]
+    r += d[-2:]
+    
+    #print("Fixed date: ", r)
+    #[print() for _ in range(10)]
+    return r
+
 def formatData(row):
     """function which returns a row that is formatted nicely for the AI"""
 
@@ -158,6 +175,8 @@ def formatData(row):
     elif row['L_Time'][1:2] == ':':
         row['L_Time'] = float(60 * int(row['L_Time'][0]) + float(row['L_Time'][2:]))
         
+    row['R_RCDate'] = fixDate(row['R_RCDate'])
+
     return row
 
 def get_race_info(row):
