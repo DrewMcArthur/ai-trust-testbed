@@ -39,7 +39,7 @@ def writeLabelInfo(f, folder, LABELWRITER):
     date = m.group(2)
     race = m.group(3)
 
-    if VERBOSEMODE:
+    if VVFLAG:
         print("         ", f)
 
     raceIDInfo = {"R_RCTrack": track, "R_RCDate": date, "R_RCRace": race}
@@ -104,17 +104,20 @@ def create_labels():
     # write the header columns to the file.
     LABELWRITER.writeheader()
 
+    if VFLAG:
+        numPlaces = 0
+
     # iterate through files in data directory, PLACE/DATE/Files
-    if VERBOSEMODE:
+    if VVFLAG:
         print(DATA)
     for place in os.listdir(DATA):
         if os.path.isdir(DATA + '/' + place):
-            if VERBOSEMODE:
+            if VVFLAG:
                 print(" ", place)
             for date in os.listdir(DATA + '/' + place):
                 folder = DATA + '/' + place + "/" + date + "/"
                 if os.path.isdir(folder):
-                    if VERBOSEMODE:
+                    if VVFLAG:
                         print("     ",date)
                     for f in os.listdir(folder):
                         # if the file contains label information, write to file
@@ -123,8 +126,13 @@ def create_labels():
                         if f.endswith('lt.csv'):
                             writeLabelInfo(f, folder, LABELWRITER)
                         # notification for verbosity
-                        elif VERBOSEMODE:
+                        elif VVFLAG:
                             print("Skipping file - unnecessary type:", f)
+            if VFLAG:
+                numPlaces += 1
+                print("Done with", numPlaces, "track folders of data.", end="\r")
+    if VFLAG:
+        print()
 
 def get_data_fn(label):
     """ given a label (dict), return the path to the file that would hold
@@ -177,6 +185,9 @@ def get_input_data(INPUTFN, LABELFN):
         # used for copying race info to rows missing this data
         raceInfo = {}
 
+        if VFLAG:
+            numPlaces = 0
+
         # iterate through each label
         for label in labelReader:
             labelWritten = False
@@ -187,7 +198,7 @@ def get_input_data(INPUTFN, LABELFN):
                 if os.path.isfile(currfn):
                     data = open(currfn)
                     datafile = csv.DictReader(data, dialect='unix')
-                elif VERBOSEMODE:
+                elif VFLAG:
                     print("Error! .SF file not found for", currfn)
             # otherwise, start over looking at the beginning of the same file
             else:
@@ -210,10 +221,11 @@ def get_input_data(INPUTFN, LABELFN):
 
             # if we never found the right data for the label
             if not labelWritten:
-                if VERBOSEMODE:
+                if VVFLAG:
                     print("Error! the input info for this label was never written!")
                     print(label)
                     print("we thought it'd be in this file:", currfn)
+                    print("attempting to find the closest match...")
                     print()
 
                 # make a list of all of the horse names in the race and how 
@@ -259,17 +271,20 @@ def get_input_data(INPUTFN, LABELFN):
                 # write the closestRow to the file, 
                 # labelled missing if we couldn't find the data
                 inputWriter.writerow(closestRow[0])
+            if VFLAG:
+                numPlaces += 1
+                print("Fetched roughly {0:.2f}% of labels.".format(numPlaces / 270), 
+                      end="\r")
+        if VFLAG:
+            print()
 
 if __name__ == "__main__":
     # get root folder and pathname and file objects for the final product.
     DATA = config['raw_data_path']
 
-    # future mode for verbosity toggling
-    VERBOSEMODE = True
-
-    # set verbosity settings
-    if "-v" not in sys.argv:
-        VERBOSEMODE = False
+    # allow levels of verbosity 
+    VVFLAG = "-vv" in sys.argv
+    VFLAG = "-v" in sys.argv or VVFLAG
 
     # create filenames
     ENDFILENAME = config['final_data_filename']
@@ -283,5 +298,9 @@ if __name__ == "__main__":
     inputHeaders[-1] = inputHeaders[-1][:-1]
 
     # okay, go!
+    if VFLAG:
+        print("Creating", LABELFILENAME, "...")
     create_labels()
+    if VFLAG:
+        print("Scraping",DATA,"for training data ...")
     get_input_data(ENDFILENAME, LABELFILENAME)
