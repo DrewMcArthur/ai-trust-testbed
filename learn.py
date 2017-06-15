@@ -38,7 +38,7 @@ def split_data(d, r):
     for _ in range(len_test):
         i = random.randrange(len(d))
         test.append(d.pop(i))
-    return (test, d)
+    return (d, test)
 
 if __name__ == "__main__":
     config = yaml.safe_load(open("./config.yml"))
@@ -73,6 +73,8 @@ if __name__ == "__main__":
     trainX = [x[0] for x in training]
     trainY = [y[1] for y in training]
     print("                 Split!")
+    print("There are {} rows in training and {} rows in test."
+                .format(len(training), len(test)))
 
     for _ in range(10):
         print()
