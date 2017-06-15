@@ -62,8 +62,7 @@ def writeLabelInfo(f, folder, LABELWRITER):
             entry = raceIDInfo.copy()
             entry.update({"L_Position": rank, 
                           "B_Horse": b["Horse"],          
-                          "L_BSF": b["Chart"],
-                          "from_filename": f
+                          "L_BSF": b["Chart"]
                          })
 
             # read one line from timereader and add time to entry
@@ -89,7 +88,8 @@ def writeLabelInfo(f, folder, LABELWRITER):
     # write the entries in labeldata to file
     for entry in labeldata:
         # make sure the name isn't actually a comment on the race conditions
-        if len(entry['B_Horse']) < 30:
+        if (len(entry['B_Horse']) < 30 and 
+            entry['L_BSF'] != "-"):
             LABELWRITER.writerow(entry)
 
 def create_labels():
@@ -227,7 +227,6 @@ def get_input_data(INPUTFN, LABELFN):
                 # when we reach the right entry, we write it to file
                 if (label['B_Horse'] == row['B_Horse'] and 
                     label['R_RCRace'] == row['R_RCRace']):
-                    row.update(label)
                     inputWriter.writerow(row)
                     labelWritten = True
 
@@ -304,8 +303,6 @@ if __name__ == "__main__":
 
     inputHeaders = config['input_data_col_headers'].split(', ')
     inputHeaders[-1] = inputHeaders[-1][:-1]
-
-    [inputHeaders.append(l) for l in labelHeaders]
 
     # okay, go!
     create_labels()
