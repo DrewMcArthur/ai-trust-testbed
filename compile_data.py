@@ -30,6 +30,8 @@ def writeLabelInfo(f, folder, LABELWRITER):
     """ Scrapes data from file f in folder, and writes the data to 
         a labels file, using the object LABELWRITER """
 
+    global NDATA
+
     # list of dictionaries, each dict is a data entry to be written to LABELS
     labeldata = []
 
@@ -89,6 +91,9 @@ def writeLabelInfo(f, folder, LABELWRITER):
         if (len(entry['B_Horse']) < 30 and 
             entry['L_BSF'] != "-"):
             LABELWRITER.writerow(entry)
+            NDATA += 1
+            if NDATA >= MAXFLAG:
+                return
 
 def create_labels():
     """ iterate through files in DATA directory and create 
@@ -125,6 +130,8 @@ def create_labels():
                         # the other filename is generated in the function below.
                         if f.endswith('lt.csv'):
                             writeLabelInfo(f, folder, LABELWRITER)
+                            if NDATA >= MAXFLAG:
+                                return
                         # notification for verbosity
                         elif VVFLAG:
                             print("Skipping file - unnecessary type:", f)
@@ -290,6 +297,11 @@ if __name__ == "__main__":
     # allow levels of verbosity 
     VVFLAG = "-vv" in sys.argv
     VFLAG = "-v" in sys.argv or VVFLAG
+
+    # allow -k n to choose number of rows of data to gather
+    NDATA = 0
+    MAXFLAG = int(config['nData'] if "-k" not in sys.argv else 
+                  sys.argv[sys.argv.index("-k") + 1])
 
     # create filenames
     ENDFILENAME = config['final_data_filename']
