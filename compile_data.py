@@ -104,8 +104,7 @@ def create_labels():
     # write the header columns to the file.
     LABELWRITER.writeheader()
 
-    if VFLAG:
-        numPlaces = 0
+    numPlaces = 0
 
     # iterate through files in data directory, PLACE/DATE/Files
     if VVFLAG:
@@ -128,11 +127,9 @@ def create_labels():
                         # notification for verbosity
                         elif VVFLAG:
                             print("Skipping file - unnecessary type:", f)
-            if VFLAG:
-                numPlaces += 1
-                print("Done with", numPlaces, "track folders of data.", end="\r")
-    if VFLAG:
-        print()
+            numPlaces += 1
+            print("Done with", numPlaces, "track folders of data.", end="\r")
+    print()
 
 def get_data_fn(label):
     """ given a label (dict), return the path to the file that would hold
@@ -211,8 +208,7 @@ def get_input_data(INPUTFN, LABELFN):
         # used for copying race info to rows missing this data
         raceInfo = {}
 
-        if VFLAG:
-            numPlaces = 0
+        numPlaces = 0
 
         # iterate through each label
         for label in labelReader:
@@ -224,7 +220,7 @@ def get_input_data(INPUTFN, LABELFN):
                 if os.path.isfile(currfn):
                     data = open(currfn)
                     datafile = csv.DictReader(data, dialect='unix')
-                elif VFLAG:
+                else:
                     print("Error! .SF file not found for", currfn)
                 # get a list of races, where each race is a list of horses' data
                 races = generate_racelist(datafile)
@@ -276,20 +272,17 @@ def get_input_data(INPUTFN, LABELFN):
                 # write the closestRow to the file, 
                 # labelled missing if we couldn't find the data
                 inputWriter.writerow(closestRow[0])
-            if VFLAG:
-                numPlaces += 1
-                print("Fetched data for roughly {0:.2f}% of labels."
-                            .format(numPlaces / 270), end="\r")
-        if VFLAG:
-            print()
+            numPlaces += 1
+            print("Fetched data for roughly {0:.2f}% of labels."
+                        .format(numPlaces / 270), end="\r")
+        print()
 
 if __name__ == "__main__":
     # get root folder and pathname and file objects for the final product.
     DATA = config['raw_data_path']
 
     # allow levels of verbosity 
-    VVFLAG = "-vv" in sys.argv
-    VFLAG = "-v" in sys.argv or VVFLAG
+    VVFLAG = "-v" in sys.argv
 
     # create filenames
     ENDFILENAME = config['final_data_filename']
@@ -303,12 +296,10 @@ if __name__ == "__main__":
     inputHeaders[-1] = inputHeaders[-1][:-1]
 
     # okay, go!
-    if VFLAG:
-        print("Creating", LABELFILENAME, "...")
+    print("Creating", LABELFILENAME, "...")
 
     create_labels()
 
-    if VFLAG:
-        print("Scraping",DATA,"for training data ...")
+    print("Scraping",DATA,"for training data ...")
 
     get_input_data(ENDFILENAME, LABELFILENAME)

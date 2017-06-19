@@ -4,9 +4,12 @@
  *  testing out sklearn on horse racing data
 """
 from sklearn import svm
+from sklearn.preprocessing import LabelEncoder
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction import FeatureHasher
 from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import VarianceThreshold
+from sklearn.decomposition import PCA
 import yaml, csv, random
 
 def read_data(filename):
@@ -43,20 +46,22 @@ def split_data(d, r):
 if __name__ == "__main__":
     config = yaml.safe_load(open("./config.yml"))
 
-    print("Loading data ... ")
+    print("Loading data ... ", end='\r')
     inputs = read_data(config['final_data_filename'])
     outputs = read_output("LABELS." + config['final_data_filename'])
-    print("                 Loaded!")
-    
-    print("Here's a sample of the inputs and outputs: ")
-    [print(inputs[i],outputs[i]) for i in range(10)]
+    print("Loading data ......... Loaded!")
 
-    print("Selecting features ... ")
-    selector = SelectKBest(k=100)
-    inputs = selector.fit_transform(inputs, outputs).toarray()
-    print("                 Selected!")
-
-    print("Transforming data ... ")
+    """
+    print("Converting data from strings to floats ... ", end='\r')
+    for col in range(len(inputs[0])):
+        if isinstance(inputs[0][col], str):
+            S = set([row[col] for row in inputs])
+            D = dict( zip(S, range(len(S))) )
+            Y = [D[row[col]] for row in inputs]
+            for i in range(len(Y)):
+                inputs[i][col] = Y[i]
+    print("Converting data from strings to floats ... Converted!")
+    print("Transforming data ... ", end='\r')
     # dictionary vectorizor method, which throws a MemoryError
     # vec = DictVectorizer()
     # inputs = vec.fit_transform(inputs).toarray()
@@ -64,7 +69,29 @@ if __name__ == "__main__":
     # feature hasher, apparently lower on memory
     fh = FeatureHasher()
     inputs = fh.fit_transform(inputs).toarray()
-    print("                 Transformed!")
+    print("Transforming data .... Transformed!")
+    """
+
+    print("Preprocessing data ... ", end='\r')
+    lb = LabelEncoder()
+    inputs = lb.fit_transform(inputs)
+    print("Preprocessing data ... ", end='\r')
+
+    print("Selecting features ... ", end='\r')
+    #selector = VarianceThreshold(threshold=.16)
+    #inputs = selector.fit_transform(inputs)
+    print("Selecting features ... Selected!")
+    print(inputs)
+
+    print("Running PCA ... ", end='\r')
+    pcaObj = PCA(n_components=50)
+    inputs = pcaObj.fit_transform(inputs)
+    print("Running PCA .......... PCA Complete!")
+
+    print(inputs)
+    print(inputs.toArray())
+    quit()
+
 
     print("Splitting data ... ")
     data = [(inputs[i], outputs[i]) for i in range(len(inputs))]
