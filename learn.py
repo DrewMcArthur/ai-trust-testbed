@@ -5,12 +5,15 @@
 """
 from sklearn import svm
 from sklearn.feature_extraction import DictVectorizer
+from sklearn.feature_extraction import FeatureHasher
+from sklearn.feature_selection import SelectKBest
 import yaml, csv, random
 
 def read_data(filename):
     """ returns an array of the data """
     with open(filename) as dataFile:
-        datareader = csv.DictReader(dataFile, dialect='unix')
+        datareader = csv.reader(dataFile, dialect='unix')
+        next(datareader)
         r = []
         for row in datareader:
             r.append(row)
@@ -35,48 +38,64 @@ def split_data(d, r):
     for _ in range(len_test):
         i = random.randrange(len(d))
         test.append(d.pop(i))
-    return (test, d)
+    return (d, test)
 
 if __name__ == "__main__":
     config = yaml.safe_load(open("./config.yml"))
 
-    print("Loading data ... ", end='')
+    print("Loading data ... ")
     inputs = read_data(config['final_data_filename'])
     outputs = read_output("LABELS." + config['final_data_filename'])
-    print("Loaded!")
+    print("                 Loaded!")
+    
+    print("Here's a sample of the inputs and outputs: ")
+    [print(inputs[i],outputs[i]) for i in range(10)]
 
-    print("Vectorizing data ... ", end='')
-    vec = DictVectorizer()
-    inputs = vec.fit_transform(inputs).toarray()
-    print("Vectorized!")
+    print("Selecting features ... ")
+    selector = SelectKBest(k=100)
+    inputs = selector.fit_transform(inputs, outputs).toarray()
+    print("                 Selected!")
 
-    print("Splitting data ... ", end='')
+    print("Transforming data ... ")
+    # dictionary vectorizor method, which throws a MemoryError
+    # vec = DictVectorizer()
+    # inputs = vec.fit_transform(inputs).toarray()
+
+    # feature hasher, apparently lower on memory
+    fh = FeatureHasher()
+    inputs = fh.fit_transform(inputs).toarray()
+    print("                 Transformed!")
+
+    print("Splitting data ... ")
     data = [(inputs[i], outputs[i]) for i in range(len(inputs))]
     training, test = split_data(data, .75)
 
     trainX = [x[0] for x in training]
     trainY = [y[1] for y in training]
-    print("Split!")
+    print("                 Split!")
+    print("There are {} rows in training and {} rows in test."
+                .format(len(training), len(test)))
+
     for _ in range(10):
         print()
 
     [print(x) for x in trainX]
     [print(y) for y in trainY]
 
-    print("Training regression model ... ", end='')
+    print("Training regression model ... ")
     clf = svm.SVR()
     clf.fit(trainX, trainY)
-    print("Trained!")
+    print("                 Trained!")
 
     nCorrect = 0.0
     nTotal = 0
 
-    print("Testing model ... ", end='')
+    print("Testing model ... ")
     for x, y in test:
         yP = clf.predict(datum)
         if y == yP:
             nCorrect += 1.0
         nTotal += 1
-    print("Tested!")
+    print("                 Tested!")
 
     print("Accuracy:", str(nCorrect/nTotal))
