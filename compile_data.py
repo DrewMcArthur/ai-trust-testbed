@@ -30,6 +30,8 @@ def writeLabelInfo(f, folder, LABELWRITER):
     """ Scrapes data from file f in folder, and writes the data to 
         a labels file, using the object LABELWRITER """
 
+    global NDATA
+
     # list of dictionaries, each dict is a data entry to be written to LABELS
     labeldata = []
 
@@ -88,7 +90,11 @@ def writeLabelInfo(f, folder, LABELWRITER):
         # make sure the name isn't actually a comment on the race conditions
         if (len(entry['B_Horse']) < 30 and 
             entry['L_BSF'] != "-"):
+            entry.update({"ID": NDATA})
             LABELWRITER.writerow(entry)
+            NDATA += 1
+            if NDATA >= MAXFLAG:
+                return
 
 def create_labels():
     """ iterate through files in DATA directory and create 
@@ -124,6 +130,8 @@ def create_labels():
                         # the other filename is generated in the function below.
                         if f.endswith('lt.csv'):
                             writeLabelInfo(f, folder, LABELWRITER)
+                            if NDATA >= MAXFLAG:
+                                return
                         # notification for verbosity
                         elif VVFLAG:
                             print("Skipping file - unnecessary type:", f)
@@ -229,6 +237,7 @@ def get_input_data(INPUTFN, LABELFN):
             for horse in races[int(label['R_RCRace']) - 1]:
                 # when we reach the right entry, we write it to file
                 if label['B_Horse'] == horse['B_Horse']:
+                    horse.update({"ID":label["ID"]})
                     inputWriter.writerow(horse)
                     labelWritten = True
 
@@ -262,19 +271,15 @@ def get_input_data(INPUTFN, LABELFN):
                 # find the row with the largest ratio of common letters
                 closestRow = max(names, key=lambda x:x[1], default=0)
 
-                # if the closest row doesn't exist or pass the threshold, 
-                if closestRow == 0 or closestRow[1] < .7:
-                    # then label the data as missing
-                    row = raceInfo.copy()
-                    row.update({"missing":1, "B_Horse":label['B_Horse']})
-                    closestRow = (row, 0)
+                # if the closest row exists and passes the threshold, 
+                if closestRow != 0 and closestRow[1] > .7:
+                    # write the closestRow to the file, 
+                    inputWriter.writerow(closestRow[0])
 
-                # write the closestRow to the file, 
-                # labelled missing if we couldn't find the data
-                inputWriter.writerow(closestRow[0])
             numPlaces += 1
             print("Fetched data for roughly {0:.2f}% of labels."
                         .format(numPlaces / 270), end="\r")
+        # print newline after last update with carriage return
         print()
 
 if __name__ == "__main__":
@@ -283,6 +288,11 @@ if __name__ == "__main__":
 
     # allow levels of verbosity 
     VVFLAG = "-v" in sys.argv
+
+    # allow -k n to choose number of rows of data to gather
+    NDATA = 0
+    MAXFLAG = int(config['nData'] if "-k" not in sys.argv else 
+                  sys.argv[sys.argv.index("-k") + 1])
 
     # create filenames
     ENDFILENAME = config['final_data_filename']
