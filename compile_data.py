@@ -90,6 +90,7 @@ def writeLabelInfo(f, folder, LABELWRITER):
         # make sure the name isn't actually a comment on the race conditions
         if (len(entry['B_Horse']) < 30 and 
             entry['L_BSF'] != "-"):
+            entry.update({"ID": NDATA})
             LABELWRITER.writerow(entry)
             NDATA += 1
             if NDATA >= MAXFLAG:
@@ -236,6 +237,7 @@ def get_input_data(INPUTFN, LABELFN):
             for horse in races[int(label['R_RCRace']) - 1]:
                 # when we reach the right entry, we write it to file
                 if label['B_Horse'] == horse['B_Horse']:
+                    horse.update({"ID":label["ID"]})
                     inputWriter.writerow(horse)
                     labelWritten = True
 
