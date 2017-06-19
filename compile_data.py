@@ -271,19 +271,15 @@ def get_input_data(INPUTFN, LABELFN):
                 # find the row with the largest ratio of common letters
                 closestRow = max(names, key=lambda x:x[1], default=0)
 
-                # if the closest row doesn't exist or pass the threshold, 
-                if closestRow == 0 or closestRow[1] < .7:
-                    # then label the data as missing
-                    row = raceInfo.copy()
-                    row.update({"missing":1, "B_Horse":label['B_Horse']})
-                    closestRow = (row, 0)
+                # if the closest row exists and passes the threshold, 
+                if closestRow != 0 and closestRow[1] > .7:
+                    # write the closestRow to the file, 
+                    inputWriter.writerow(closestRow[0])
 
-                # write the closestRow to the file, 
-                # labelled missing if we couldn't find the data
-                inputWriter.writerow(closestRow[0])
             numPlaces += 1
             print("Fetched data for roughly {0:.2f}% of labels."
                         .format(numPlaces / 270), end="\r")
+        # print newline after last update with carriage return
         print()
 
 if __name__ == "__main__":
