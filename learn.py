@@ -61,57 +61,70 @@ def split_data(d, l, r):
 if __name__ == "__main__":
     config = yaml.safe_load(open("./config.yml"))
 
-    print("Loading Data ... ", end='\r')
+    #print("Loading Data ... ", end='\r')
     data = read_data(config['final_data_filename'])
     targets = read_output("LABELS." + config['final_data_filename'], data)
-    print("Loading Data ...................... Loaded!")
+    #print("Loading Data ...................... Loaded!")
 
-    print("Splitting training data ... ", end='\r')
-    training, test = split_data(data, targets, .95)
-    tData, tLabels = training
-    testData, testLabels = test
-    print("Splitting training data ........... Split!")
+    
+    for n in range(10,1500):
+        #print("Splitting training data ... ", end='\r')
+        training, test = split_data(data, targets, .95)
+        tData, tLabels = training
+        testData, testLabels = test
+        #print("Splitting training data ........... Split!")
 
-    print("Hashing Features ... ", end='\r')
-    fh = FeatureHasher(input_type='string')
-    tData = fh.fit_transform(tData, tLabels)
-    testData = fh.transform(testData)
-    print("Hashing Features .................. Hashed!")
+        #print("Hashing Features ... ", end='\r')
+        fh = FeatureHasher(input_type='string')
+        tData = fh.fit_transform(tData, tLabels)
+        testData = fh.transform(testData)
+        #print("Hashing Features .................. Hashed!")
 
-    print("Continuizing Discrete Variables ... ", end='\r')
-    # TODO: get array of indices that represents which columns are categorical
-    #cat_feats = []
-    #enc = OneHotEncoder(categorical_features=cat_feats)
-    #tData = enc.fit_transform(tData)
-    #testData = enc.transform(testData)
-    print("Continuizing Discrete Variables ... Continuized!")
+        #print("Continuizing Discrete Variables ... ", end='\r')
+        # TODO: get array of indices that represents which columns are categorical
+        #cat_feats = []
+        #enc = OneHotEncoder(categorical_features=cat_feats)
+        #tData = enc.fit_transform(tData)
+        #testData = enc.transform(testData)
+        #print("Continuizing Discrete Variables ... Continuized!")
 
-    print("Pruning Features ... ", end='\r')
-    kBest = SelectKBest(k=1000)
-    tData = kBest.fit_transform(tData, tLabels)
-    testData = kBest.transform(testData)
-    print("Pruning Features .................. Pruned!")
+        #print("Pruning Features ... ", end='\r')
+        kBest = SelectKBest(k=n)
+        tData = kBest.fit_transform(tData, tLabels)
+        testData = kBest.transform(testData)
+        #print("Pruning Features .................. Pruned!")
 
-    #print("Dimensions of data:")
-    #print("    data: [{}]".format(data.shape))
-    #print(" targets: [{}]".format(len(targets)))
+        #print("Dimensions of data:")
+        #print("    data: [{}]".format(data.shape))
+        #print(" targets: [{}]".format(len(targets)))
 
-    # TODO split training data with labels, 
-    # fit estimator on training, then predict on test data
-    estimator = SVR(kernel="linear")
-    estimator.fit(tData, tLabels)
-    preds = estimator.predict(testData)
-    deltas = []
+        # TODO split training data with labels, 
+        # fit estimator on training, then predict on test data
+        #print("Fitting Data ... ", end='\r')
+        estimator = SVR(kernel="linear", epsilon=0.05)
+        estimator.fit(tData, tLabels)
+        #print("Fitting Data ...................... Fit!")
 
-    for p, l in zip(preds, testLabels):
-        # input, output = data # (test, testlabels) from split_data
-        # write to file the outputs
-        print("Guess: {},   Actual: {},  delta: {}.".format(p, l, p-l))
-        deltas.append(p-l)
+        #print("Predicting Outcomes ... ", end='\r')
+        preds = estimator.predict(testData)
+        #print("Predicting Outcomes ............... Predicted!")
 
-    print()
-    print("average delta:", sum([abs(x) for x in deltas])/len(deltas))
-    print("avg precision score:", metrics.average_precision_score(testLabels, preds))
+        deltas = [abs(p-l) for p, l in zip(preds, testLabels)]
+        #for p, l in zip(preds, testLabels):
+            # input, output = data # (test, testlabels) from split_data
+            # write to file the outputs
+            #print("Guess: {:.2f},   Actual: {},  delta: {:.2f}.".format(p,l,p-l))
+            #deltas.append(abs(p-l))
+
+        print()
+        print("With {} features selected: ".format(n))
+        print("     average delta:", sum(deltas)/len(deltas))
+        print("explained variance:",metrics.explained_variance_score(testLabels, preds))
+        print("        mean error:",metrics.mean_absolute_error(testLabels, preds))
+        print("      mean^2 error:",metrics.mean_squared_error(testLabels, preds))
+        print("      median error:",metrics.median_absolute_error(testLabels, preds))
+        print("               r^2:",metrics.r2_score(testLabels, preds))
+        print()
 
     quit()
 
