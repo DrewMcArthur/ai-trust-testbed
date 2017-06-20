@@ -82,9 +82,6 @@ def writeLabelInfo(f, folder, LABELWRITER):
             labeldata.append(entry)
             rank += 1
 
-    # sort the data by horse name (track, race #, date are all identical)
-    #labeldata.sort(key=lambda x: (x["B_Horse"]))
-
     # write the entries in labeldata to file
     for entry in labeldata:
         # double check entry for missing data before writing
@@ -283,8 +280,8 @@ def get_input_data(INPUTFN, LABELFN):
                     inputWriter.writerow(closestRow[0])
 
             numPlaces += 1
-            print("Fetched data for roughly {0:.2f}% of labels."
-                        .format(numPlaces / 270), end="\r")
+            print("Fetched data for {0:.2f}% of labels."
+                        .format(numPlaces / (NDATA/100)), end="\r")
         # print newline after last update with carriage return
         print()
 
