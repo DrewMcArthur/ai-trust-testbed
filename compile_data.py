@@ -83,15 +83,18 @@ def writeLabelInfo(f, folder, LABELWRITER):
             rank += 1
 
     # sort the data by horse name (track, race #, date are all identical)
-    labeldata.sort(key=lambda x: (x["B_Horse"]))
+    #labeldata.sort(key=lambda x: (x["B_Horse"]))
 
     # write the entries in labeldata to file
     for entry in labeldata:
-        # make sure the name isn't actually a comment on the race conditions
+        # double check entry for missing data before writing
         if (len(entry['B_Horse']) < 30 and 
             entry['L_BSF'] != "-" and
             entry['L_BSF'] != "-0" and
-            entry['L_BSF'] != ""):
+            entry['L_BSF'] != '' and
+            entry['L_BSF'] != None and
+            entry['L_Time'] != '' and
+            entry['L_Time'] != None ):
             entry.update({"ID": NDATA})
             LABELWRITER.writerow(entry)
             NDATA += 1
@@ -311,7 +314,8 @@ if __name__ == "__main__":
     # okay, go!
     print("Creating", LABELFILENAME, "...")
 
-    create_labels()
+    if "--skip-labels" not in sys.argv:
+        create_labels()
 
     print("Scraping",DATA,"for training data ...")
 
