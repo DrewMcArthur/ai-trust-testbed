@@ -3,13 +3,18 @@
  *  6/14/17
  *  testing out sklearn on horse racing data
 """
-from sklearn import svm
+
+from sklearn.svm import SVR
 from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction import FeatureHasher
+from sklearn.feature_selection import RFECV
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import VarianceThreshold
+from sklearn.decomposition import TruncatedSVD
 from sklearn.decomposition import PCA
+from sklearn.pipeline import Pipeline
 import yaml, csv, random
 
 def read_data(filename):
@@ -22,15 +27,19 @@ def read_data(filename):
             r.append(row)
         return r
 
-def read_output(filename):
+def read_output(filename, data):
     """ returns an array of outputs """
+
+    IDs = [d[0] for d in data]
+
     # read labels.data.csv
     with open(filename) as lFile:
         labelreader = csv.DictReader(lFile, dialect='unix')
         r = []
         # iterate through the file and keep track of times
         for row in labelreader:
-            r.append(row['L_BSF'])
+            if row['ID'] in IDs:
+                r.append(int(row['L_BSF']))
         return r
 
 def split_data(d, r):
@@ -46,83 +55,36 @@ def split_data(d, r):
 if __name__ == "__main__":
     config = yaml.safe_load(open("./config.yml"))
 
-    print("Loading data ... ", end='\r')
-    inputs = read_data(config['final_data_filename'])
-    outputs = read_output("LABELS." + config['final_data_filename'])
-    print("Loading data ......... Loaded!")
+    print("Loading Data ... ", end='\r')
+    data = read_data(config['final_data_filename'])
+    targets = read_output("LABELS." + config['final_data_filename'], data)
+    print("Loading Data ......... Loaded!")
 
-    """
-    print("Converting data from strings to floats ... ", end='\r')
-    for col in range(len(inputs[0])):
-        if isinstance(inputs[0][col], str):
-            S = set([row[col] for row in inputs])
-            D = dict( zip(S, range(len(S))) )
-            Y = [D[row[col]] for row in inputs]
-            for i in range(len(Y)):
-                inputs[i][col] = Y[i]
-    print("Converting data from strings to floats ... Converted!")
-    print("Transforming data ... ", end='\r')
-    # dictionary vectorizor method, which throws a MemoryError
-    # vec = DictVectorizer()
-    # inputs = vec.fit_transform(inputs).toarray()
+    print("Hashing Features ... ", end='\r')
+    fh = FeatureHasher(input_type='string')
+    data = fh.fit_transform(data, targets)
+    print("Hashing Features ... Hashed!")
 
-    # feature hasher, apparently lower on memory
-    fh = FeatureHasher()
-    inputs = fh.fit_transform(inputs).toarray()
-    print("Transforming data .... Transformed!")
-    """
+    print("Pruning Features ... ", end='\r')
+    estimator = SVR(kernel="linear")
+    selector = RFECV(estimator)
+    selector.fit_transform(data, targets)
+    print("Pruning Features ... Pruned!")
 
-    print("Preprocessing data ... ", end='\r')
-    lb = LabelEncoder()
-    inputs = lb.fit_transform(inputs)
-    print("Preprocessing data ... ", end='\r')
-
-    print("Selecting features ... ", end='\r')
-    #selector = VarianceThreshold(threshold=.16)
-    #inputs = selector.fit_transform(inputs)
-    print("Selecting features ... Selected!")
-    print(inputs)
-
-    print("Running PCA ... ", end='\r')
-    pcaObj = PCA(n_components=50)
-    inputs = pcaObj.fit_transform(inputs)
-    print("Running PCA .......... PCA Complete!")
-
-    print(inputs)
-    print(inputs.toArray())
+    print("Data is of shape:", data.shape)
     quit()
 
+    recursive_feature_pruner
 
-    print("Splitting data ... ")
-    data = [(inputs[i], outputs[i]) for i in range(len(inputs))]
-    training, test = split_data(data, .75)
+    kBest = SelectKBest()
 
-    trainX = [x[0] for x in training]
-    trainY = [y[1] for y in training]
-    print("                 Split!")
-    print("There are {} rows in training and {} rows in test."
-                .format(len(training), len(test)))
+    tSVD = TruncatedSVD(n_components=50)
+    pca = PCA(n_components=50)
 
-    for _ in range(10):
-        print()
-
-    [print(x) for x in trainX]
-    [print(y) for y in trainY]
-
-    print("Training regression model ... ")
-    clf = svm.SVR()
-    clf.fit(trainX, trainY)
-    print("                 Trained!")
-
-    nCorrect = 0.0
-    nTotal = 0
-
-    print("Testing model ... ")
-    for x, y in test:
-        yP = clf.predict(datum)
-        if y == yP:
-            nCorrect += 1.0
-        nTotal += 1
-    print("                 Tested!")
-
-    print("Accuracy:", str(nCorrect/nTotal))
+    pipe = Pipeline([("kb", kBest),
+                     ("svd", tSVD),
+                     ("clf", clf)
+                    ])
+    pipe.fit_transform(data, targets)
+    prediction = pipe.predict(data)
+    pipe.score(data, targets)
