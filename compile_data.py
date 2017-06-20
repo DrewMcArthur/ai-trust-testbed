@@ -76,7 +76,7 @@ def writeLabelInfo(f, folder, LABELWRITER):
 
             entry.update({"L_Time": t["Fin"]})
 
-            entry = formatData(entry)
+            entry = formatDateTime(entry)
 
             # add entry to list and update rank
             labeldata.append(entry)
@@ -165,8 +165,8 @@ def fixDate(d):
     #[print() for _ in range(10)]
     return r
 
-def formatData(row):
-    """function which returns a row that is formatted nicely for the AI"""
+def formatDateTime(row):
+    """function which returns a row that has a nicely formatted date and time"""
 
     if row['L_Time'] == None or row['L_Time'] == '':
         return row
@@ -186,6 +186,25 @@ def formatData(row):
     row['R_RCDate'] = fixDate(row['R_RCDate'])
 
     return row
+
+def formatR_RaceBred(row):
+    """format the R_RaceBred column nicely"""
+
+    breedDict = {'':0, 'T':0, 'N':1, 'Q':2, 'R':3, 'P':4, 'O':5, 'S':6, 'M':7}
+    row['R_RaceBred'] = breedDict[row['R_RaceBred']]
+
+
+def formatR_StateBred(row):
+    """format the R_StateBred column nicely"""
+
+def formatData(row):
+    """function which returns a row that is formatted nicely for the AI"""
+
+    #format the date and time
+    formatDateTime(row)
+
+    #format the R_RaceBred column
+    formatR_RaceBred(row)
 
 def get_race_info(row):
     """ returns a dictionary, given a row, of all the race-specific information.
