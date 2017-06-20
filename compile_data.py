@@ -89,7 +89,9 @@ def writeLabelInfo(f, folder, LABELWRITER):
     for entry in labeldata:
         # make sure the name isn't actually a comment on the race conditions
         if (len(entry['B_Horse']) < 30 and 
-            entry['L_BSF'] != "-"):
+            entry['L_BSF'] != "-" and
+            entry['L_BSF'] != "-0" and
+            entry['L_BSF'] != ""):
             entry.update({"ID": NDATA})
             LABELWRITER.writerow(entry)
             NDATA += 1
@@ -274,6 +276,7 @@ def get_input_data(INPUTFN, LABELFN):
                 # if the closest row exists and passes the threshold, 
                 if closestRow != 0 and closestRow[1] > .7:
                     # write the closestRow to the file, 
+                    closestRow[0].update({"ID":label["ID"]})
                     inputWriter.writerow(closestRow[0])
 
             numPlaces += 1
