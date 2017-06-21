@@ -11,6 +11,7 @@ from sklearn.feature_extraction import DictVectorizer, FeatureHasher
 from sklearn.feature_selection import RFECV, SelectKBest, VarianceThreshold
 from sklearn.decomposition import TruncatedSVD, PCA
 from sklearn.pipeline import Pipeline, make_pipeline
+from joblib import Parallel, delayed
 import yaml, csv, random
 
 def read_data(filename):
@@ -91,5 +92,5 @@ if __name__ == "__main__":
     data = read_data(config['final_data_filename'])
     targets = read_output("LABELS." + config['final_data_filename'], data)
 
-    Ns = [122, 131, 137, 151, 152, 155, 157, 158, 159]
-    [test_n_features(n, data, targets) for n in Ns]
+    Ns = range(150, 1500, 5)
+    Parallel(n_jobs=4)(delayed(test_n_features)(n, data, targets) for n in Ns)
