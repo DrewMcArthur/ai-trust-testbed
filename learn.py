@@ -92,5 +92,5 @@ if __name__ == "__main__":
     data = read_data(config['final_data_filename'])
     targets = read_output("LABELS." + config['final_data_filename'], data)
 
-    Ns = range(150, 1500, 5)
-    Parallel(n_jobs=4)(delayed(test_n_features)(n, data, targets) for n in Ns)
+    Ns = range(1250, 1800, 2)
+    Parallel(n_jobs=6)(delayed(test_n_features)(n, data, targets) for n in Ns)
