@@ -12,7 +12,7 @@ from sklearn.feature_selection import RFECV, SelectKBest, VarianceThreshold
 from sklearn.decomposition import TruncatedSVD, PCA
 from sklearn.pipeline import Pipeline, make_pipeline
 from joblib import Parallel, delayed
-import yaml, csv, random
+import yaml, csv, random, time
 
 def read_data(filename):
     """ returns an array of the data """
@@ -55,6 +55,8 @@ def split_data(d, l, r):
     return ((d,l), (test,testlabels))
 
 def test_n_features(n, Xs, Ys):
+    beg = time.time()
+
     training, test = split_data(Xs, Ys, .90)
     x_train, y_train = training
     x_test, y_test = test
@@ -75,6 +77,8 @@ def test_n_features(n, Xs, Ys):
 
     deltas = [abs(p-l) for p, l in zip(y_pred, y_test)]
 
+    end = time.time()
+
     # open output.csv and append a row to it consisting of 
     # the number of features, the avg. error, 
     # the explained variance, and r^2
@@ -82,6 +86,7 @@ def test_n_features(n, Xs, Ys):
         oWriter = csv.writer(oFile, dialect='unix',
                              quoting=csv.QUOTE_MINIMAL)
         oWriter.writerow([n, 
+                          end - beg,
                           sum(deltas)/len(deltas),
                           explained_variance_score(y_test, y_pred),
                           r2_score(y_test, y_pred)])
