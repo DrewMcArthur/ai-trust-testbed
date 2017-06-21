@@ -56,10 +56,8 @@ def split_data(d, l, r):
 if __name__ == "__main__":
     config = yaml.safe_load(open("./config.yml"))
 
-    #print("Loading Data ... ", end='\r')
     data = read_data(config['final_data_filename'])
     targets = read_output("LABELS." + config['final_data_filename'], data)
-    #print("Loading Data ...................... Loaded!")
 
     
     for n in [122, 131, 137, 151, 152, 155, 157, 158, 159]:
@@ -67,7 +65,7 @@ if __name__ == "__main__":
         x_train, y_train = training
         x_test, y_test = test
 
-        # TODO: get array of indices that represents which columns are categorical
+        # TODO: get array of indices that represents the categorical columns
         #       this would go second, after feature hashing
         #cat_feats = []
         #enc = OneHotEncoder(categorical_features=cat_feats)
