@@ -53,49 +53,43 @@ def split_data(d, l, r):
         testlabels.append(l.pop(i))
     return ((d,l), (test,testlabels))
 
+def test_n_features(n, Xs, Ys):
+    training, test = split_data(Xs, Ys, .90)
+    x_train, y_train = training
+    x_test, y_test = test
+
+    # TODO: get array of indices that represents the categorical columns
+    #       this would go second, after feature hashing
+    #cat_feats = []
+    #enc = OneHotEncoder(categorical_features=cat_feats)
+
+    fh = FeatureHasher(input_type='string')
+    kBest = SelectKBest(k=n)
+    estimator = SVR(kernel="linear", epsilon=0.05)
+
+    pipe = make_pipeline(fh, kBest, estimator)
+
+    pipe.fit(x_train, y_train)
+    y_pred = pipe.predict(x_test)
+
+    deltas = [abs(p-l) for p, l in zip(y_pred, y_test)]
+
+    # open output.csv and append a row to it consisting of 
+    # the number of features, the avg. error, 
+    # the explained variance, and r^2
+    with open("output.csv", 'a', newline='') as oFile:
+        oWriter = csv.writer(oFile, dialect='unix',
+                             quoting=csv.QUOTE_MINIMAL)
+        oWriter.writerow([n, 
+                          sum(deltas)/len(deltas),
+                          explained_variance_score(y_test, y_pred),
+                          r2_score(y_test, y_pred)])
+
 if __name__ == "__main__":
     config = yaml.safe_load(open("./config.yml"))
 
     data = read_data(config['final_data_filename'])
     targets = read_output("LABELS." + config['final_data_filename'], data)
 
-    
-    for n in [122, 131, 137, 151, 152, 155, 157, 158, 159]:
-        training, test = split_data(data, targets, .90)
-        x_train, y_train = training
-        x_test, y_test = test
-
-        # TODO: get array of indices that represents the categorical columns
-        #       this would go second, after feature hashing
-        #cat_feats = []
-        #enc = OneHotEncoder(categorical_features=cat_feats)
-
-        fh = FeatureHasher(input_type='string')
-        kBest = SelectKBest(k=n)
-        estimator = SVR(kernel="linear", epsilon=0.05)
-
-        pipe = make_pipeline(fh, kBest, estimator)
-
-        pipe.fit(x_train, y_train)
-        y_pred = pipe.predict(x_test)
-
-        deltas = [abs(p-l) for p, l in zip(y_pred, y_test)]
-
-        # open output.csv and append a row to it consisting of 
-        # the number of features, the avg. error, 
-        # the explained variance, and r^2
-        with open("output.csv", 'a', newline='') as oFile:
-            oWriter = csv.writer(oFile, dialect='unix',
-                                 quoting=csv.QUOTE_MINIMAL)
-            oWriter.writerow([n, 
-                              sum(deltas)/len(deltas),
-                              explained_variance_score(y_test, y_pred),
-                              r2_score(y_test, y_pred)])
-
-    quit()
-
-    selector = RFECV(estimator)
-    data = selector.fit_transform(data, targets)
-
-    tSVD = TruncatedSVD(n_components=50)
-    pca = PCA(n_components=50)
+    Ns = [122, 131, 137, 151, 152, 155, 157, 158, 159]
+    [test_n_features(n, data, targets) for n in Ns]
