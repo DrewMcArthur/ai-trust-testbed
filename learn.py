@@ -4,18 +4,13 @@
  *  testing out sklearn on horse racing data
 """
 
-from sklearn import metrics
+from sklearn.metrics import explained_variance_score, r2_score
 from sklearn.svm import SVR
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.feature_extraction import DictVectorizer
-from sklearn.feature_extraction import FeatureHasher
-from sklearn.feature_selection import RFECV
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import VarianceThreshold
-from sklearn.decomposition import TruncatedSVD
-from sklearn.decomposition import PCA
-from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.feature_extraction import DictVectorizer, FeatureHasher
+from sklearn.feature_selection import RFECV, SelectKBest, VarianceThreshold
+from sklearn.decomposition import TruncatedSVD, PCA
+from sklearn.pipeline import Pipeline, make_pipeline
 import yaml, csv, random
 
 def read_data(filename):
@@ -67,64 +62,37 @@ if __name__ == "__main__":
     #print("Loading Data ...................... Loaded!")
 
     
-    for n in range(10,1500):
-        #print("Splitting training data ... ", end='\r')
-        training, test = split_data(data, targets, .95)
-        tData, tLabels = training
-        testData, testLabels = test
-        #print("Splitting training data ........... Split!")
+    for n in [122, 131, 137, 151, 152, 155, 157, 158, 159]:
+        training, test = split_data(data, targets, .90)
+        x_train, y_train = training
+        x_test, y_test = test
 
-        #print("Hashing Features ... ", end='\r')
-        fh = FeatureHasher(input_type='string')
-        tData = fh.fit_transform(tData, tLabels)
-        testData = fh.transform(testData)
-        #print("Hashing Features .................. Hashed!")
-
-        #print("Continuizing Discrete Variables ... ", end='\r')
         # TODO: get array of indices that represents which columns are categorical
+        #       this would go second, after feature hashing
         #cat_feats = []
         #enc = OneHotEncoder(categorical_features=cat_feats)
-        #tData = enc.fit_transform(tData)
-        #testData = enc.transform(testData)
-        #print("Continuizing Discrete Variables ... Continuized!")
 
-        #print("Pruning Features ... ", end='\r')
+        fh = FeatureHasher(input_type='string')
         kBest = SelectKBest(k=n)
-        tData = kBest.fit_transform(tData, tLabels)
-        testData = kBest.transform(testData)
-        #print("Pruning Features .................. Pruned!")
-
-        #print("Dimensions of data:")
-        #print("    data: [{}]".format(data.shape))
-        #print(" targets: [{}]".format(len(targets)))
-
-        # TODO split training data with labels, 
-        # fit estimator on training, then predict on test data
-        #print("Fitting Data ... ", end='\r')
         estimator = SVR(kernel="linear", epsilon=0.05)
-        estimator.fit(tData, tLabels)
-        #print("Fitting Data ...................... Fit!")
 
-        #print("Predicting Outcomes ... ", end='\r')
-        preds = estimator.predict(testData)
-        #print("Predicting Outcomes ............... Predicted!")
+        pipe = make_pipeline(fh, kBest, estimator)
 
-        deltas = [abs(p-l) for p, l in zip(preds, testLabels)]
-        #for p, l in zip(preds, testLabels):
-            # input, output = data # (test, testlabels) from split_data
-            # write to file the outputs
-            #print("Guess: {:.2f},   Actual: {},  delta: {:.2f}.".format(p,l,p-l))
-            #deltas.append(abs(p-l))
+        pipe.fit(x_train, y_train)
+        y_pred = pipe.predict(x_test)
 
-        print()
-        print("With {} features selected: ".format(n))
-        print("     average delta:", sum(deltas)/len(deltas))
-        print("explained variance:",metrics.explained_variance_score(testLabels, preds))
-        print("        mean error:",metrics.mean_absolute_error(testLabels, preds))
-        print("      mean^2 error:",metrics.mean_squared_error(testLabels, preds))
-        print("      median error:",metrics.median_absolute_error(testLabels, preds))
-        print("               r^2:",metrics.r2_score(testLabels, preds))
-        print()
+        deltas = [abs(p-l) for p, l in zip(y_pred, y_test)]
+
+        # open output.csv and append a row to it consisting of 
+        # the number of features, the avg. error, 
+        # the explained variance, and r^2
+        with open("output.csv", 'a', newline='') as oFile:
+            oWriter = csv.writer(oFile, dialect='unix',
+                                 quoting=csv.QUOTE_MINIMAL)
+            oWriter.writerow([n, 
+                              sum(deltas)/len(deltas),
+                              explained_variance_score(y_test, y_pred),
+                              r2_score(y_test, y_pred)])
 
     quit()
 
@@ -133,9 +101,3 @@ if __name__ == "__main__":
 
     tSVD = TruncatedSVD(n_components=50)
     pca = PCA(n_components=50)
-
-    pipe = Pipeline([("kb", kBest),
-                     ("svd", tSVD),
-                     ("clf", clf)
-                    ])
-    data = pipe.fit_transform(data, targets)
