@@ -4,16 +4,4 @@ A program designed for a study involving participants' trust in an artificial in
 Data used for the AI will be located in `data/`, which is a symlink to the shared directory `/opt/summer17/data`.
 This will contain data from the formulator website, as it was downloaded.  A user can run `compile_data.py` (after configuring the compilation in `config.py`), which scrapes the data found in the linked directory to generate a single (large) data file for use for a given AI, depending on the settings found in the config file.  This file can be found at `data.csv` by default.
 
-This data will be compiled for one of three problems, each to by solved by their own AI (and therefore requiring different forms of the data).  In the config file, these problems are referred to as `PREDICT_TIME_AI`, `PREDICT_BSF_AI`, and `PREDICT_WINNER_AI`.  
-
-- `PREDICT_TIME_AI` (1): 
-    - Input: Information on a horse for a specific race, as well as the race conditions
-    - Output: The horse's finishing time for that race
-
-- `PREDICT_BSF_AI` (2): 
-    - Input: Information on a horse for a specific race, as well as the race conditions
-    - Output: The horse's Beyer Speed Figure for that race
-
-- `PREDICT_WINNER_AI` (3): 
-    - Input: information on two horses for a specific race, as well as the race conditions
-    - Output: Indication which horse wins the race
+Once the data has been compiled into `data.csv` and `LABELS.data.csv`, then `learn.py` can be run to, using SciKit Learn, fit to the data and predict either finishing time or Beyer Speed Figures of horses.
