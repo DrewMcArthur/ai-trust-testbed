@@ -78,7 +78,7 @@ def writeLabelInfo(f, folder, LABELWRITER):
 
             entry.update({"L_Time": t["Fin"]})
 
-            entry = formatDateTime(entry)
+            entry = formatLabel(entry)
 
             # add entry to list and update rank
             labeldata.append(entry)
@@ -170,7 +170,7 @@ def fixDate(d):
     #[print() for _ in range(10)]
     return r
 
-def formatDateTime(row):
+def formatLabel(row):
     """function which returns a row that has a nicely formatted date and time"""
 
     if row['L_Time'] == None or row['L_Time'] == '':
@@ -195,21 +195,129 @@ def formatDateTime(row):
 def formatR_RaceBred(row):
     """format the R_RaceBred column nicely"""
 
+    #check that the column hasn't been changed yet
+    if type(row['R_RaceBred']) == type(0):
+        return 
+
     breedDict = {'':0, 'T':0, 'N':1, 'Q':2, 'R':3, 'P':4, 'O':5, 'S':6, 'M':7}
     row['R_RaceBred'] = breedDict[row['R_RaceBred']]
+    for i in range(1, 13):
+        row['HR_Breed_'+str(i)] = breedDict[row['HR_Breed_'+str(i)]]
 
+def formatHR_Entry(row):
+    """format all of the HR_Entry columns nicely"""
+
+    if type(row['HR_Entries_1']) == type(0):
+        return
+
+    entryDict = {'':0, 'E':1, 'F':2}
+    for i in range(1, 13):
+        row['HR_Entries_'+str(i)] = entryDict[row['HR_Entries_'+str(i)]]
 
 def formatR_StateBred(row):
     """format the R_StateBred column nicely"""
+    
+    #check that the column hasn't been changed yet
+    if type(row['R_StateBred']) == type(0):
+        return
+
+    stateDict = {'':0, 'S':1, 'R':2}
+    row['R_StateBred'] = stateDict[row['R_StateBred']]
+
+def formatR_Inner(row):
+    """format the R_Inner column nicely"""
+
+    #check that the column hasn't been changed yet
+    if type(row['R_Inner']) == type(0):
+        return
+    
+    innerDict = {'':0, 'I':1, 'O':2, 'J':3, 'P':4, 'C':5, '/':6, '-':7}
+    row['R_Inner'] = innerDict[row['R_Inner']]
+    for i in range(1, 13):
+        row['HR_Inner_'+str(i)] = innerDict[row['HR_Inner_'+str(i)]]
+
+def formatR_RaceType(row):
+    """format the R_RaceType column nicely"""
+
+    #check that the column hasn't been changed yet
+    if type(row['R_RaceType']) == type(0):
+        return
+
+    typeDict = {'':0, 'A':1, 'C':2, 'N':3, 'S':4}
+    row['R_RaceType'] = typeDict[row['R_RaceType']]
+
+def formatH_AeMto(row):
+    """format the H_AeMto column nicely""" 
+
+    #check that the column hasn't been changed yet
+    if type(row['H_AeMto']) == type(0):
+        return
+
+    AeMtoDict = {'':0, 'A': 1, 'M':2}
+    row['H_AeMto'] = AeMtoDict[row['H_AeMto']]
+
+def formatH_Entry(row):
+    
+    if type(row['H_Entry']) == type(0):
+        return
+    
+    if row['H_Entry'] == '':
+        row['H_Entry'] = 0
+        return
+
+    #turn the entry into the int number of the alphabet it is
+    row['H_Entry'] = ord(row['H_Entry']) - 66
+
+def formatTimeformCodes(row):
+    """format all of the timeform code columns"""
+
+    if type(row['HR_TimeformCode_1']) == type(0):
+        return
+
+    timeformDict = {'':0, 'p':1, 'P':2, '?':3, '+':4, '-':5}
+    for i in range(1,13):
+        row['HR_TimeformCode_'+str(i)] = \
+            timeformDict[row['HR_TimeformCode_'+str(i)]]
+
+def formatHR_DH(row):
+    """format the HR_DH rows"""
+
+    if type(row['HR_DH_1']) == type(0):
+        return
+
+    HR_DHdict = {'':0, '-':1, 'Y':2}
+    for i in range(1, 13):
+        row['HR_DH_'+str(i)] = HR_DHdict[row['HR_DH_'+str(i)]]
+
+def formatBinaryCols(row):
+    """format nicely the columns with binary values"""
+    
+    if type(row['HR_SealedTrack_1']) == type(0):
+        return
+
+    binaryDict = {'':0, 'Y':1}
+    for i in range(1, 13):
+        row['HR_SealedTrack_'+str(i)] = \
+        binaryDict[row['HR_SealedTrack_'+str(i)]]
+
+    for i in range(1, 7):
+        row['W_Bullet_'+str(i)] = binaryDict[row['W_Bullet_'+str(i)]]
 
 def formatData(row):
     """function which returns a row that is formatted nicely for the AI"""
 
-    #format the date and time
-    formatDateTime(row)
-
-    #format the R_RaceBred column
+    #format columns with these functions
     formatR_RaceBred(row)
+    formatR_StateBred(row)
+    formatR_Inner(row)
+    formatR_RaceType(row)
+    formatH_AeMto(row) 
+    formatH_Entry(row)
+    formatTimeformCodes(row)
+    formatHR_DH(row)
+    formatHR_Entry(row)
+    formatBinaryCols(row)
+    
 
 def get_race_info(row):
     """ returns a dictionary, given a row, of all the race-specific information.
@@ -298,6 +406,7 @@ def get_input_data(INPUTFN, LABELFN):
                 # when we reach the right entry, we write it to file
                 if label['B_Horse'] == horse['B_Horse']:
                     horse.update({"ID":label["ID"]})
+                    formatData(horse)
                     inputWriter.writerow(horse)
                     labelWritten = True
 
@@ -333,7 +442,8 @@ def get_input_data(INPUTFN, LABELFN):
 
                 # if the closest row exists and passes the threshold, 
                 if closestRow != 0 and closestRow[1] > .7:
-                    # write the closestRow to the file, 
+                    # write the closestRow to the file,
+                    formatData(closestRow[0])
                     inputWriter.writerow(closestRow[0])
 
             numPlaces += 1
