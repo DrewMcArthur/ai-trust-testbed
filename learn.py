@@ -25,6 +25,13 @@ def read_data(filename):
         r.sort(key=lambda x:x[0])
         return r
 
+def get_label(row):
+    # Beyer Figure
+    #return int(row['L_BSF'])
+
+    # Time
+    return int(round(float(row['L_Time'])*100))
+
 def read_output(filename, data):
     """ returns an array of outputs """
 
@@ -37,7 +44,7 @@ def read_output(filename, data):
         # iterate through the file and keep track of times
         for row in labelreader:
             if row['ID'] in IDs:
-                r.append((row['ID'], int(row['L_BSF'])))
+                r.append((row['ID'], get_label(row)))
         r.sort(key=lambda x:x[0])
         return [x[1] for x in r]
 
@@ -54,7 +61,7 @@ def split_data(d, l, r):
         testlabels.append(l.pop(i))
     return ((d,l), (test,testlabels))
 
-def test_n_features(n, Xs, Ys):
+def test_n_features(E, Xs, Ys):
     beg = time.time()
 
     training, test = split_data(Xs, Ys, .90)
@@ -67,8 +74,8 @@ def test_n_features(n, Xs, Ys):
     #enc = OneHotEncoder(categorical_features=cat_feats)
 
     fh = FeatureHasher(input_type='string')
-    kBest = SelectKBest(k=n)
-    estimator = SVR(kernel="linear", epsilon=0.05)
+    kBest = SelectKBest(k=1750)
+    estimator = SVR(kernel="linear", epsilon=E/100.0)
 
     pipe = make_pipeline(fh, kBest, estimator)
 
@@ -79,13 +86,15 @@ def test_n_features(n, Xs, Ys):
 
     end = time.time()
 
+    for d in deltas:
+        print(d)
     # open output.csv and append a row to it consisting of 
     # the number of features, the avg. error, 
     # the explained variance, and r^2
-    with open("output.csv", 'a', newline='') as oFile:
+    with open("timeoutput.csv", 'a', newline='') as oFile:
         oWriter = csv.writer(oFile, dialect='unix',
                              quoting=csv.QUOTE_MINIMAL)
-        oWriter.writerow([n, 
+        oWriter.writerow([E,
                           end - beg,
                           sum(deltas)/len(deltas),
                           explained_variance_score(y_test, y_pred),
@@ -97,5 +106,5 @@ if __name__ == "__main__":
     data = read_data(config['final_data_filename'])
     targets = read_output("LABELS." + config['final_data_filename'], data)
 
-    Ns = range(1250, 1800, 2)
-    Parallel(n_jobs=6)(delayed(test_n_features)(n, data, targets) for n in Ns)
+    Ns = range(1,51)
+    Parallel(n_jobs=3)(delayed(test_n_features)(n, data, targets) for n in Ns)
