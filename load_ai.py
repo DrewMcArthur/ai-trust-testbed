@@ -6,7 +6,11 @@
     call get_positions with the required arguments, and let the code do the rest
     need to slim data down using headers in config.yml
 
-    Note: Ordering may be backwards, depending on the heuristic.
+    TODO: select heuristic and therefore ordering of the list when it's sorted.
+          pass dictionary with only the desired headers
+          format data correctly, similar to compile_data.py
+                followup, should the function used there ^ be placed 
+                in a separate file for use in this script, etc.?
 """
 
 def get_raceInfo(horse):
