@@ -24,6 +24,10 @@ def get_raceInfo(horse):
     # for each key listed above, add it and it's value in horse
     [r.update({key: horse[key]}) for key in keys]
     return r
+
+def format_horsedata(horses):
+    """ given a list of dictionaries representing horses, 
+        return a list of modified dictionaries to clean up the data. """
     
 def load_horsedata(filename, n_race):
     """ given the path to a file containing horse data, and a specific race 
@@ -31,20 +35,21 @@ def load_horsedata(filename, n_race):
     with open(filename) as f:
         reader = csv.DictReader(f, dialect='unix')
         raceInfo = {}
+        horses = []
         for horse in reader:
+            # ensure that each row has all the information on the race
+            if getRaceInfo(horse) == {}:
+                horse.update(raceInfo)
+            else:
+                raceInfo = getRaceInfo(horse)
+
             # if this horse is in the race we want, add it to the list
             if horse['R_RCRace'] == n_race:
-                # ensure that each row has all the information on the race
-                if getRaceInfo(horse) == {}:
-                    horse.update(raceInfo)
-                else:
-                    raceInfo = getRaceInfo(horse)
-
                 horses.append(horse)
 
             # once we get all of the horses, return the list
             if len(horses) == horse['R_Starters']:
-                return horses
+                return format_horsedata(horses)
 
 def get_list_data(horses):
     """ given a list of dictionaries, 
