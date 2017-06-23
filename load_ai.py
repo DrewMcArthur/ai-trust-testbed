@@ -1,3 +1,14 @@
+""" Drew McArthur, 6/23/17
+    load_ai.py
+
+    contains methods used to generate an ordered list of horses in a race
+        based on their predicted finishing.  
+    call get_positions with the required arguments, and let the code do the rest
+    need to slim data down using headers in config.yml
+
+    Note: Ordering may be backwards, depending on the heuristic.
+"""
+
 def get_raceInfo(horse):
     """ given a dictionary representing a horse, 
         return a sub-dictionary containing info only relevant to the race. """
