@@ -2,6 +2,7 @@
 *.csv
 *.swp
 *.swo
+*.out
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

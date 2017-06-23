@@ -84,14 +84,16 @@ def writeLabelInfo(f, folder, LABELWRITER):
             labeldata.append(entry)
             rank += 1
 
-    # sort the data by horse name (track, race #, date are all identical)
-    labeldata.sort(key=lambda x: (x["B_Horse"]))
-
     # write the entries in labeldata to file
     for entry in labeldata:
-        # make sure the name isn't actually a comment on the race conditions
+        # double check entry for missing data before writing
         if (len(entry['B_Horse']) < 30 and 
-            entry['L_BSF'] != "-"):
+            entry['L_BSF'] != "-" and
+            entry['L_BSF'] != "-0" and
+            entry['L_BSF'] != '' and
+            entry['L_BSF'] != None and
+            entry['L_Time'] != '' and
+            entry['L_Time'] != None ):
             entry.update({"ID": NDATA})
             LABELWRITER.writerow(entry)
             NDATA += 1
@@ -303,6 +305,23 @@ def formatBinaryCols(row):
     for i in range(1, 7):
         row['W_Bullet_'+str(i)] = binaryDict[row['W_Bullet_'+str(i)]]
 
+def formatOdds(row):
+    """function which formats the odds column nicely"""
+
+    if type(row['B_MLOdds']) == type(0.0):
+        return 
+
+    divisor = ''
+    dividend = ''
+
+    while row['B_MLOdds'][0] != '-':
+        dividend += row['B_MLOdds'][0]
+        row['B_MLOdds'] = row['B_MLOdds'][1:]
+    
+    divisor += row['B_MLOdds'][1:]
+
+    row['B_MLOdds'] = int(dividend) / float(divisor)
+
 def formatData(row):
     """function which returns a row that is formatted nicely for the AI"""
 
@@ -317,6 +336,7 @@ def formatData(row):
     formatHR_DH(row)
     formatHR_Entry(row)
     formatBinaryCols(row)
+    formatOdds(row)
     
 
 def get_race_info(row):
@@ -442,13 +462,17 @@ def get_input_data(INPUTFN, LABELFN):
 
                 # if the closest row exists and passes the threshold, 
                 if closestRow != 0 and closestRow[1] > .7:
+
                     # write the closestRow to the file,
                     formatData(closestRow[0])
+                    # write the closestRow to the file, 
+                    closestRow[0].update({"ID":label["ID"]})
+
                     inputWriter.writerow(closestRow[0])
 
             numPlaces += 1
-            print("Fetched data for roughly {0:.2f}% of labels."
-                        .format(numPlaces / 270), end="\r")
+            print("Fetched data for {0:.2f}% of labels."
+                        .format(numPlaces / (NDATA/100)), end="\r")
         # print newline after last update with carriage return
         print()
 
@@ -478,7 +502,8 @@ if __name__ == "__main__":
     # okay, go!
     print("Creating", LABELFILENAME, "...")
 
-    create_labels()
+    if "--skip-labels" not in sys.argv:
+        create_labels()
 
     print("Scraping",DATA,"for training data ...")
 
