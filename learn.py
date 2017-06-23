@@ -61,7 +61,7 @@ def split_data(d, l, r):
         testlabels.append(l.pop(i))
     return ((d,l), (test,testlabels))
 
-def test_n_features(E, Xs, Ys):
+def test_n_features(Xs, Ys):
     beg = time.time()
 
     training, test = split_data(Xs, Ys, .90)
@@ -75,27 +75,28 @@ def test_n_features(E, Xs, Ys):
 
     fh = FeatureHasher(input_type='string')
     kBest = SelectKBest(k=1750)
-    estimator = SVR(kernel="linear", epsilon=E/100.0)
+    estimator = SVR(kernel="linear")
 
     pipe = make_pipeline(fh, kBest, estimator)
 
     pipe.fit(x_train, y_train)
+    joblib.dump(pipe, 'ai.pickle')
+
     y_pred = pipe.predict(x_test)
 
     deltas = [abs(p-l) for p, l in zip(y_pred, y_test)]
 
     end = time.time()
 
-    for d in deltas:
-        print(d)
+    #for d in deltas:
+        #print(d)
     # open output.csv and append a row to it consisting of 
     # the number of features, the avg. error, 
     # the explained variance, and r^2
-    with open("timeoutput.csv", 'a', newline='') as oFile:
+    with open("output.csv", 'a', newline='') as oFile:
         oWriter = csv.writer(oFile, dialect='unix',
                              quoting=csv.QUOTE_MINIMAL)
-        oWriter.writerow([E,
-                          end - beg,
+        oWriter.writerow([end - beg,
                           sum(deltas)/len(deltas),
                           explained_variance_score(y_test, y_pred),
                           r2_score(y_test, y_pred)])
@@ -106,5 +107,8 @@ if __name__ == "__main__":
     data = read_data(config['final_data_filename'])
     targets = read_output("LABELS." + config['final_data_filename'], data)
 
-    Ns = range(1,51)
-    Parallel(n_jobs=3)(delayed(test_n_features)(n, data, targets) for n in Ns)
+    #Ns = range(1,51)
+    #Parallel(n_jobs=2)(delayed(test_n_features)(n, data, targets) for n in Ns)
+    #[test_n_features(.1, data, targets) for _ in range(5)]
+
+    test_n_features(data, targets)
