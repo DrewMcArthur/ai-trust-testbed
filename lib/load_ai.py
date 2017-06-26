@@ -13,7 +13,9 @@
                 in a separate file for use in this script, etc.?
 """
 
-def get_raceInfo(horse):
+import joblib, csv
+
+def get_race_info(horse):
     """ given a dictionary representing a horse, 
         return a sub-dictionary containing info only relevant to the race. """
     r = {}
@@ -32,6 +34,7 @@ def get_raceInfo(horse):
 def format_horsedata(horses):
     """ given a list of dictionaries representing horses, 
         return a list of modified dictionaries to clean up the data. """
+    return horses
     
 def load_horsedata(filename, n_race):
     """ given the path to a file containing horse data, and a specific race 
@@ -42,39 +45,43 @@ def load_horsedata(filename, n_race):
         horses = []
         for horse in reader:
             # ensure that each row has all the information on the race
-            if getRaceInfo(horse) == {}:
+            if horse['R_RCRace'] == "":
                 horse.update(raceInfo)
             else:
-                raceInfo = getRaceInfo(horse)
+                raceInfo = get_race_info(horse)
 
             # if this horse is in the race we want, add it to the list
             if horse['R_RCRace'] == n_race:
                 horses.append(horse)
 
             # once we get all of the horses, return the list
-            if len(horses) == horse['R_Starters']:
+            if str(len(horses)) == horse['R_Starters']:
                 return format_horsedata(horses)
 
 def get_list_data(horses):
     """ given a list of dictionaries, 
         return the same data, but formatted as lists """
-    return [i for k, i in horse.items()] for horse in horses]
+    return [[i for k, i in horse.items()] for horse in horses]
 
 def get_ai():
     """ returns the ai object used to predict horse's ranks """
-    return joblib.load("ai.pickle")
+    return (joblib.load("ai_beyer.pickle"), joblib.load("ai_time.pickle"))
 
 def get_positions(track, date, n_race):
     """ given identifying info on a race, (Track, Date, Number)
         return a list of horses in the predicted order of their finishing. """
 
+    if isinstance(n_race, int):
+        n_race = str(n_race)
+
     # separator, since filenames can be PRX170603.csv or WO_170603.csv
     sep = "" if len(track) == 3 else "_"
     # get pathname
-    path = "data/" + track + "/" + date + "/" + track + sep + date + ".csv"
+    path = "data/" + track + "/" + date + "/" + track + sep + date + "_SF.CSV"
 
     # get the data on horses in the race
     horses = load_horsedata(path, n_race)
+
     # format it as a 2D list, (horses is a list of dictionaries)
     data = get_list_data(horses)
 
@@ -89,3 +96,11 @@ def get_positions(track, date, n_race):
     horses.sort(key=lambda horse: horse['beyer'], reverse=True)
 
     return horses
+
+def main():
+    """ Testing functions """
+    horses = get_positions("PRX", "170508", 2)
+    [print(horse['B_Horse'],horse['time'], horse['beyer']) for horse in horses]
+
+if __name__ == "__main__":
+    main()

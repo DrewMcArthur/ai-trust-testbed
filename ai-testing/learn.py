@@ -11,7 +11,7 @@ from sklearn.feature_extraction import DictVectorizer, FeatureHasher
 from sklearn.feature_selection import RFECV, SelectKBest, VarianceThreshold
 from sklearn.decomposition import TruncatedSVD, PCA
 from sklearn.pipeline import Pipeline, make_pipeline
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, dump, load
 import yaml, csv, random, time
 
 def read_data(filename):
@@ -78,7 +78,7 @@ def test_n_features(Xs, Ys):
     pipe = make_pipeline(fh, kBest, estimator)
 
     pipe.fit(x_train, y_train)
-    joblib.dump(pipe, 'ai.pickle')
+    dump(pipe, 'ai.pickle')
 
     y_pred = pipe.predict(x_test)
 
@@ -114,12 +114,13 @@ if __name__ == "__main__":
     beyers = [t[1] for t in targets]
 
     fh = FeatureHasher(input_type='string')
-    kBest = SelectKBest(k=1750)
+    kBest = SelectKBest(k=1700)
     estimator = SVR(kernel="linear")
 
-    time_pipe = make_pipeline(fh, kBest, estimator)
-    beyer_pipe = make_pipeline(fh, kBest, estimator)
+    #time_pipe = make_pipeline(fh, kBest, estimator)
+    #time_pipe.fit(data, times)
+    #dump(time_pipe, 'ai_time.pickle')
 
-    time_pipe.fit(data, times)
+    beyer_pipe = make_pipeline(fh, kBest, estimator)
     beyer_pipe.fit(data, beyers)
-    joblib.dump((time_pipe, beyer_pipe), 'ai.pickle')
+    dump(beyer_pipe, 'ai_beyer.pickle')
