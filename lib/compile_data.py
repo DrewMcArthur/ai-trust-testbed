@@ -184,7 +184,8 @@ def formatData(row):
 
     #case if they ran over a minute
     elif row['L_Time'][1:2] == ':':
-        row['L_Time'] = float(60 * int(row['L_Time'][0]) + float(row['L_Time'][2:]))
+        row['L_Time'] = (float(60 * int(row['L_Time'][0]) + 
+                         float(row['L_Time'][2:])))
         
     row['R_RCDate'] = fixDate(row['R_RCDate'])
 

@@ -6,36 +6,27 @@
     call get_positions with the required arguments, and let the code do the rest
     need to slim data down using headers in config.yml
 
-    TODO: select heuristic and therefore ordering of the list when it's sorted.
-          pass dictionary with only the desired headers
-          format data correctly, similar to compile_data.py
-                followup, should the function used there ^ be placed 
-                in a separate file for use in this script, etc.?
+    TODO: format data correctly, similar to compile_data.py
+            more efficient version of format data, 
+            add more keys to keep in format data
 """
 
 import joblib, csv
+from compile_data import get_race_info
 
-def get_race_info(horse):
-    """ given a dictionary representing a horse, 
-        return a sub-dictionary containing info only relevant to the race. """
-    r = {}
-    keys = ["R_RCTrack", "R_RCDate", "R_RCRace", "R_Starters", "R_TrackName", 
-            "R_RaceState", "R_Division", "R_RaceBred", "R_StateBred", 
-            "R_RaceSex", "R_RaceAge", "R_Class", "R_Purse", "R_HiClaim", 
-            "R_LoClaim", "R_Distance", "R_Inner", "R_Surface", "R_RaceType", 
-            "R_GradedRace", "R_GradedRaceDesc", "R_SimTrack", "R_SimRace", 
-            "R_TrackRecord", "R_DayOfWeek", "R_PostTime", "R_LongClass", 
-            "R_TrkAbbrev", "R_DistUnit", "R_TimeUnit", "R_Conditions"
-           ]    
-    # for each key listed above, add it and it's value in horse
-    [r.update({key: horse[key]}) for key in keys]
-    return r
+def format_data(row):
+    """ formats a row (dictionary) of data to our standards. """
+    # list of desired keys
+    keys = ['R_RCTrack', 'R_RCDate', 'B_Horse', 'L_Time', 'L_BSF', 'R_RCRace']
+    toRemove = []
+    # remove all keys not in the list above
+    for key, item in row.items():
+        if key not in keys:
+            toRemove.append(key)
+    for key in toRemove:
+        row.pop(key)
+    return row
 
-def format_horsedata(horses):
-    """ given a list of dictionaries representing horses, 
-        return a list of modified dictionaries to clean up the data. """
-    return horses
-    
 def load_horsedata(filename, n_race):
     """ given the path to a file containing horse data, and a specific race 
         read the file and return data on horses in the race. """
@@ -56,7 +47,7 @@ def load_horsedata(filename, n_race):
 
             # once we get all of the horses, return the list
             if str(len(horses)) == horse['R_Starters']:
-                return format_horsedata(horses)
+                return horses
 
 def get_list_data(horses):
     """ given a list of dictionaries, 
@@ -65,7 +56,8 @@ def get_list_data(horses):
 
 def get_ai():
     """ returns the ai object used to predict horse's ranks """
-    return (joblib.load("ai_beyer.pickle"), joblib.load("ai_time.pickle"))
+    return (joblib.load("lib/ai_beyer.pickle"), 
+            joblib.load("lib/ai_time.pickle"))
 
 def get_positions(track, date, n_race):
     """ given identifying info on a race, (Track, Date, Number)
@@ -92,15 +84,16 @@ def get_positions(track, date, n_race):
 
     # update each horse with its heuristic, then sort to produce an ordered list
     for beyer, time, horse in zip(beyers, times, horses):
-        horse.update({"beyer": beyer, "time": time})
-    horses.sort(key=lambda horse: horse['beyer'], reverse=True)
+        horse.update({"L_BSF": beyer, "L_Time": time})
+    #horses.sort(key=lambda horse: horse['L_BSF'], reverse=True)
+    horses.sort(key=lambda horse: horse['L_Time'])
 
-    return horses
+    return [format_data(horse) for horse in horses]
 
 def main():
     """ Testing functions """
     horses = get_positions("PRX", "170508", 2)
-    [print(horse['B_Horse'],horse['time'], horse['beyer']) for horse in horses]
+    [print(horse['B_Horse'],horse['L_Time'], horse['L_BSF']) for horse in horses]
 
 if __name__ == "__main__":
     main()
