@@ -2,8 +2,10 @@
     Drew McArthur, Judy Zhou, Geo Engel, and Risa Ulinski
     6/23/17                                                         """
 
+from ui import Graphics
+
 def main():
-    print("Woohoo!")
+    Graphics.run()
 
 if __name__ == "__main__":
     main()
