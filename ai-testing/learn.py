@@ -25,12 +25,10 @@ def read_data(filename):
         r.sort(key=lambda x:x[0])
         return r
 
-def get_label(row):
-    # Beyer Figure
-    #return int(row['L_BSF'])
-
-    # Time
-    return int(round(float(row['L_Time'])*100))
+def get_label(horse):
+    """ returns the time and beyer figure for the given horse. """
+    # (Time, Beyer Figure)
+    return (int(round(float(horse['L_Time'])*100)), int(horse['L_BSF']))
 
 def read_output(filename, data):
     """ returns an array of outputs """
@@ -111,4 +109,17 @@ if __name__ == "__main__":
     #Parallel(n_jobs=2)(delayed(test_n_features)(n, data, targets) for n in Ns)
     #[test_n_features(.1, data, targets) for _ in range(5)]
 
-    test_n_features(data, targets)
+    # time = targets[0], beyer = targets[1]
+    times = [t[0] for t in targets]
+    beyers = [t[1] for t in targets]
+
+    fh = FeatureHasher(input_type='string')
+    kBest = SelectKBest(k=1750)
+    estimator = SVR(kernel="linear")
+
+    time_pipe = make_pipeline(fh, kBest, estimator)
+    beyer_pipe = make_pipeline(fh, kBest, estimator)
+
+    time_pipe.fit(data, times)
+    beyer_pipe.fit(data, beyers)
+    joblib.dump((time_pipe, beyer_pipe), 'ai.pickle')

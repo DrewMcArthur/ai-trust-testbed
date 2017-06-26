@@ -79,12 +79,13 @@ def get_positions(track, date, n_race):
     data = get_list_data(horses)
 
     # load the ai and generate predicted heuristics of their performance
-    ai = get_ai()
-    Ys = ai.predict(data)
+    beyer_ai, time_ai = get_ai()
+    beyers = beyer_ai.predict(data)
+    times = time_ai.predict(data)
 
     # update each horse with its heuristic, then sort to produce an ordered list
-    for y, horse in zip(Ys, horses):
-        horse.update({"heuristic": y})
-    horses.sort(key=lambda horse: horse['heuristic'], reverse=True)
+    for beyer, time, horse in zip(beyers, times, horses):
+        horse.update({"beyer": beyer, "time": time})
+    horses.sort(key=lambda horse: horse['beyer'], reverse=True)
 
     return horses

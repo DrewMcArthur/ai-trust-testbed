@@ -21,10 +21,6 @@
 #  csv: for reading and writing csv files
 #   re: for regex parsing of filenames
 import yaml, sys, os, csv, re
-config = yaml.safe_load(open("config.yml"))
-
-# right way to access config vars
-# config['raw_data_path']
 
 def writeLabelInfo(f, folder, LABELWRITER):
     """ Scrapes data from file f in folder, and writes the data to 
@@ -327,6 +323,15 @@ def get_input_data(INPUTFN, LABELFN):
         print()
 
 if __name__ == "__main__":
+    # right way to access config vars
+    # config['raw_data_path']
+
+    if "lib" not in os.listdir("."):
+        print("This script must run from the main directory, try again.")
+        quit()
+
+    config = yaml.safe_load(open("config.yml"))
+
     # get root folder and pathname and file objects for the final product.
     DATA = config['raw_data_path']
 
