@@ -11,14 +11,18 @@
 # Filename to save final data to
 final_data_filename: "data.csv"
 
+# number of rows of data to gather
+nData: 100000
+
 # the names of each column for the final file
 input_data_col_headers: >
-    R_RCTrack, R_RCDate, R_RCRace, B_Horse, missing, R_Starters, R_TrackName,
+    ID, R_RCTrack, R_RCDate, R_RCRace, B_Horse, missing, R_Starters, R_TrackName,
     R_RaceState, R_Division, R_RaceBred, R_StateBred, R_RaceSex,
     R_RaceAge, R_Class, R_Purse, R_HiClaim, R_LoClaim, R_Distance,
     R_Inner, R_Surface, R_RaceType, R_GradedRace, R_GradedRaceDesc,
     R_SimTrack, R_SimRace, R_TrackRecord, R_DayOfWeek, R_PostTime,
-    R_LongClass, R_TrkAbbrev, R_DistUnit, R_TimeUnit, R_Conditions,
+    R_LongClass, R_TrkAbbrev, R_DistUnit, R_TimeUnit,
+    # R_Conditions,
     B_ProgNum, B_PostPosition, B_Jockey, B_MLOdds, H_AeMto,
     H_Weight, H_Horse, H_FD, H_TripleCrown, H_Sex, H_YBorn, H_MBorn,
     H_State, H_Breeder, H_Color, H_Sire, H_SireSire, H_Dam,
@@ -424,7 +428,7 @@ input_data_col_headers: >
 
 # headers for LABELS.data.csv
 label_data_col_headers: >
-    R_RCTrack, R_RCDate, R_RCRace, B_Horse,
+    ID, R_RCTrack, R_RCDate, R_RCRace, B_Horse,
     L_Position, L_Time, L_BSF
 
 # Path to the folder containing the raw data to be compiled

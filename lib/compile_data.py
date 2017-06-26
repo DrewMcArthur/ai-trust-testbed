@@ -30,6 +30,8 @@ def writeLabelInfo(f, folder, LABELWRITER):
     """ Scrapes data from file f in folder, and writes the data to 
         a labels file, using the object LABELWRITER """
 
+    global NDATA
+
     # list of dictionaries, each dict is a data entry to be written to LABELS
     labeldata = []
 
@@ -39,7 +41,7 @@ def writeLabelInfo(f, folder, LABELWRITER):
     date = m.group(2)
     race = m.group(3)
 
-    if VERBOSEMODE:
+    if VVFLAG:
         print("         ", f)
 
     raceIDInfo = {"R_RCTrack": track, "R_RCDate": date, "R_RCRace": race}
@@ -62,8 +64,7 @@ def writeLabelInfo(f, folder, LABELWRITER):
             entry = raceIDInfo.copy()
             entry.update({"L_Position": rank, 
                           "B_Horse": b["Horse"],          
-                          "L_BSF": b["Chart"],
-                          "from_filename": f
+                          "L_BSF": b["Chart"]
                          })
 
             # read one line from timereader and add time to entry
@@ -87,8 +88,13 @@ def writeLabelInfo(f, folder, LABELWRITER):
     # write the entries in labeldata to file
     for entry in labeldata:
         # make sure the name isn't actually a comment on the race conditions
-        if len(entry['B_Horse']) < 30:
+        if (len(entry['B_Horse']) < 30 and 
+            entry['L_BSF'] != "-"):
+            entry.update({"ID": NDATA})
             LABELWRITER.writerow(entry)
+            NDATA += 1
+            if NDATA >= MAXFLAG:
+                return
 
 def create_labels():
     """ iterate through files in DATA directory and create 
@@ -104,17 +110,19 @@ def create_labels():
     # write the header columns to the file.
     LABELWRITER.writeheader()
 
+    numPlaces = 0
+
     # iterate through files in data directory, PLACE/DATE/Files
-    if VERBOSEMODE:
+    if VVFLAG:
         print(DATA)
     for place in os.listdir(DATA):
         if os.path.isdir(DATA + '/' + place):
-            if VERBOSEMODE:
+            if VVFLAG:
                 print(" ", place)
             for date in os.listdir(DATA + '/' + place):
                 folder = DATA + '/' + place + "/" + date + "/"
                 if os.path.isdir(folder):
-                    if VERBOSEMODE:
+                    if VVFLAG:
                         print("     ",date)
                     for f in os.listdir(folder):
                         # if the file contains label information, write to file
@@ -122,9 +130,14 @@ def create_labels():
                         # the other filename is generated in the function below.
                         if f.endswith('lt.csv'):
                             writeLabelInfo(f, folder, LABELWRITER)
+                            if NDATA >= MAXFLAG:
+                                return
                         # notification for verbosity
-                        elif VERBOSEMODE:
+                        elif VVFLAG:
                             print("Skipping file - unnecessary type:", f)
+            numPlaces += 1
+            print("Done with", numPlaces, "track folders of data.", end="\r")
+    print()
 
 def get_data_fn(label):
     """ given a label (dict), return the path to the file that would hold
@@ -155,11 +168,37 @@ def get_race_info(row):
         r.update({key: row[key]})
     return r
 
+def generate_racelist(reader):
+    """ given a csv reader, return a list of races, where a race in the list
+        consists of each row associated with that race.
+        races[i] == race #(i+1) in this file. """
+    races = []
+    raceInfo = {}
+
+    for row in reader:
+        # first, we add race info to each row where its missing
+        if row["R_RCTrack"] == "":
+            row.update(raceInfo)
+        # or update the info for the current row's race
+        else:
+            raceInfo = get_race_info(row)
+
+        # race number for the current row
+        raceN = int(row["R_RCRace"])
+
+        # if we're at race N, but races only has info on N - 1 races, 
+        if len(races) < raceN:
+            # then append a new list, containing this row
+            races.append([row])
+        else:
+            # otherwise, just add this row to the existing sublist
+            races[raceN - 1].append(row)
+
+    return races
+
 def get_input_data(INPUTFN, LABELFN):
     """ reads the labels file, and uses the information there to find
         input data and write it to file """
-
-    labelsmissingdata = []
 
     # open the relevant files and CSV objects
     with open(LABELFN) as LABELFILE, open(INPUTFN, 'w') as INPUTFILE:
@@ -177,6 +216,8 @@ def get_input_data(INPUTFN, LABELFN):
         # used for copying race info to rows missing this data
         raceInfo = {}
 
+        numPlaces = 0
+
         # iterate through each label
         for label in labelReader:
             labelWritten = False
@@ -187,34 +228,26 @@ def get_input_data(INPUTFN, LABELFN):
                 if os.path.isfile(currfn):
                     data = open(currfn)
                     datafile = csv.DictReader(data, dialect='unix')
-                elif VERBOSEMODE:
-                    print("Error! .SF file not found for", currfn)
-            # otherwise, start over looking at the beginning of the same file
-            else:
-                data.seek(0)
-
-            # iterate through the data, and
-            for row in datafile:
-                # first, we add race info to each row where its missing
-                if row["R_RCTrack"] == "":
-                    row.update(raceInfo)
-                # or update the info for the current row's race
                 else:
-                    raceInfo = get_race_info(row)
-                
+                    print("Error! .SF file not found for", currfn)
+                # get a list of races, where each race is a list of horses' data
+                races = generate_racelist(datafile)
+
+            # iterate through each horse in this race to find the data
+            for horse in races[int(label['R_RCRace']) - 1]:
                 # when we reach the right entry, we write it to file
-                if (label['B_Horse'] == row['B_Horse'] and 
-                    label['R_RCRace'] == row['R_RCRace']):
-                    row.update(label)
-                    inputWriter.writerow(row)
+                if label['B_Horse'] == horse['B_Horse']:
+                    horse.update({"ID":label["ID"]})
+                    inputWriter.writerow(horse)
                     labelWritten = True
 
             # if we never found the right data for the label
             if not labelWritten:
-                if VERBOSEMODE:
-                    print("Error! the input info for this label was never written!")
+                if VVFLAG:
+                    print("Error! input info for this label wasn't written!")
                     print(label)
                     print("we thought it'd be in this file:", currfn)
+                    print("attempting to find the closest match...")
                     print()
 
                 # make a list of all of the horse names in the race and how 
@@ -222,55 +255,44 @@ def get_input_data(INPUTFN, LABELFN):
                 names = []
                 potNames = []
                 
-                # go back to the beginning of the file
-                data.seek(0)
-                
                 # go through each row to find the ones with a matching race
-                for row in datafile:
-
-                    # make sure that each row has its race data
-                    if row["R_RCTrack"] == "":
-                        row.update(raceInfo)
-                    else:
-                        raceInfo = get_race_info(row)
-
-                    # go through each row and store each horse from the label's race
-                    if label['R_RCRace'] == row['R_RCRace']:
-                        potNames.append(row['B_Horse'])
-                        
-                        # create a ratio of the number of letters from the original name
-                        # that are in the label name and put them into a list
-                        lettersInCommon = 0
-                        for letter in row['B_Horse']:
-                            if letter in label['B_Horse']:
-                                lettersInCommon += 1
-                        ratio = lettersInCommon / len(row['B_Horse'])
-                        names.append((row, ratio))
+                for horse in races[int(label['R_RCRace']) - 1]:
+                    potNames.append(horse['B_Horse'])
+                    
+                    # create a ratio of the number of letters from the original name
+                    # that are in the label name and put them into a list
+                    lettersInCommon = 0
+                    for letter in horse['B_Horse']:
+                        if letter in label['B_Horse']:
+                            lettersInCommon += 1
+                    ratio = lettersInCommon / len(horse['B_Horse'])
+                    names.append((horse, ratio))
                
                 # find the row with the largest ratio of common letters
                 closestRow = max(names, key=lambda x:x[1], default=0)
 
-                # if the closest row doesn't exist or pass the threshold, 
-                if closestRow == 0 or closestRow[1] < .7:
-                    # then label the data as missing
-                    labelsmissingdata.append((currfn, label))
-                    row = raceInfo.copy()
-                    row.update({"missing":1, "B_Horse":label['B_Horse']})
+                # if the closest row exists and passes the threshold, 
+                if closestRow != 0 and closestRow[1] > .7:
+                    # write the closestRow to the file, 
+                    inputWriter.writerow(closestRow[0])
 
-                # write the closestRow to the file, 
-                # labelled missing if we couldn't find the data
-                inputWriter.writerow(closestRow[0])
+            numPlaces += 1
+            print("Fetched data for roughly {0:.2f}% of labels."
+                        .format(numPlaces / 270), end="\r")
+        # print newline after last update with carriage return
+        print()
 
 if __name__ == "__main__":
     # get root folder and pathname and file objects for the final product.
     DATA = config['raw_data_path']
 
-    # future mode for verbosity toggling
-    VERBOSEMODE = True
+    # allow levels of verbosity 
+    VVFLAG = "-v" in sys.argv
 
-    # set verbosity settings
-    if "-v" not in sys.argv:
-        VERBOSEMODE = False
+    # allow -k n to choose number of rows of data to gather
+    NDATA = 0
+    MAXFLAG = int(config['nData'] if "-k" not in sys.argv else 
+                  sys.argv[sys.argv.index("-k") + 1])
 
     # create filenames
     ENDFILENAME = config['final_data_filename']
@@ -283,8 +305,11 @@ if __name__ == "__main__":
     inputHeaders = config['input_data_col_headers'].split(', ')
     inputHeaders[-1] = inputHeaders[-1][:-1]
 
-    [inputHeaders.append(l) for l in labelHeaders]
-
     # okay, go!
+    print("Creating", LABELFILENAME, "...")
+
     create_labels()
+
+    print("Scraping",DATA,"for training data ...")
+
     get_input_data(ENDFILENAME, LABELFILENAME)
