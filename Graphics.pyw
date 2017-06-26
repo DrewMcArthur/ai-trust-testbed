@@ -24,11 +24,11 @@ class Window1:
     def s_settings(self):
         # setting title
         tk.Label(self.settings, text = 'Settings', font = (None, 15)).grid(row = 1, column = 1, columnspan = 2, pady = 10)
-        # number of trails prompt
-        tk.Label(self.settings, text = 'Number of Trails: ').grid(row = 2, column = 1, padx = 10, pady = 5, sticky = tk.W)
-        # number of trails text box
-        self.trails = tk.Entry(self.settings, width = 3)
-        self.trails.grid(row = 2, column = 2, sticky = tk.W)
+        # number of trials prompt
+        tk.Label(self.settings, text = 'Number of Trials: ').grid(row = 2, column = 1, padx = 10, pady = 5, sticky = tk.W)
+        # number of trials text box
+        self.trials = tk.Entry(self.settings, width = 3)
+        self.trials.grid(row = 2, column = 2, sticky = tk.W)
         # accuracy prompt
         tk.Label(self.settings, text = 'Accuracy: ').grid(row = 3, column = 1, padx = 10, pady = 5, sticky = tk.W)
         # accuracy slider
@@ -91,7 +91,7 @@ class Window1:
             column = 1, columnspan = 2, pady = 10)
 
         # defaults
-        self.trails.insert(0, 5)
+        self.trials.insert(0, 5)
         self.accuracy.set(50)
         self.option_betting.set('Fixed')
         self.betting.insert(0, 2)
@@ -114,7 +114,7 @@ class Window1:
             root.after(1000, self.countdown)
 
     def errorcheck(self):
-        elementlist = [self.trails.get(), self.accuracy.get(), self.showtime.get(), self.showbeyer.get(), self.showorder.get(), self.purse.get(), self.betting.get(), self.horses.get(), self.time.get()]
+        elementlist = [self.trials.get(), self.accuracy.get(), self.showtime.get(), self.showbeyer.get(), self.showorder.get(), self.purse.get(), self.betting.get(), self.horses.get(), self.time.get()]
         for element in elementlist:
             if not element:
                 error = tk.Tk()
@@ -150,7 +150,7 @@ class Window1:
         # checking if all entries are filled out
         if not self.errorcheck():
             # saving data from settings
-            self.trails1 = int(self.trails.get())
+            self.trials1 = int(self.trials.get())
             self.accuracy1 = int(self.accuracy.get())
             self.showtime1 = self.showtime.get()
             self.showbeyer1 = self.showbeyer.get()
@@ -165,7 +165,7 @@ class Window1:
             self.horses1 = int(self.horses.get())
             self.time1 = int(self.time.get())
 
-            print("Trails: ", self.trails1, 
+            print("Trials: ", self.trials1, 
                 "\nAccuracy: ", self.accuracy1,
                 "\nTime: ", self.showtime1,
                 "\nBeyer: ", self.showbeyer1,
@@ -196,7 +196,7 @@ class Window1:
             tk.Label(self.instructions, text = 'Welcome!\n Please decide the winner.'
                 "\n You will have %s minutes per race. \nThere are %s races." 
                 "\n Press start when you are ready."
-                % (self.time1, self.trails1), font = (None, 50)).grid(row = 1, column = 1, padx = 500, pady = (300, 100))
+                % (self.time1, self.trials1), font = (None, 50)).grid(row = 1, column = 1, padx = 500, pady = (300, 100))
             tk.Button(self.instructions, text = 'Start', font = (None, 25), command = combine_funcs(self.countdown, self.betting_screen)).grid(row = 1, column = 1, sticky = tk.S)
             # timer
             self.t = self.time1 * 60
@@ -268,17 +268,17 @@ class Window1:
         tk.Label(self.result, text = 'System\'s choice: ', font = (None, 25)).grid(row = 3, column = 0, padx = (700, 10), pady= 10)
         tk.Label(self.result, text = 'Your choice: ', font = (None, 25)).grid(row = 4, column = 0, padx = (700, 10), pady= 10)
         tk.Label(self.result, text = 'Updated Wallet: ', font = (None, 25)).grid(row = 5, column = 0, padx = (700, 10), pady= 10)
-        if self.trails1 == 1:
+        if self.trials1 == 1:
             tk.Button(self.result, text = 'Exit', font = (None, 20), command = self.exit).grid(row = 6, column = 1, padx = 10, pady = 10)
         else:
             tk.Button(self.result, text = 'Next Race', font = (None, 20), command = self.races).grid(row = 6, column = 1, padx = 10, pady = 10)
 
     def races(self):
-        if self.trails1 > 0:
+        if self.trials1 > 0:
             self.betting_screen()
             self.countdown()
             combine_funcs(self.countdown, self.betting_screen)
-            self.trails1 -= 1
+            self.trials1 -= 1
 
     def exit(self):
         self.result.destroy()
