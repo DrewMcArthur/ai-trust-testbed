@@ -12,7 +12,7 @@
 """
 
 import joblib, csv
-from compile_data import get_race_info
+from lib.compile_data import get_race_info
 
 def format_data(row):
     """ formats a row (dictionary) of data to our standards. """

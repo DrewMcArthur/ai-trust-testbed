@@ -1,6 +1,7 @@
 import tkinter as tk
 import time
 from PIL import Image, ImageTk
+from lib.load_ai import get_positions
 
 def check():
     # checks for keyboard interrupts (ctrl+q)
@@ -290,9 +291,14 @@ class Window1:
         tk.Button(self.exit, text = 'Save', font = (None, 30)).grid(row = 1, column = 1, padx = 10, pady = 10)
         tk.Button(self.exit, text = 'Exit', font = (None, 30), command = self.window.destroy()).grid(row = 1, column = 2, padx = 10, pady = 10)
 
-root = tk.Tk()
-root.title("Horse Racing")
-root.geometry("500x400")
-root.bind('<Control-q>', quit)
-app = Window1(root)
-root.mainloop()
+def run():
+    superhorses = get_positions("PRX", "170508", 4)
+    root = tk.Tk()
+    root.title("Horse Racing")
+    root.geometry("500x400")
+    root.bind('<Control-q>', quit)
+    app = Window1(root)
+    root.mainloop()
+
+if __name__ == "__main__":
+    run()
