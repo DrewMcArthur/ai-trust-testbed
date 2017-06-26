@@ -17,7 +17,7 @@ from lib.compile_data import get_race_info
 def format_data(row):
     """ formats a row (dictionary) of data to our standards. """
     # list of desired keys
-    keys = ['R_RCTrack', 'R_RCDate', 'B_Horse', 'L_Time', 'L_BSF', 'R_RCRace']
+    keys = ['R_RCTrack', 'R_RCDate', 'B_Horse', 'L_Time', 'L_BSF', 'R_RCRace', 'B_MLOdds']
     toRemove = []
     # remove all keys not in the list above
     for key, item in row.items():
