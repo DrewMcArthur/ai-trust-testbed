@@ -8,8 +8,9 @@
 
     Note: Ordering may be backwards, depending on the heuristic.
 """
+import csv
 
-def get_raceInfo(horse):
+def getRaceInfo(horse):
     """ given a dictionary representing a horse, 
         return a sub-dictionary containing info only relevant to the race. """
     r = {}
@@ -31,6 +32,8 @@ def load_horsedata(filename, n_race):
     with open(filename) as f:
         reader = csv.DictReader(f, dialect='unix')
         raceInfo = {}
+
+        horses = []
         for horse in reader:
             # if this horse is in the race we want, add it to the list
             if horse['R_RCRace'] == n_race:
@@ -39,7 +42,7 @@ def load_horsedata(filename, n_race):
                     horse.update(raceInfo)
                 else:
                     raceInfo = getRaceInfo(horse)
-
+                
                 horses.append(horse)
 
             # once we get all of the horses, return the list
@@ -49,11 +52,12 @@ def load_horsedata(filename, n_race):
 def get_list_data(horses):
     """ given a list of dictionaries, 
         return the same data, but formatted as lists """
-    return [i for k, i in horse.items()] for horse in horses]
+
+    return [[i for k, i in horse.items()] for horse in horses]
 
 def get_ai():
     """ returns the ai object used to predict horse's ranks """
-    return joblib.load("ai.pickle")
+    return joblib.load("SVR.pkl")
 
 def get_positions(track, date, n_race):
     """ given identifying info on a race, (Track, Date, Number)
@@ -62,7 +66,8 @@ def get_positions(track, date, n_race):
     # separator, since filenames can be PRX170603.csv or WO_170603.csv
     sep = "" if len(track) == 3 else "_"
     # get pathname
-    path = "data/" + track + "/" + date + "/" + track + sep + date + ".csv"
+    path = "data/" + track + "/" + date + "/" + track + sep + date +\
+           "_SF.CSV"
 
     # get the data on horses in the race
     horses = load_horsedata(path, n_race)
@@ -79,3 +84,5 @@ def get_positions(track, date, n_race):
     horses.sort(key=lambda horse: horse['heuristic'], reverse=True)
 
     return horses
+
+print(get_positions('PRX', '170605', '3'))
