@@ -27,8 +27,10 @@ def read_data(filename):
 
 def get_label(horse):
     """ returns the time and beyer figure for the given horse. """
-    # (Time, Beyer Figure)
-    return (int(round(float(horse['L_Time'])*100)), int(horse['L_BSF']))
+    # Beyer Figure
+    return int(round(float(horse['L_Time'])*1000))
+    # time
+    #return int(horse['L_BSF'])
 
 def read_output(filename, data):
     """ returns an array of outputs """
@@ -78,7 +80,7 @@ def test_n_features(Xs, Ys):
     pipe = make_pipeline(fh, kBest, estimator)
 
     pipe.fit(x_train, y_train)
-    dump(pipe, 'ai.pickle')
+    dump(pipe, 'ai_recent.pickle')
 
     y_pred = pipe.predict(x_test)
 
@@ -86,18 +88,13 @@ def test_n_features(Xs, Ys):
 
     end = time.time()
 
-    #for d in deltas:
-        #print(d)
     # open output.csv and append a row to it consisting of 
     # the number of features, the avg. error, 
     # the explained variance, and r^2
-    with open("output.csv", 'a', newline='') as oFile:
-        oWriter = csv.writer(oFile, dialect='unix',
-                             quoting=csv.QUOTE_MINIMAL)
-        oWriter.writerow([end - beg,
-                          sum(deltas)/len(deltas),
-                          explained_variance_score(y_test, y_pred),
-                          r2_score(y_test, y_pred)])
+    print([end - beg,
+           sum(deltas)/len(deltas),
+           explained_variance_score(y_test, y_pred),
+           r2_score(y_test, y_pred)])
 
 if __name__ == "__main__":
     config = yaml.safe_load(open("./config.yml"))
@@ -108,19 +105,3 @@ if __name__ == "__main__":
     #Ns = range(1,51)
     #Parallel(n_jobs=2)(delayed(test_n_features)(n, data, targets) for n in Ns)
     #[test_n_features(.1, data, targets) for _ in range(5)]
-
-    # time = targets[0], beyer = targets[1]
-    times = [t[0] for t in targets]
-    beyers = [t[1] for t in targets]
-
-    fh = FeatureHasher(input_type='string')
-    kBest = SelectKBest(k=1700)
-    estimator = SVR(kernel="linear")
-
-    #time_pipe = make_pipeline(fh, kBest, estimator)
-    #time_pipe.fit(data, times)
-    #dump(time_pipe, 'ai_time.pickle')
-
-    beyer_pipe = make_pipeline(fh, kBest, estimator)
-    beyer_pipe.fit(data, beyers)
-    dump(beyer_pipe, 'ai_beyer.pickle')
