@@ -44,6 +44,7 @@ def read_output(filename, data):
         # iterate through the file and keep track of times
         for row in labelreader:
             if row['ID'] in IDs:
+                print(row)
                 r.append((row['ID'], get_label(row)))
         r.sort(key=lambda x:x[0])
         return [x[1] for x in r]
@@ -61,7 +62,7 @@ def split_data(d, l, r):
         testlabels.append(l.pop(i))
     return ((d,l), (test,testlabels))
 
-def test_n_features(Xs, Ys):
+def test_n_features(n, Xs, Ys):
     beg = time.time()
 
     training, test = split_data(Xs, Ys, .90)
@@ -74,13 +75,13 @@ def test_n_features(Xs, Ys):
     #enc = OneHotEncoder(categorical_features=cat_feats)
 
     fh = FeatureHasher(input_type='string')
-    kBest = SelectKBest(k=1750)
-    estimator = SVR(kernel="linear")
+    kBest = SelectKBest(k=n)
+    estimator = SVR(kernel="rbf")
 
     pipe = make_pipeline(fh, kBest, estimator)
 
     pipe.fit(x_train, y_train)
-    dump(pipe, 'ai_recent.pickle')
+    #dump(pipe, 'ai_recent.pickle')
 
     y_pred = pipe.predict(x_test)
 
@@ -102,6 +103,5 @@ if __name__ == "__main__":
     data = read_data(config['final_data_filename'])
     targets = read_output("LABELS." + config['final_data_filename'], data)
 
-    #Ns = range(1,51)
-    #Parallel(n_jobs=2)(delayed(test_n_features)(n, data, targets) for n in Ns)
-    #[test_n_features(.1, data, targets) for _ in range(5)]
+    Ns = range(1700, 1810, 10)
+    Parallel(n_jobs=8)(delayed(test_n_features)(n, data, targets) for n in Ns)
