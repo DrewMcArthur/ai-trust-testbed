@@ -7,12 +7,7 @@
     categorizing information for the races, horses, and labels,
     to then be used to compile the final datafile.
  *  note: use python3
- *  TODO: read data from *{lt, lb}.csv files, write to LABELS.data.csv
-          create LABELWRITER object and appropriate associated files
-          sort data before writing to middle files
-            write sorting algorithm for a list of dictionaries that sorts by
-                certain keys
-            this way, reading from the middle files to merge them is easier
+ *  TODO: read LB files not just lb files
 """
 
 # yaml: for loading config file
@@ -77,24 +72,17 @@ def writeLabelInfo(f, folder, LABELWRITER):
             entry = formatData(entry)
 
             # add entry to list and update rank
-            labeldata.append(entry)
-            rank += 1
+            if entry is not None:
+                labeldata.append(entry)
+                rank += 1
 
     # write the entries in labeldata to file
     for entry in labeldata:
-        # double check entry for missing data before writing
-        if (len(entry['B_Horse']) < 30 and 
-            entry['L_BSF'] != "-" and
-            entry['L_BSF'] != "-0" and
-            entry['L_BSF'] != '' and
-            entry['L_BSF'] != None and
-            entry['L_Time'] != '' and
-            entry['L_Time'] != None ):
-            entry.update({"ID": NDATA})
-            LABELWRITER.writerow(entry)
-            NDATA += 1
-            if NDATA >= MAXFLAG:
-                return
+        entry.update({"ID": NDATA})
+        LABELWRITER.writerow(entry)
+        NDATA += 1
+        if NDATA >= MAXFLAG:
+            return
 
 def create_labels():
     """ iterate through files in DATA directory and create 
@@ -153,6 +141,9 @@ def get_data_fn(label):
 
 def fixDate(row):
     """ given a date d, return the same date in YYMMDD format. """
+    if row is None:
+        return row
+
     d = row['R_RCDate']
 
     # if there are no slashes, we assume the date is already formatted.
@@ -169,10 +160,15 @@ def fixDate(row):
 
 def fixTime(row):
     """ given a row, fix the time in the row """
+    if row is None:
+        return row
+
     t = row['L_Time']
 
     if t == '' or t is None:
-        row['L_time'] = 0
+        if VVFLAG:
+            print("Bad Time: ", row)
+        return None
     elif ":" in t:
         m = re.match("([0-9]*):([0-9]*).([0-9]*)", t)
         mins = int(m.group(1)) if m.group(1) != "" else 0
@@ -189,11 +185,47 @@ def fixTime(row):
         row['L_Time'] = int(t) * 6000
     return row
 
+def fixLabelName(row):
+    """ remove non-unicode and extra characters from names that were converted
+        incorrectly from pdf """
+    if row is None:
+        return row
+
+    n = row['B_Horse']
+    if len(n) > 30:
+        if VVFLAG:
+            print("Bad Name: ", row)
+        return None
+    if '-' in n:
+        n = n[:n.index("-")]
+    if '?' in n:
+        n = n.replace('?', '')
+    row['B_Horse'] = n
+    return row
+
+def checkBSF(row):
+    """ returns None if a label is bad (i.e. 0 or None or "") """
+    if row is None:
+        return row
+
+    # double check rowfor missing data before writing
+    if (row['L_BSF'] == "-" or
+        row['L_BSF'] == "-0" or
+        row['L_BSF'] == '' or
+        row['L_BSF'] == None ):
+        if VVFLAG: 
+            print("Bad Beyer Figure: ", row)
+        return None
+
+    return row
+
 def formatData(row):
     """ function which returns a row that is formatted nicely for the AI"""
     row = fixDate(row)
     if "L_Time" in row:
         row = fixTime(row)
+        row = fixLabelName(row)
+        row = checkBSF(row)
     return row
 
 def get_race_info(row):
@@ -284,8 +316,9 @@ def get_input_data(INPUTFN, LABELFN):
                 if label['B_Horse'] == horse['B_Horse']:
                     horse.update({"ID":label["ID"]})
                     horse = formatData(horse)
-                    inputWriter.writerow(horse)
-                    labelWritten = True
+                    if horse is not None:
+                        inputWriter.writerow(horse)
+                        labelWritten = True
 
             # if we never found the right data for the label
             if not labelWritten:
@@ -322,7 +355,8 @@ def get_input_data(INPUTFN, LABELFN):
                     # write the closestRow to the file, 
                     closestRow[0].update({"ID":label["ID"]})
                     horse = formatData(closestRow[0])
-                    inputWriter.writerow(horse)
+                    if horse is not None:
+                        inputWriter.writerow(horse)
 
             numPlaces += 1
             print("Fetched data for {0:.2f}% of labels."
