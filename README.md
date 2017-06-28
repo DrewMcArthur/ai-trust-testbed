@@ -1,5 +1,19 @@
 # ai-trust-testbed
 
+## Running the Software
+
+Running the testbed should be as simple as `python3 main.py` from within `ai-trust-testbed`.  There are a few dependencies that may have to be addressed, however.  You must have `python3` and `pip3` on your system, in addition to a few python packages listed below.  They can be installed using `pip3 install [packagename]`.  If you wish to install the packages locally, this can be done by adding the `--user` flag.
+
+* `scipy`
+* `numpy`
+* `sklearn`
+* `joblib`
+* `pyyaml`
+
+These dependencies are also located in `requirements.txt`, and can be installed by running the following:
+
+    pip3 install -r requirements.txt
+
 ### `ai/`
 A program designed for a study involving participants' trust in an artificial intelligence.  This is tested by asking the participant to "bet" on horse races where an AI has predicted the outcome.  Researchers will then observe the participant's actions while choosing their bet, as an indication of trust, (i.e. choosing the AI's suggestion, amount of time taken, etc).
 
