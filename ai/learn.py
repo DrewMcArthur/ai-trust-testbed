@@ -44,7 +44,6 @@ def read_output(filename, data):
         # iterate through the file and keep track of times
         for row in labelreader:
             if row['ID'] in IDs:
-                print(row)
                 r.append((row['ID'], get_label(row)))
         r.sort(key=lambda x:x[0])
         return [x[1] for x in r]
