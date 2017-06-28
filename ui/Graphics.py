@@ -1,10 +1,10 @@
 import tkinter as tk
 import time
-from PIL import Image, ImageTk
-from lib.load_ai import get_positions
 import re
 import random
 import os
+from PIL import Image, ImageTk
+from lib.load_ai import get_positions
 
 def check():
     # checks for keyboard interrupts (ctrl+q)
@@ -20,18 +20,14 @@ class Window1:
         self.s_settings()
     def s_settings(self):
         try:
-            if self.setactivate == False:
+            if hasattr(self, "window"):
+                self.window.destroy()
                 root = tk.Tk()
                 root.title("Horse Racing")
                 root.geometry("500x425")
                 root.bind('<Control-q>', quit)
-        except AttributeError:
-            pass
-        # check if root and settings frame is deleted
-        # if so recreate them
-        try:
-            if hasattr(self, 'window'):
-                self.window.destroy()
+                self.settings = tk.Frame(root)
+                self.settings.grid()
         except AttributeError:
             pass
         # setting title
@@ -106,12 +102,8 @@ class Window1:
         self.time.grid(row = 12, column = 2, sticky = tk.W)
         tk.Label(self.settings, text = 'minutes').grid(row = 12, column = 2, padx = 30, sticky = tk.W)
 
-        # variable of when settings and root need to be recreated
-        self.setactivate = False
-
         # submit button
-        tk.Button(self.settings, text = 'Submit', command = self.instructions).grid(row = 14, 
-            column = 1, columnspan = 2, pady = 10)
+        tk.Button(self.settings, text = 'Submit', command = self.instructions).grid(row = 14, column = 1, columnspan = 2, pady = 10)
 
         # defaults
         self.trials.insert(0, 5)
@@ -162,8 +154,16 @@ class Window1:
                     return False
 
     def instructions(self):
+        print("START OF INSTRUCTION")
         # screen that displays the instructions
-        """SAVE DATA"""
+        """SAVE DATA:
+                accuracy
+                checkaccuracy
+                showtime
+                showbeyer
+                showorder
+                purse
+                betting_option"""
         # checking if all entries are filled out
         if not self.errorcheck():
             # saving data from settings
@@ -199,7 +199,6 @@ class Window1:
             # clearing screen and making a new instructions window
             self.settings.destroy()
             root.destroy()
-            self.setactivate = True
             self.window = tk.Tk()
             self.window.title("Horse Racing")
             self.window.bind('<Control-q>', quit)
@@ -264,8 +263,8 @@ class Window1:
             self.retrieving_data()
         # updating timer
         else:
-            self.timer_label['text'] = self.timeformat
-            self.t = self.t - 1
+            self.timer_label.config(text = self.timeformat)
+            self.t -= 1
             root.after(1000, self.countdown)
 
     def betting_screen(self):
