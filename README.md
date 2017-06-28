@@ -10,6 +10,10 @@ Running the testbed should be as simple as `python3 main.py` from within `ai-tru
 * `joblib`
 * `pyyaml`
 
+These dependencies are also located in `requirements.txt`, and can be installed by running the following:
+
+    pip3 install -r requirements.txt
+
 ### `ai/`
 A program designed for a study involving participants' trust in an artificial intelligence.  This is tested by asking the participant to "bet" on horse races where an AI has predicted the outcome.  Researchers will then observe the participant's actions while choosing their bet, as an indication of trust, (i.e. choosing the AI's suggestion, amount of time taken, etc).
 
