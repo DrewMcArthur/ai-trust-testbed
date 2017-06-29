@@ -217,6 +217,30 @@ class Window1:
         pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?\.jpg')
         race = random.choice(os.listdir(folder))
         m = pattern.match(race)
+
+        # get filepaths, and make sure they exist before continuing
+        sep = "_" if len(m.group(1)) < 3 else ""
+        p = "data/" + m.group(1) + "/" + m.group(2) + "/" + m.group(1) + sep + \
+            m.group(2) + "_SF.CSV"
+        ltp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
+              m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_lt.csv"
+        lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
+              m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_lb.csv"
+
+        while not (os.path.isfile(p) and os.path.isfile(ltp) and os.path.isfile(lbp)):
+            print("File doesn't exist! Trying again...")
+            race = random.choice(os.listdir(folder))
+            m = pattern.match(race)
+            # get filepaths, and make sure they exist before continuing
+            sep = "_" if len(m.group(1)) < 3 else ""
+            p = "data/" + m.group(1) + "/" + m.group(2) + "/" + m.group(1) + sep + \
+                m.group(2) + "_SF.CSV"
+            ltp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
+                  m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_lt.csv"
+            lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
+                  m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_lb.csv"
+
+
         string = "convert -append " + os.path.join(folder, m.group(1) + m.group(2) + '_' + m.group(3) + "_header.jpg ")
         filenames = [f for f in os.listdir(folder) if f.endswith(".jpg") and f.startswith(m.group(1) + m.group(2) + '_' + m.group(3)) and not f.endswith("_header.jpg")]
         random.shuffle(filenames)
@@ -229,25 +253,25 @@ class Window1:
 
         os.system(string)
 
-        # fin horses in csv files
-        try:
-            self.superhorses = get_positions(m.group(1), m.group(2), m.group(3))
-            self.horses_racing = []
-            self.horses_odds = ""
-            for horse in self.superhorses:
-                if (horse['B_ProgNum'] in nums):
-                    self.horses_racing.append(horse)
-            # find predicted winning horse
-            self.horse_pwin = min(self.horses_racing, key = lambda x:x['L_Time'])['B_Horse']
-            # find actual winning horse
-            self.horse_win =  min(self.horses_racing, key = lambda x:x['L_Time'])['B_Horse']
-            # find odds for horses
-            self.horses_racing.sort(key = lambda x:x['B_ProgNum'])
-            for horse in self.horses_racing:
-                self.horses_odds += horse['B_Horse'] + " : " + horse['B_MLOdds'] + "\n  "
         # check if csv file is available
-        except FileNotFoundError:
-            self.generateforms()
+
+        # fin horses in csv files
+        self.superhorses = get_positions(m.group(1), m.group(2), m.group(3))
+        self.horses_racing = []
+        self.horses_odds = ""
+        for horse in self.superhorses:
+            if (horse['B_ProgNum'] in nums):
+                self.horses_racing.append(horse)
+        # find predicted winning horse
+        self.horses_racing.sort(key = lambda x:x['L_Time'])
+        self.horse_pwin = self.horses_racing[0]['B_Horse']
+        # find actual winning horse
+        self.horses_racing.sort(key = lambda x:x['L_Time'])
+        self.horse_win = self.horses_racing[0]['B_Horse']
+        # find odds for horses
+        self.horses_racing.sort(key = lambda x:x['B_ProgNum'])
+        for horse in self.horses_racing:
+            self.horses_odds += horse['B_Horse'] + " : " + horse['B_MLOdds'] + "\n  "
 
     def scrolledcanvas(self):
         # generate forms
