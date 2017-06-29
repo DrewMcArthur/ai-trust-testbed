@@ -39,10 +39,12 @@ class Window1:
         self.trials.grid(row = 2, column = 2, sticky = tk.W)
         def toggleslider():
             if self.activate == True:
+                self.accuracy.config(foreground = "gainsboro")
                 self.accuracy.config(state = 'disabled')
                 self.activate = False
             else:
                 self.accuracy.config(state = 'normal')
+                self.accuracy.config(foreground = "black")
                 self.activate = True
         # accuracy prompt
         tk.Label(self.settings, text = 'Accuracy: ').grid(row = 3, column = 1, padx = 10, pady = 5, sticky = tk.W)
@@ -127,18 +129,18 @@ class Window1:
                 error = tk.Tk()
                 error.title("ERROR")
                 error.bind('<Control-q>', quit)
-                tk.Label(error, text = "Fill in all settings.").pack(padx = 10, pady = 10)
+                tk.Label(error, text = "Fill in all settings.", font = (None, 20)).pack(padx = 10, pady = 10)
                 tk.Button(error, text = "OK", command = lambda : error.destroy()).pack(padx = 10, pady = 10)
                 return False
             # check if purse is a float number
-            if element == self.purse.get():
+            elif element == self.purse.get():
                 try:
                     float(element)
                 except:
                     error = tk.Tk()
                     error.title("ERROR")
                     error.bind('<Control-q>', quit)
-                    tk.Label(error, text = "Please correct format for purse.").pack(padx = 10, pady = 10)
+                    tk.Label(error, text = "Please correct format for purse.", font = (None, 20)).pack(padx = 10, pady = 10)
                     tk.Button(error, text = "OK", command = lambda : error.destroy()).pack(padx = 10, pady = 10)
                     return False
             # check if other elements are integers (not letters)
@@ -149,23 +151,18 @@ class Window1:
                     error = tk.Tk()
                     error.title("ERROR")
                     error.bind('<Control-q>', quit)
-                    tk.Label(error, text = "Please enter integers.").pack(padx = 10, pady = 10)
+                    tk.Label(error, text = "Please enter integers.", font = (None, 20)).pack(padx = 10, pady = 10)
                     tk.Button(error, text = "OK", command = lambda : error.destroy()).pack(padx = 10, pady = 10)
                     return False
+            else:
+                return True
 
     def instructions(self):
-        print("START OF INSTRUCTION")
+        print("Error check: ", self.errorcheck())
         # screen that displays the instructions
-        """SAVE DATA:
-                accuracy
-                checkaccuracy
-                showtime
-                showbeyer
-                showorder
-                purse
-                betting_option"""
+        """SAVE DATA"""
         # checking if all entries are filled out
-        if not self.errorcheck():
+        if self.errorcheck():
             # saving data from settings
             self.trials1 = int(self.trials.get())
             self.accuracy1 = int(self.accuracy.get())
@@ -214,8 +211,6 @@ class Window1:
                 % (self.time1, self.trials1), font = (None, 50)).grid(row = 1, column = 1, padx = (500, 450), pady = (300, 100))
             tk.Button(self.instructions, text = 'Start', font = (None, 25), command = self.betting_screen).grid(row = 1, column = 1, sticky = tk.S)
 
-            tk.Button(self.instructions, text = "settings", command = self.s_settings).grid(row = 0, column = 1, pady= 10, sticky = tk.N + tk.E)
-
     def generateforms(self):
         folder = "split_jpgs"
         # randomly generate race forms
@@ -255,17 +250,13 @@ class Window1:
         self.imgtag = self.canv.create_image(0, 0, anchor = "nw", image = self.im2)
 
     def countdown(self):
-        # count down timer
+        self.t -= 1
         mins, secs = divmod(self.t, 60)
         self.timeformat = '{:02d}:{:02d}'.format(mins, secs)
-        # when timer reaches 0
-        if self.t <= 0:
+        self.timer_label['text'] = self.timeformat
+        self.bet.after(1000, self.countdown)
+        if self.t == -1:
             self.retrieving_data()
-        # updating timer
-        else:
-            self.timer_label.config(text = self.timeformat)
-            self.t -= 1
-            root.after(1000, self.countdown)
 
     def betting_screen(self):
         # check if result and instructions screen has been destroyed
@@ -288,7 +279,7 @@ class Window1:
         self.bet.grid_columnconfigure(0, weight = 1)
         # timer
         self.t = self.time1 * 60
-        self.timer_label = tk.Label(self.bet, text = "", font = (None, 25), width = 10)
+        self.timer_label = tk.Label(self.bet, textvariable = "", font = (None, 25), width = 10)
         self.timer_label.grid(row = 0, column = 5, padx = 10, pady = 10, sticky = tk.N + tk.E)
         self.countdown()
         # show forms
