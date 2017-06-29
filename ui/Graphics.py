@@ -158,7 +158,6 @@ class Window1:
                 return True
 
     def instructions(self):
-        print("Error check: ", self.errorcheck())
         # screen that displays the instructions
         """SAVE DATA"""
         # checking if all entries are filled out
@@ -214,17 +213,38 @@ class Window1:
     def generateforms(self):
         folder = "split_jpgs"
         # randomly generate race forms
-        pattern = re.compile(r'([A-Z]+\d+_\d+)_(\d*|header)?\.jpg')
+        pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?\.jpg')
         race = random.choice(os.listdir(folder))
         m = pattern.match(race)
-        string = "convert -append " + os.path.join(folder, m.group(1) + "_header.jpg ")
-        filenames = [f for f in os.listdir(folder) if f.endswith(".jpg") and f.startswith(m.group(1)) and not f.endswith("_header.jpg")]
+        string = "convert -append " + os.path.join(folder, m.group(1) + m.group(2) + '_' + m.group(3) + "_header.jpg ")
+        filenames = [f for f in os.listdir(folder) if f.endswith(".jpg") and f.startswith(m.group(1) + m.group(2) + '_' + m.group(3)) and not f.endswith("_header.jpg")]
         random.shuffle(filenames)
+        nums = []
         for filename in sorted(filenames[:self.horses1]):
             string += os.path.join(folder, filename) + " "
+            m = pattern.match(filename)
+            nums += m.group(4)
         string += "test.jpg"
 
         os.system(string)
+
+        # fin horses in csv files
+        try:
+            superhorses = get_positions(m.group(1), m.group(2), m.group(3))
+            self.horses_racing = []
+            self.horses_odds = ""
+            for horse in superhorses:
+                if (horse['B_ProgNum'] in nums):
+                    self.horses_racing.append(horse)
+            # find winning horse
+            self.horses_racing.sort(key = lambda x:x['L_Time'])
+            self.horse_win = self.horses_racing[1]['B_Horse']
+            # find odds for horses
+            self.horses_racing.sort(key = lambda x:x['B_ProgNum'])
+            for horse in self.horses_racing:
+                self.horses_odds += horse['B_Horse'] + " : " + horse['B_MLOdds'] + "\n  "
+        except FileNotFoundError:
+            self.generateforms()
 
     def scrolledcanvas(self):
         # generate forms
@@ -284,27 +304,44 @@ class Window1:
         self.countdown()
         # show forms
         self.scrolledcanvas()
+        # drop down menu of horses
+        self.horse_names = []
+        for horse in self.horses_racing:
+            self.horse_names.append(horse['B_Horse'])
+        self.horsemenu = tk.StringVar(self.bet)
+        self.horsemenu.set("Select horse")
+        self.horse_select = tk.OptionMenu(self.bet, self.horsemenu, *self.horse_names)
+        self.horse_select.config(font = (None, 20))
         # show race information on side
-        tk.Label(self.bet, text = 'Purse Total: $%s\n\n\nOdds:\nHorse 1: %s\n\n\nSystem recommendation: '
-        '%s\n\n\nHorse you want to bet on: \n\n\n' %(format(self.purse1, '.2f'), self.purse1, self.purse1), font = (None, 20), justify = 'left').grid(row = 0, column = 5, padx = 40, pady = 10, sticky = tk.E)
+        tk.Label(self.bet, text = 'Purse Total: $%s\n\n\nOdds:\n  %s\n\n\nSystem recommendation: \n  '
+        '%s\n\n\nHorse you want to bet on: ' %(format(self.purse1, '.2f'), self.horses_odds, self.horse_win), font = (None, 20), justify = 'left').grid(row = 0, column = 5, padx = 40, pady = 10, sticky = tk.E)
+        self.horse_select.grid(row = 0, column = 5, pady = (475, 50))
         # submit button
-        tk.Button(self.bet, text = 'Submit', command = self.retrieving_data).grid(row = 0, column = 5, padx = 10, pady= 10, sticky = tk.S)
+        tk.Button(self.bet, text = 'Submit', command = self.retrieving_data, font = (None, 20)).grid(row = 0, column = 5, padx = 10, pady= 10, sticky = tk.S)
 
     def retrieving_data(self):
         # check how long the user took to submit
         print(self.timeformat)
-        # delete old frame
-        self.bet.destroy()
-        # variable to keep track if there are more races
-        self.next_race = True
-        # create a new window for retrieving data
-        self.retrieve = tk.Tk()
-        self.retrieve.title("Retrieving Data")
-        self.retrieve.bind('<Control-q>', quit)
-        tk.Label(self.retrieve, text = "Retrieving Data...", font = (None, 50)).pack(padx = 10, pady = 10)
-        # delete window after 2 seconds
-        self.retrieve.after(2000, lambda: self.results())
-        self.retrieve.mainloop()
+        # check if a horse is selected
+        if self.horsemenu.get() == "Select horse":
+            error = tk.Tk()
+            error.title("ERROR")
+            error.bind('<Control-q>', quit)
+            tk.Label(error, text = "Please select a horse.", font = (None, 20)).pack(padx = 10, pady = 10)
+            tk.Button(error, text = "OK", command = lambda : error.destroy()).pack(padx = 10, pady = 10)
+        else:
+            # delete old frame
+            self.bet.destroy()
+            # variable to keep track if there are more races
+            self.next_race = True
+            # create a new window for retrieving data
+            self.retrieve = tk.Tk()
+            self.retrieve.title("Retrieving Data")
+            self.retrieve.bind('<Control-q>', quit)
+            tk.Label(self.retrieve, text = "Retrieving Data...", font = (None, 50)).pack(padx = 10, pady = 10)
+            # delete window after 2 seconds
+            self.retrieve.after(2000, lambda: self.results())
+            self.retrieve.mainloop()
 
     def results(self):
         # destroy the retrieving screen and create a new screen for results
@@ -314,16 +351,16 @@ class Window1:
         self.result.grid_rowconfigure(0, weight = 1)
         self.result.grid_columnconfigure(0, weight = 1)
         # result labels
-        tk.Label(self.result, text = 'Results', font = (None, 35)).grid(row = 1, column = 1, columnspan = 2, pady= (400, 10))
+        tk.Label(self.result, text = 'Results', font = (None, 35)).grid(row = 0, column = 0, padx = (700, 10), pady = (400, 10))
         tk.Label(self.result, text = 'Actual result: ', font = (None, 25)).grid(row = 2, column = 0, padx = (700, 10), pady= 10)
-        tk.Label(self.result, text = 'System\'s choice: ', font = (None, 25)).grid(row = 3, column = 0, padx = (700, 10), pady= 10)
-        tk.Label(self.result, text = 'Your choice: ', font = (None, 25)).grid(row = 4, column = 0, padx = (700, 10), pady= 10)
-        tk.Label(self.result, text = 'Updated Purse: ', font = (None, 25)).grid(row = 5, column = 0, padx = (700, 10), pady= 10)
+        tk.Label(self.result, text = 'System\'s choice: %s' % (self.horse_win), font = (None, 25)).grid(row = 3, column = 0, padx = (700, 10), pady= 10)
+        tk.Label(self.result, text = 'Your choice: %s'% (self.horsemenu.get()), font = (None, 25)).grid(row = 4, column = 0, padx = (700, 10), pady= 10)
+        tk.Label(self.result, text = 'Updated Purse: $%s' % (self.purse1), font = (None, 25)).grid(row = 5, column = 0, padx = (700, 10), pady= 10)
         # check if there are more races
         if self.trials1 == 1:
-            tk.Button(self.result, text = 'Exit', font = (None, 20), command = self.exit).grid(row = 6, column = 1, padx = 10, pady = 10)
+            tk.Button(self.result, text = 'Exit', font = (None, 20), command = self.exit).grid(row = 6, column = 0, padx = (700, 10), pady = 10)
         else:
-            tk.Button(self.result, text = 'Next Race', font = (None, 20), command = self.races).grid(row = 6, column = 1, padx = 10, pady = 10)
+            tk.Button(self.result, text = 'Next Race', font = (None, 20), command = self.races).grid(row = 6, column = 0, padx = (700, 10), pady = 10)
 
     def races(self):
         # if there are more races, decrement trails and load another race
@@ -363,7 +400,6 @@ class Window1:
 root = tk.Tk()
 
 def run():
-    superhorses = get_positions("PRX", "170508", 4)
     root.title("Horse Racing")
     root.geometry("500x425")
     root.bind('<Control-q>', quit)
