@@ -240,7 +240,7 @@ class Window1:
             # find predicted winning horse
             self.horse_pwin = min(self.horses_racing, key = lambda x:x['L_Time'])['B_Horse']
             # find actual winning horse
-            self.horse_win =  min(self.horses_racing, key = lambda x:x['L_Rank'])['B_Horse']
+            self.horse_win =  min(self.horses_racing, key = lambda x:x['L_Time'])['B_Horse']
             # find odds for horses
             self.horses_racing.sort(key = lambda x:x['B_ProgNum'])
             for horse in self.horses_racing:
@@ -348,11 +348,12 @@ class Window1:
 
     def update_purse(self):
         self.purse1 -= self.betting1
-        for horse in self.superhorses:
-            if horse['B_Horse'] == self.horsemenu.get():
-                odds = horse['B_MLOdds'].split('-')
-        if self.betting1 != '0':
-            self.purse1 = ((self.betting1 * float(odds[0])) / float(odds[1])) + self.purse1
+        if self.horse_win == self.horsemenu.get():
+            for horse in self.superhorses:
+                if horse['B_Horse'] == self.horsemenu.get():
+                    odds = horse['B_MLOdds'].split('-')
+            if self.betting1 != '0':
+                self.purse1 = ((self.betting1 * float(odds[0])) / float(odds[1])) + self.purse1
 
     def results(self):
         self.update_purse()
@@ -367,7 +368,7 @@ class Window1:
         tk.Label(self.result, text = 'Actual result: %s' % (self.horse_win), font = (None, 25)).grid(row = 2, column = 0, padx = (700, 10), pady= 10)
         tk.Label(self.result, text = 'System\'s choice: %s' % (self.horse_pwin), font = (None, 25)).grid(row = 3, column = 0, padx = (700, 10), pady= 10)
         tk.Label(self.result, text = 'Your choice: %s'% (self.horsemenu.get()), font = (None, 25)).grid(row = 4, column = 0, padx = (700, 10), pady= 10)
-        tk.Label(self.result, text = 'Updated Purse: $%s' % (self.purse1), font = (None, 25)).grid(row = 5, column = 0, padx = (700, 10), pady= 10)
+        tk.Label(self.result, text = 'Updated Purse: $%s' % (format(self.purse1, '.2f')), font = (None, 25)).grid(row = 5, column = 0, padx = (700, 10), pady= 10)
         # check if there are more races
         if self.trials1 == 1:
             tk.Button(self.result, text = 'Exit', font = (None, 20), command = self.exit).grid(row = 6, column = 0, padx = (700, 10), pady = 10)
