@@ -238,11 +238,9 @@ class Window1:
                 if (horse['B_ProgNum'] in nums):
                     self.horses_racing.append(horse)
             # find predicted winning horse
-            self.horses_racing.sort(key = lambda x:x['L_Time'])
-            self.horse_pwin = self.horses_racing[0]['B_Horse']
+            self.horse_pwin = min(self.horses_racing, key = lambda x:x['L_Time'])['B_Horse']
             # find actual winning horse
-            self.horses_racing.sort(key = lambda x:x['L_Time'])
-            self.horse_win = self.horses_racing[0]['B_Horse']
+            self.horse_win =  min(self.horses_racing, key = lambda x:x['L_Rank'])['B_Horse']
             # find odds for horses
             self.horses_racing.sort(key = lambda x:x['B_ProgNum'])
             for horse in self.horses_racing:
@@ -349,6 +347,7 @@ class Window1:
             self.retrieve.mainloop()
 
     def update_purse(self):
+        self.purse1 -= self.betting1
         for horse in self.superhorses:
             if horse['B_Horse'] == self.horsemenu.get():
                 odds = horse['B_MLOdds'].split('-')
