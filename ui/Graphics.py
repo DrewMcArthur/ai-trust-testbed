@@ -211,6 +211,7 @@ class Window1:
             tk.Button(self.instructions, text = 'Start', font = (None, 25), command = self.betting_screen).grid(row = 1, column = 1, sticky = tk.S)
 
     def generateforms(self):
+        """CHECK TO SEE IF CSV HORSE IS THERE"""
         folder = "split_jpgs"
         # randomly generate race forms
         pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?\.jpg')
@@ -230,19 +231,23 @@ class Window1:
 
         # fin horses in csv files
         try:
-            superhorses = get_positions(m.group(1), m.group(2), m.group(3))
+            self.superhorses = get_positions(m.group(1), m.group(2), m.group(3))
             self.horses_racing = []
             self.horses_odds = ""
-            for horse in superhorses:
+            for horse in self.superhorses:
                 if (horse['B_ProgNum'] in nums):
                     self.horses_racing.append(horse)
-            # find winning horse
+            # find predicted winning horse
             self.horses_racing.sort(key = lambda x:x['L_Time'])
-            self.horse_win = self.horses_racing[1]['B_Horse']
+            self.horse_pwin = self.horses_racing[0]['B_Horse']
+            # find actual winning horse
+            self.horses_racing.sort(key = lambda x:x['L_Time'])
+            self.horse_win = self.horses_racing[0]['B_Horse']
             # find odds for horses
             self.horses_racing.sort(key = lambda x:x['B_ProgNum'])
             for horse in self.horses_racing:
                 self.horses_odds += horse['B_Horse'] + " : " + horse['B_MLOdds'] + "\n  "
+        # check if csv file is available
         except FileNotFoundError:
             self.generateforms()
 
@@ -313,9 +318,9 @@ class Window1:
         self.horse_select = tk.OptionMenu(self.bet, self.horsemenu, *self.horse_names)
         self.horse_select.config(font = (None, 20))
         # show race information on side
-        tk.Label(self.bet, text = 'Purse Total: $%s\n\n\nOdds:\n  %s\n\n\nSystem recommendation: \n  '
-        '%s\n\n\nHorse you want to bet on: ' %(format(self.purse1, '.2f'), self.horses_odds, self.horse_win), font = (None, 20), justify = 'left').grid(row = 0, column = 5, padx = 40, pady = 10, sticky = tk.E)
-        self.horse_select.grid(row = 0, column = 5, pady = (475, 50))
+        tk.Label(self.bet, text = 'Purse Total: $%s\n\n\nBetting Amount: $%s\n\n\nOdds:\n  %s\n\n\nSystem recommendation: \n  '
+        '%s\n\n\nHorse you want to bet on: ' %(format(self.purse1, '.2f'), format(self.betting1, '.2f'), self.horses_odds, self.horse_pwin), font = (None, 20), justify = 'left').grid(row = 0, column = 5, padx = 40, pady = 10, sticky = tk.E)
+        self.horse_select.grid(row = 0, column = 5, pady = (550, 50))
         # submit button
         tk.Button(self.bet, text = 'Submit', command = self.retrieving_data, font = (None, 20)).grid(row = 0, column = 5, padx = 10, pady= 10, sticky = tk.S)
 
@@ -343,7 +348,15 @@ class Window1:
             self.retrieve.after(2000, lambda: self.results())
             self.retrieve.mainloop()
 
+    def update_purse(self):
+        for horse in self.superhorses:
+            if horse['B_Horse'] == self.horsemenu.get():
+                odds = horse['B_MLOdds'].split('-')
+        if self.betting1 != '0':
+            self.purse1 = ((self.betting1 * float(odds[0])) / float(odds[1])) + self.purse1
+
     def results(self):
+        self.update_purse()
         # destroy the retrieving screen and create a new screen for results
         self.retrieve.destroy()
         self.result = tk.Frame(self.window)
@@ -352,8 +365,8 @@ class Window1:
         self.result.grid_columnconfigure(0, weight = 1)
         # result labels
         tk.Label(self.result, text = 'Results', font = (None, 35)).grid(row = 0, column = 0, padx = (700, 10), pady = (400, 10))
-        tk.Label(self.result, text = 'Actual result: ', font = (None, 25)).grid(row = 2, column = 0, padx = (700, 10), pady= 10)
-        tk.Label(self.result, text = 'System\'s choice: %s' % (self.horse_win), font = (None, 25)).grid(row = 3, column = 0, padx = (700, 10), pady= 10)
+        tk.Label(self.result, text = 'Actual result: %s' % (self.horse_win), font = (None, 25)).grid(row = 2, column = 0, padx = (700, 10), pady= 10)
+        tk.Label(self.result, text = 'System\'s choice: %s' % (self.horse_pwin), font = (None, 25)).grid(row = 3, column = 0, padx = (700, 10), pady= 10)
         tk.Label(self.result, text = 'Your choice: %s'% (self.horsemenu.get()), font = (None, 25)).grid(row = 4, column = 0, padx = (700, 10), pady= 10)
         tk.Label(self.result, text = 'Updated Purse: $%s' % (self.purse1), font = (None, 25)).grid(row = 5, column = 0, padx = (700, 10), pady= 10)
         # check if there are more races
@@ -363,7 +376,7 @@ class Window1:
             tk.Button(self.result, text = 'Next Race', font = (None, 20), command = self.races).grid(row = 6, column = 0, padx = (700, 10), pady = 10)
 
     def races(self):
-        # if there are more races, decrement trails and load another race
+        # if there are more races, decrement trials and load another race
         if self.trials1 > 0:
             self.betting_screen()
             self.trials1 -= 1
