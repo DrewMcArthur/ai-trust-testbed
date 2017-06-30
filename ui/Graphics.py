@@ -235,8 +235,8 @@ class Window1:
             self.window.title("Horse Racing")
             self.window.bind('<Control-q>', quit)
             # find size of screen
-            self.screen_width = self.window.winfo_screenwidth()
-            self.screen_height = self.window.winfo_screenheight()
+            self.screen_width = int(self.window.winfo_screenwidth())
+            self.screen_height = int(self.window.winfo_screenheight())
             # fit to screen
             self.window.geometry("%sx%s" % (self.screen_width, self.screen_height))
 
@@ -245,16 +245,19 @@ class Window1:
             # instructions frame
             self.instructions = tk.Frame(self.window)
             self.instructions.grid()
-            self.instructions.grid_rowconfigure(0,  minsize = int(self.screen_height/3))
+            self.instructions.grid_rowconfigure(0,  minsize = int(self.screen_height/3.5))
             self.instructions.grid_columnconfigure(0,  minsize = int(self.screen_width/3))
+            self.instructions.grid_rowconfigure(1,  minsize = int(self.screen_height/3.5))
+            self.instructions.grid_columnconfigure(1,  minsize = int(self.screen_width/3))
+            self.instructions.grid_rowconfigure(2,  minsize = int(self.screen_height/3.5))
+            self.instructions.grid_columnconfigure(2,  minsize = int(self.screen_width/3))
             # instructions label
             tk.Label(self.instructions, text = 'Welcome!\n Please decide the winner.'
                 "\n You will have %s minutes per race. \nThere are %s races." 
-                "\n Press start when you are ready."
-                % (self.time1, self.trials1), font = (None, int(self.screen_width*.02))).grid(row = 1, \
-                column = 1)
+                "\n Press start when you are ready." % (self.time1, self.trials1), \
+                font = (None, int(self.screen_width*.02))).grid(row = 1, column = 1)
             tk.Button(self.instructions, text = 'Start', font = (None, int(self.screen_width*.01)), \
-                command = self.betting_screen).grid(row = 2, column = 1, pady = 10, sticky = tk.S)
+                command = self.betting_screen).grid(row = 1, column = 1, sticky = tk.S)
 
     def generateforms(self):
         # creates forms with random horses
