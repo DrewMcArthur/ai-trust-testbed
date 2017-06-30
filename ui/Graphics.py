@@ -250,7 +250,7 @@ class Window1:
                 "\n You will have %s minutes per race. \nThere are %s races." 
                 "\n Press start when you are ready."
                 % (self.time1, self.trials1), font = (None, 50)).grid(row = 1, \
-                column = 1, padx = (self.screen_width/4), pady = ((self.screen_height/4), 50))
+                column = 1, padx = (self.screen_width/4), pady = ((self.screen_height/4), 100))
             tk.Button(self.instructions, text = 'Start', font = (None, 25), \
                 command = self.betting_screen).grid(row = 1, column = 1, sticky = tk.S)
 
@@ -395,7 +395,9 @@ class Window1:
         tk.Label(self.bet, text = 'Purse Total: $%s\n\n\nBetting Amount: '
             '$%s\n\n\nOdds:\n  %s\n\n\nSystem recommendation: \n  '
         '%s\n\n\nHorse you want to bet on: ' %(format(self.purse1, '.2f'), \
-            format(self.betting1, '.2f'), self.horses_odds, self.horse_pwin), font = (None, 20), justify = 'left').grid(row = 0, column = 5, padx = 40, pady = 10, sticky = tk.E)
+            format(self.betting1, '.2f'), self.horses_odds, self.horse_pwin), \
+            font = (None, 20), justify = 'left').grid(row = 0, column = 5, \
+            padx = 40, pady = 10, sticky = tk.E)
         self.horse_select.grid(row = 0, column = 5, pady = (550, 50))
         # submit button
         tk.Button(self.bet, text = 'Submit', command = self.retrieving_data, \
@@ -451,24 +453,31 @@ class Window1:
         self.result.grid_columnconfigure(0, weight = 1)
         # result labels
         tk.Label(self.result, text = 'Results', font = (None, 35)).grid(row = 0, \
-            column = 0, padx = (700, 10), pady = (400, 10))
+            column = 0, padx = ((self.screen_width/2.5), 10), pady = \
+            ((self.screen_height/3), 10))
         tk.Label(self.result, text = 'Actual result: %s' % (self.horse_win), \
-            font = (None, 25)).grid(row = 2, column = 0, padx = (700, 10), pady= 10)
+            font = (None, 25)).grid(row = 2, column = 0, padx = \
+            ((self.screen_width/2.5), 10), pady= 10)
         tk.Label(self.result, text = 'System\'s choice: %s' % (self.horse_pwin), \
-            font = (None, 25)).grid(row = 3, column = 0, padx = (700, 10), pady= 10)
+            font = (None, 25)).grid(row = 3, column = 0, padx = \
+            ((self.screen_width/2.5), 10), pady= 10)
         tk.Label(self.result, text = 'Your choice: %s'% (self.horsemenu.get()), \
-            font = (None, 25)).grid(row = 4, column = 0, padx = (700, 10), pady= 10)
+            font = (None, 25)).grid(row = 4, column = 0, padx = \
+            ((self.screen_width/2.5), 10), pady= 10)
         # update the users purse
         self.update_purse()
         tk.Label(self.result, text = 'Updated Purse: $%s' % (format(self.purse1, '.2f')), \
-            font = (None, 25)).grid(row = 5, column = 0, padx = (700, 10), pady= 10)
+            font = (None, 25)).grid(row = 5, column = 0, padx = \
+            ((self.screen_width/2.5), 10), pady= 10)
         # check if there are more races to display 'next race' or 'exit'
         if self.trials1 == 1:
             tk.Button(self.result, text = 'Exit', font = (None, 20), command = \
-                self.exit).grid(row = 6, column = 0, padx = (700, 10), pady = 10)
+                self.exit).grid(row = 6, column = 0, padx = \
+                ((self.screen_width/2.5), 10), pady = 10)
         else:
             tk.Button(self.result, text = 'Next Race', font = (None, 20), command = \
-                self.races).grid(row = 6, column = 0, padx = (700, 10), pady = 10)
+                self.races).grid(row = 6, column = 0, padx = \
+                ((self.screen_width/2.5), 10), pady = 10)
 
     def races(self):
         # if there are more races, decrement trials and load another race
@@ -486,16 +495,16 @@ class Window1:
         # instructions for what to do next
         tk.Label(self.exit, text = 'Thank you!\nPlease notify the researcher.', \
             font = (None, 50)).grid(row = 0, column = 1, columnspan = 2, \
-            padx = (600, 100), pady = (400, 10))
+            padx = ((self.screen_width/3), 100), pady = ((self.screen_height/3), 10))
         # instructions for inserting ID number
         tk.Label(self.exit, text = 'Please enter ID number in order to save.').grid\
-        (row = 2, column = 1, columnspan = 2, padx = (600, 100))
+        (row = 2, column = 1, columnspan = 2, padx = ((self.screen_width/3), 100))
         self.save = tk.Entry(self.exit, width = 30)
-        self.save.grid(row = 3, column = 1, columnspan = 2, padx = (500, 10))
+        self.save.grid(row = 3, column = 1, columnspan = 2, padx = ((self.screen_width/3), 100))
         # save button
         tk.Button(self.exit, text = 'Save', font = (None, 15), command = \
             self.checksave).grid(row = 4, column = 1, columnspan = 2, \
-            padx = (550, 50), pady = 10)
+            padx = ((self.screen_width/3), 50), pady = 10)
 
     def checksave(self):
         # check the ID number
@@ -505,6 +514,7 @@ class Window1:
         if self.save.get() == "-0":
             print("NO SAVE")
             self.exit.destroy()
+            self.window.destroy()
         # check if no entry
         elif self.save.get() == "":
             error = tk.Tk()
@@ -515,10 +525,21 @@ class Window1:
             tk.Button(error, text = "OK", command = lambda : \
                 error.destroy()).pack(padx = 10, pady = 10)
         # save if pass all tests
-        else: 
-            print("SAVE")
-            self.exit.destroy()
-        self.window.destroy()
+        else:
+            # check if entry is numbers
+            try:
+                int(self.save.get())
+                print("SAVE")
+                self.exit.destroy()
+                self.window.destroy()
+            except ValueError:
+                error = tk.Tk()
+                error.title("ERROR")
+                error.bind('<Control-q>', quit)
+                tk.Label(error, text = "Please insert numbers.", font = \
+                    (None, 20)).pack(padx = 10, pady = 10)
+                tk.Button(error, text = "OK", command = lambda : \
+                    error.destroy()).pack(padx = 10, pady = 10)
 
 root = tk.Tk()
 
