@@ -243,13 +243,15 @@ class Window1:
             print(self.screen_width, self.screen_height)
 
             # instructions frame
+            self.screen_width = int(self.window.winfo_screenwidth())
+            self.screen_height = int(self.window.winfo_screenheight())- 100
             self.instructions = tk.Frame(self.window)
             self.instructions.grid()
-            self.instructions.grid_rowconfigure(0,  minsize = int(self.screen_height/3.5))
+            self.instructions.grid_rowconfigure(0,  minsize = int(self.screen_height/3))
             self.instructions.grid_columnconfigure(0,  minsize = int(self.screen_width/3))
-            self.instructions.grid_rowconfigure(1,  minsize = int(self.screen_height/3.5))
+            self.instructions.grid_rowconfigure(1,  minsize = int(self.screen_height/3))
             self.instructions.grid_columnconfigure(1,  minsize = int(self.screen_width/3))
-            self.instructions.grid_rowconfigure(2,  minsize = int(self.screen_height/3.5))
+            self.instructions.grid_rowconfigure(2,  minsize = int(self.screen_height/3))
             self.instructions.grid_columnconfigure(2,  minsize = int(self.screen_width/3))
             # instructions label
             tk.Label(self.instructions, text = 'Welcome!\n Please decide the winner.'
