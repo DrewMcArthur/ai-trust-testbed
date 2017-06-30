@@ -234,10 +234,11 @@ class Window1:
             self.window = tk.Tk()
             self.window.title("Horse Racing")
             self.window.bind('<Control-q>', quit)
-            screen_width = self.window.winfo_screenwidth()
-            screen_height = self.window.winfo_screenheight()
-            self.window.geometry("%sx%s" % (screen_width, screen_height))
-            #self.window.attributes("-fullscreen", True)
+            # find size of screen
+            self.screen_width = self.window.winfo_screenwidth()
+            self.screen_height = self.window.winfo_screenheight()
+            # fit to screen
+            self.window.geometry("%sx%s" % (self.screen_width, self.screen_height))
 
             # instructions frame
             self.instructions = tk.Frame(self.window)
@@ -249,7 +250,7 @@ class Window1:
                 "\n You will have %s minutes per race. \nThere are %s races." 
                 "\n Press start when you are ready."
                 % (self.time1, self.trials1), font = (None, 50)).grid(row = 1, \
-                column = 1, padx = (500, 450), pady = (300, 100))
+                column = 1, padx = (self.screen_width/4), pady = ((self.screen_height/4), 50))
             tk.Button(self.instructions, text = 'Start', font = (None, 25), \
                 command = self.betting_screen).grid(row = 1, column = 1, sticky = tk.S)
 
