@@ -240,6 +240,8 @@ class Window1:
             # fit to screen
             self.window.geometry("%sx%s" % (self.screen_width, self.screen_height))
 
+            print(self.screen_width, self.screen_height)
+
             # instructions frame
             self.instructions = tk.Frame(self.window)
             self.instructions.grid()
@@ -249,7 +251,7 @@ class Window1:
             tk.Label(self.instructions, text = 'Welcome!\n Please decide the winner.'
                 "\n You will have %s minutes per race. \nThere are %s races." 
                 "\n Press start when you are ready."
-                % (self.time1, self.trials1), font = (None, 50)).grid(row = 1, \
+                % (self.time1, self.trials1), font = (None, int(self.screen_width/40))).grid(row = 1, \
                 column = 1, padx = (self.screen_width/4), pady = ((self.screen_height/4), 100))
             tk.Button(self.instructions, text = 'Start', font = (None, 25), \
                 command = self.betting_screen).grid(row = 1, column = 1, sticky = tk.S)
