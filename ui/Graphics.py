@@ -234,7 +234,10 @@ class Window1:
             self.window = tk.Tk()
             self.window.title("Horse Racing")
             self.window.bind('<Control-q>', quit)
-            self.window.attributes("-fullscreen", True)
+            screen_width = self.window.winfo_screenwidth()
+            screen_height = self.window.winfo_screenheight()
+            self.window.geometry("%sx%s" % (screen_width, screen_height))
+            #self.window.attributes("-fullscreen", True)
 
             # instructions frame
             self.instructions = tk.Frame(self.window)
