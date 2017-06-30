@@ -7,29 +7,18 @@ from PIL import Image, ImageTk
 from lib.load_ai import get_positions
 
 def check():
-    # checks for keyboard interrupts (ctrl+q)
+    # checks every 50 milliseconds for keyboard interrupts (ctrl+q)
+    # quits if ctrl+q is pressed
     root.after(50, self.check)
-    Window1.exit()
 
 class Window1:
     def __init__(self, master):
-        # master frame
+        # setting up first window (settings)
         self.master = master
         self.settings = tk.Frame(self.master)
         self.settings.grid()
         self.s_settings()
     def s_settings(self):
-        try:
-            if hasattr(self, "window"):
-                self.window.destroy()
-                root = tk.Tk()
-                root.title("Horse Racing")
-                root.geometry("500x425")
-                root.bind('<Control-q>', quit)
-                self.settings = tk.Frame(root)
-                self.settings.grid()
-        except AttributeError:
-            pass
         # setting title
         tk.Label(self.settings, text = 'Settings', font = (None, 15)).grid( \
             row = 1, column = 1, columnspan = 2, pady = 10)
@@ -39,6 +28,7 @@ class Window1:
         # number of trials text box
         self.trials = tk.Entry(self.settings, width = 3)
         self.trials.grid(row = 2, column = 2, sticky = tk.W)
+        # disabling and enabling accuracy bar
         def toggleslider():
             if self.activate == True:
                 self.accuracy.config(foreground = "gainsboro")
@@ -57,6 +47,8 @@ class Window1:
         self.accuracy.grid(row = 3, column = 2, columnspan = 2, sticky = tk.W)
         self.activate = True
         self.checkaccuracy = tk.StringVar(self.settings)
+        # check button for using accuracy of classifer
+        # if checked, accuracy bar is disabled
         self.CA = tk.Checkbutton(self.settings, text = "Use accuracy of classifer.", \
             variable = self.checkaccuracy, onvalue = True, offvalue = False, \
             command = toggleslider)
@@ -67,7 +59,7 @@ class Window1:
         tk.Label(self.settings, text = 'Note: default is one horse', \
             font = (None, 10)).grid(row = 7, column = 1, padx = 10, pady = 5, \
             sticky = tk.S + tk.W)
-        # show check buttons
+        # show check buttons - time, beyer, and show order
         self.showtime = tk.StringVar(self.settings)
         self.showbeyer = tk.StringVar(self.settings)
         self.showorder = tk.StringVar(self.settings)
@@ -94,16 +86,18 @@ class Window1:
         self.betting = tk.Entry(self.settings, width = 3)
         self.betting.grid(row = 9, column = 2, padx = 100, sticky = tk.W)
         self.option_betting = tk.StringVar()
+        # change betting option
         tk.Radiobutton(self.settings, variable = self.option_betting, \
             text = 'Change', value = 'Change',
             command = disableEntry).grid(row = 8, column = 2, sticky = tk.W)
+        # fixed betting option
         tk.Radiobutton(self.settings, variable = self.option_betting, \
             text = 'Fixed', value = 'Fixed', 
             command = enableEntry).grid(row = 9, column = 2, sticky = tk.W)
         # purse size prompt
         tk.Label(self.settings, text = 'Purse Size: ').grid(row = 10, \
             column = 1, padx = 10, pady = 5, sticky = tk.W)
-        # purse size entry
+        # purse size entry box
         tk.Label(self.settings, text = '$').grid(row = 10, column = 2, \
             sticky = tk.W)
         self.purse = tk.Entry(self.settings, width = 5)
@@ -111,13 +105,13 @@ class Window1:
         # number of horses prompt
         tk.Label(self.settings, text = 'Number of Horses: ').grid(row = 11, \
             column = 1, padx = 10, pady = 5, sticky = tk.W)
-        # number of horses entry
+        # number of horses entry box
         self.horses = tk.Entry(self.settings, width = 3)
         self.horses.grid(row = 11, column = 2, sticky = tk.W)
         # time limit per race prompt
         tk.Label(self.settings, text = 'Time Limit per Race: ').grid(row = 12, \
             column = 1, padx = 10, pady = 5, sticky = tk.W)
-        # time limit per race entry
+        # time limit per race entry box
         self.time = tk.Entry(self.settings, width = 3)
         self.time.grid(row = 12, column = 2, sticky = tk.W)
         tk.Label(self.settings, text = 'minutes').grid(row = 12, column = 2, \
@@ -128,26 +122,38 @@ class Window1:
         (row = 14, column = 1, columnspan = 2, pady = 10)
 
         # defaults
+        # trails entry box
         self.trials.insert(0, 5)
+        # accuracy slider
         self.accuracy.set(50)
+        # use accuracy of classifer
         self.CA.deselect()
+        # show time
         self.C1.deselect()
+        # show beyer
         self.C2.deselect()
+        # show order of horses
         self.C3.deselect()
+        # betting options
         self.option_betting.set('Fixed')
+        # fixed bet entry box
         self.betting.insert(0, 2)
+        # purse size
         self.purse.insert(0, "{0:.02f}".format(25.00))
+        # number of horses
         self.horses.insert(0, 3)
+        # time per race
         self.time.insert(0, 15)
 
     def errorcheck(self):
-        # check if all elements are given
+        # checks to make sure the settings were correct
         elementlist = [self.trials.get(), self.accuracy.get(), \
         self.checkaccuracy.get(), self.showtime.get(), self.showbeyer.get(), \
         self.showorder.get(), self.purse.get(), self.betting.get(), \
         self.horses.get(), self.time.get()]
+
         for element in elementlist:
-            # check if elements are empty
+            # check if any element is empty
             if not element:
                 error = tk.Tk()
                 error.title("ERROR")
@@ -189,7 +195,6 @@ class Window1:
 
     def instructions(self):
         # screen that displays the instructions
-        """SAVE DATA"""
         # checking if all entries are filled out
         if self.errorcheck():
             # saving data from settings
@@ -202,6 +207,7 @@ class Window1:
             self.purse1 = float(self.purse.get())
             self.purse1 = round(self.purse1, 2)
             self.betting_option = self.option_betting.get()
+            # set fixed betting amount to 0 if betting option is change
             if not (self.betting.get()):
                 self.betting1 = 0
             else:
@@ -229,6 +235,8 @@ class Window1:
             self.window.title("Horse Racing")
             self.window.bind('<Control-q>', quit)
             self.window.attributes("-fullscreen", True)
+
+            # instructions frame
             self.instructions = tk.Frame(self.window)
             self.instructions.grid()
             self.instructions.grid_rowconfigure(0, weight = 1)
@@ -243,14 +251,15 @@ class Window1:
                 command = self.betting_screen).grid(row = 1, column = 1, sticky = tk.S)
 
     def generateforms(self):
-        """CHECK TO SEE IF CSV HORSE IS THERE"""
+        # creates forms with random horses
+        # folder where forms are found
         folder = "split_jpgs"
         # randomly generate race forms
         pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?\.jpg')
         race = random.choice(os.listdir(folder))
         m = pattern.match(race)
 
-        # get filepaths, and make sure they exist before continuing
+        # get filepaths and make sure they exist before continuing
         sep = "_" if len(m.group(1)) < 3 else ""
         p = "data/" + m.group(1) + "/" + m.group(2) + "/" + m.group(1) + sep + \
             m.group(2) + "_SF.CSV"
@@ -259,6 +268,7 @@ class Window1:
         lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
               m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_lb.csv"
 
+        # find a race
         while not (os.path.isfile(p) and os.path.isfile(ltp) and os.path.isfile(lbp)):
             print("File doesn't exist! Trying again...")
             race = random.choice(os.listdir(folder))
@@ -273,6 +283,7 @@ class Window1:
                   m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_lb.csv"
 
 
+        # pick random horses and make a form
         string = "convert -append " + os.path.join(folder, m.group(1) + \
             m.group(2) + '_' + m.group(3) + "_header.jpg ")
         filenames = [f for f in os.listdir(folder) if f.endswith(".jpg") and \
@@ -288,15 +299,14 @@ class Window1:
 
         os.system(string)
 
-        # check if csv file is available
-
-        # fin horses in csv files
+        # find horses in csv files
         self.superhorses = get_positions(m.group(1), m.group(2), m.group(3))
         self.horses_racing = []
         self.horses_odds = ""
         for horse in self.superhorses:
             if (horse['B_ProgNum'] in nums):
                 self.horses_racing.append(horse)
+        
         # find predicted winning horse
         self.horses_racing.sort(key = lambda x:x['L_Time'])
         self.horse_pwin = self.horses_racing[0]['B_Horse']
@@ -333,6 +343,7 @@ class Window1:
         self.imgtag = self.canv.create_image(0, 0, anchor = "nw", image = self.im2)
 
     def countdown(self):
+        # countdown timer
         self.t -= 1
         mins, secs = divmod(self.t, 60)
         self.timeformat = '{:02d}:{:02d}'.format(mins, secs)
@@ -343,7 +354,7 @@ class Window1:
 
     def betting_screen(self):
         # check if result and instructions screen has been destroyed
-        # destroy them if they are created
+        # destroy them if they are created to show new race
         try:
             if hasattr(self, 'result'):
                 self.result.destroy()
@@ -360,7 +371,7 @@ class Window1:
         self.bet.grid()
         self.bet.grid_rowconfigure(0, weight = 1)
         self.bet.grid_columnconfigure(0, weight = 1)
-        # timer
+        # set up for countdown timer
         self.t = self.time1 * 60
         self.timer_label = tk.Label(self.bet, textvariable = "", font = (None, 25), width = 10)
         self.timer_label.grid(row = 0, column = 5, padx = 10, pady = 10, sticky = tk.N + tk.E)
@@ -413,7 +424,10 @@ class Window1:
             self.retrieve.mainloop()
 
     def update_purse(self):
+        # updates the purse
+        # take away money used to bet
         self.purse1 -= self.betting1
+        # if bet on the right horse, calculate winnings
         if self.horse_win == self.horsemenu.get():
             for horse in self.superhorses:
                 if horse['B_Horse'] == self.horsemenu.get():
@@ -423,7 +437,7 @@ class Window1:
                     float(odds[1])) + self.purse1
 
     def results(self):
-        self.update_purse()
+        # displays the results of the race
         # destroy the retrieving screen and create a new screen for results
         self.retrieve.destroy()
         self.result = tk.Frame(self.window)
@@ -439,9 +453,11 @@ class Window1:
             font = (None, 25)).grid(row = 3, column = 0, padx = (700, 10), pady= 10)
         tk.Label(self.result, text = 'Your choice: %s'% (self.horsemenu.get()), \
             font = (None, 25)).grid(row = 4, column = 0, padx = (700, 10), pady= 10)
+        # update the users purse
+        self.update_purse()
         tk.Label(self.result, text = 'Updated Purse: $%s' % (format(self.purse1, '.2f')), \
             font = (None, 25)).grid(row = 5, column = 0, padx = (700, 10), pady= 10)
-        # check if there are more races
+        # check if there are more races to display 'next race' or 'exit'
         if self.trials1 == 1:
             tk.Button(self.result, text = 'Exit', font = (None, 20), command = \
                 self.exit).grid(row = 6, column = 0, padx = (700, 10), pady = 10)
@@ -456,7 +472,7 @@ class Window1:
             self.trials1 -= 1
 
     def exit(self):
-        # destroy result screen and make a new screen
+        # destroy result screen and make a new exit screen
         self.result.destroy()
         self.exit = tk.Frame(self.window)
         self.exit.grid()
@@ -466,6 +482,7 @@ class Window1:
         tk.Label(self.exit, text = 'Thank you!\nPlease notify the researcher.', \
             font = (None, 50)).grid(row = 0, column = 1, columnspan = 2, \
             padx = (600, 100), pady = (400, 10))
+        # instructions for inserting ID number
         tk.Label(self.exit, text = 'Please enter ID number in order to save.').grid\
         (row = 2, column = 1, columnspan = 2, padx = (600, 100))
         self.save = tk.Entry(self.exit, width = 30)
@@ -480,11 +497,20 @@ class Window1:
         # if ID number is -0, don't save
         # otherwise, save
         self.window.destroy()
+        # check if -0 
         if self.save.get() == "-0":
             print("NO SAVE")
             self.exit.destroy()
-        if self.save.get() == "":
-            pass
+        # check if no entry
+        elif self.save.get() == "":
+            error = tk.Tk()
+            error.title("ERROR")
+            error.bind('<Control-q>', quit)
+            tk.Label(error, text = "Please insert ID number.", font = \
+                (None, 20)).pack(padx = 10, pady = 10)
+            tk.Button(error, text = "OK", command = lambda : \
+                error.destroy()).pack(padx = 10, pady = 10)
+        # save if pass all tests
         else: 
             print("SAVE")
             self.exit.destroy()
