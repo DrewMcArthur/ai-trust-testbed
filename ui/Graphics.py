@@ -31,8 +31,8 @@ class Window1:
         # disabling and enabling accuracy bar
         def toggleslider():
             if self.activate == True:
-                self.accuracy.config(foreground = "gainsboro")
                 self.accuracy.config(state = 'disabled')
+                self.accuracy.config(foreground = "gainsboro")
                 self.activate = False
             else:
                 self.accuracy.config(state = 'normal')
@@ -256,7 +256,8 @@ class Window1:
         folder = "split_jpgs"
         # randomly generate race forms
         pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?\.jpg')
-        race = random.choice(os.listdir(folder))
+        #race = random.choice(os.listdir(folder))
+        race = "AJX170618_3_1.jpg"
         m = pattern.match(race)
 
         # get filepaths and make sure they exist before continuing
@@ -264,9 +265,9 @@ class Window1:
         p = "data/" + m.group(1) + "/" + m.group(2) + "/" + m.group(1) + sep + \
             m.group(2) + "_SF.CSV"
         ltp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
-              m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_lt.csv"
+              m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LT.CSV"
         lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
-              m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_lb.csv"
+              m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LB.CSV"
 
         # find a race
         while not (os.path.isfile(p) and os.path.isfile(ltp) and os.path.isfile(lbp)):
@@ -278,9 +279,9 @@ class Window1:
             p = "data/" + m.group(1) + "/" + m.group(2) + "/" + m.group(1) + sep + \
                 m.group(2) + "_SF.CSV"
             ltp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
-                  m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_lt.csv"
+                  m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LT.CSV"
             lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
-                  m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_lb.csv"
+                  m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LB.CSV"
 
 
         # pick random horses and make a form
@@ -311,7 +312,7 @@ class Window1:
         self.horses_racing.sort(key = lambda x:x['L_Time'])
         self.horse_pwin = self.horses_racing[0]['B_Horse']
         # find actual winning horse
-        self.horses_racing.sort(key = lambda x:x['L_Time'])
+        self.horses_racing.sort(key = lambda x:x['L_Rank'])
         self.horse_win = self.horses_racing[0]['B_Horse']
         # find odds for horses
         self.horses_racing.sort(key = lambda x:x['B_ProgNum'])
@@ -496,7 +497,6 @@ class Window1:
         # check the ID number
         # if ID number is -0, don't save
         # otherwise, save
-        self.window.destroy()
         # check if -0 
         if self.save.get() == "-0":
             print("NO SAVE")
@@ -514,6 +514,7 @@ class Window1:
         else: 
             print("SAVE")
             self.exit.destroy()
+        self.window.destroy()
 
 root = tk.Tk()
 
