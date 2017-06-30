@@ -91,10 +91,14 @@ def test_n_features(n, Xs, Ys):
     # open output.csv and append a row to it consisting of 
     # the number of features, the avg. error, 
     # the explained variance, and r^2
-    print([end - beg,
-           sum(deltas)/len(deltas),
-           explained_variance_score(y_test, y_pred),
-           r2_score(y_test, y_pred)])
+
+    with open("output.csv", 'a', newline='') as oFile:
+        oWriter = csv.writer(oFile, dialect='unix',
+                             quoting=csv.QUOTE_MINIMAL)
+        oWriter.writerow([n, end - beg,
+               sum(deltas)/len(deltas),
+               explained_variance_score(y_test, y_pred),
+               r2_score(y_test, y_pred)])
 
 if __name__ == "__main__":
     config = yaml.safe_load(open("./config.yml"))
