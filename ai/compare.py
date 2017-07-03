@@ -7,7 +7,7 @@
 from learn import split_data
 from itertools import permutations
 from collections import OrderedDict
-from joblib import dump
+from joblib import dump, load
 import yaml, os, csv 
 
 def get_raceID(horse):
@@ -40,6 +40,11 @@ def get_comparison(horses):
         boolean value == (horseA['position'] < horseB['position'])
         i.e. true if horseA finished before horseB                  """
     horseA, horseB = horses
+    [print() for _ in range(10)]
+    print(horseA)
+    [print() for _ in range(10)]
+    print(horseB)
+    [print() for _ in range(10)]
     return 1 if horseA['L_Position'] < horseB['L_Position'] else 0
 
 def get_label(horse):
@@ -52,12 +57,18 @@ def read_output(filename, races):
     with open(filename) as lFile:
         labelreader = csv.DictReader(lFile, dialect='unix')
         r = []
+        print(races.keys())
         # iterate through the file and keep track of times
         for row in labelreader:
             ID = get_raceID(row)
+            print("Getting label for: ", ID)
             if ID in races:
                 for horse in races[ID]:
+                    print("applying label to ", horse['B_Horse'], " in ", ID)
+                    print("IDs:", horse['ID'], row['ID'])
+                    print("Names:", horse['B_Horse'], row['B_Horse'])
                     if horse['ID'] == row['ID']:
+                        print("gave horse position",horse['B_Horse'])
                         horse.update({"L_Position": row['L_Position']})
         return races
 
@@ -141,7 +152,9 @@ def test_model(model, x_test, y_test):
     print(explained_variance_score(y_test, y_pred))
     print(r2_score(y_test, y_pred))
 
-def main():
+def generate_datadump(toFile=False):
+    """ loads data from file, formats it, and if toFile is set to true, 
+        dumps the data itself to file.  The data is then returned. """
     # read the data and labels from file
     config = yaml.safe_load(open("./config.yml"))
     races = read_data(config['final_data_filename'])
@@ -158,8 +171,12 @@ def main():
     labels = []
     i = 0
     for ID, race in races.items():
+        print(ID, "horses in race:")
+        [print(h['B_Horse']) for h in race]
         pairs = generate_pairs(race)
         newlabels = [get_comparison(pair) for pair in pairs]
+        print("Labels:")
+        [print(l) for l in newlabels]
         data += [format_pair(pair) for pair in pairs]
         labels += newlabels
         print("Parsed {0:.2f}% of races.".format(i / (len(races)/100)), 
@@ -196,8 +213,15 @@ def main():
     print(a)
 
     data = a.tolist()
-    dump(data, 'classifier_data.pickle')
-    quit()
+    if toFile:
+        dump((data, labels), 'classifier_data.pickle')
+    return (data, labels)
+
+def main():
+    # load the data from file if it exists, or re-generate it. 
+    data, labels = (load("classifier_data.pickle") 
+                    if os.path.isfile('classifier_data.pickle')
+                    else generate_datadump(True))
 
     # split the data
     training, test = split_data(data, labels, .9)
@@ -211,4 +235,4 @@ def main():
     test_model(model, x_test, y_test)
 
 if __name__ == "__main__":
-    main()
+    generate_datadump(True)

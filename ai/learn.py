@@ -92,7 +92,9 @@ def test_n_features(n, Xs, Ys):
     # the number of features, the avg. error, 
     # the explained variance, and r^2
 
-    with open("output.csv", 'a', newline='') as oFile:
+    print("Writing data for round", n)
+
+    with open("results.csv", 'a', newline='') as oFile:
         oWriter = csv.writer(oFile, dialect='unix',
                              quoting=csv.QUOTE_MINIMAL)
         oWriter.writerow([n, end - beg,
