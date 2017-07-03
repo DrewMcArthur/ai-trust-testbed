@@ -17,7 +17,8 @@ from lib.compile_data import get_race_info
 def format_data(row):
     """ formats a row (dictionary) of data to our standards. """
     # list of desired keys
-    keys = ['R_RCTrack', 'R_RCDate', 'B_Horse', 'L_Time', 'L_BSF', 'R_RCRace', 'B_MLOdds', 'B_ProgNum']
+    keys = ['R_RCTrack', 'R_RCDate', 'B_Horse', 'L_Rank', 'L_Time', 'L_BSF', 
+            'R_RCRace', 'B_MLOdds', 'B_ProgNum', 'P_Time', 'P_BSF']
     toRemove = []
     # remove all keys not in the list above
     for key, item in row.items():
@@ -49,6 +50,30 @@ def load_horsedata(filename, n_race):
             if str(len(horses)) == horse['R_Starters']:
                 return horses
 
+def similar(a, b):
+    from difflib import SequenceMatcher
+    return SequenceMatcher(None, a, b).ratio()
+    
+def add_labels(horses, labelpath):
+    """ given a list of horses, and a base path to the two labels files, 
+        return the list with labels for each horse added to the dictionary.
+    """
+    with open(labelpath + "_lt.csv") as tLabel, \
+         open(labelpath + "_lb.csv") as bLabel:
+        tReader = csv.DictReader(tLabel, dialect='unix')
+        bReader = csv.DictReader(bLabel, dialect='unix')
+        rank = 1
+        for row in bReader:
+            trow = next(tReader)
+            for horse in horses:
+                if similar(horse['B_Horse'], row['Horse']) > .4:
+                    horse.update({"L_Rank": rank, 
+                                  "L_Time": trow['Fin'],
+                                  "L_BSF": row['Chart']
+                                })
+            rank += 1
+    return horses
+
 def get_list_data(horses):
     """ given a list of dictionaries, 
         return the same data, but formatted as lists """
@@ -68,11 +93,15 @@ def get_positions(track, date, n_race):
 
     # separator, since filenames can be PRX170603.csv or WO_170603.csv
     sep = "" if len(track) == 3 else "_"
-    # get pathname
-    path = "data/" + track + "/" + date + "/" + track + sep + date + "_SF.CSV"
+
+    # get pathnames
+    datapath = "data/" + track + "/" + date + "/" + \
+                    track + sep + date + "_SF.CSV"
+    labelpath = "data/" + track + "/" + date + "/" + \
+                    track + sep + date + "_" + n_race 
 
     # get the data on horses in the race
-    horses = load_horsedata(path, n_race)
+    horses = load_horsedata(datapath, n_race)
 
     # format it as a 2D list, (horses is a list of dictionaries)
     data = get_list_data(horses)
@@ -82,18 +111,30 @@ def get_positions(track, date, n_race):
     beyers = beyer_ai.predict(data)
     times = time_ai.predict(data)
 
+    # add actual labels to horses
+    horses = add_labels(horses, labelpath)
+
+    toremove = []
     # update each horse with its heuristic, then sort to produce an ordered list
     for beyer, time, horse in zip(beyers, times, horses):
-        horse.update({"L_BSF": beyer, "L_Time": time})
+        if "L_Rank" not in horse:
+            toremove.append(horse)
+        else:
+            horse.update({"P_BSF": beyer, "P_Time": time})
+
+    for horse in toremove:
+        horses.remove(horse)
+
     #horses.sort(key=lambda horse: horse['L_BSF'], reverse=True)
-    horses.sort(key=lambda horse: horse['L_Time'])
+    horses.sort(key=lambda horse: horse['P_Time'])
 
     return [format_data(horse) for horse in horses]
 
 def main():
     """ Testing functions """
-    horses = get_positions("PRX", "170508", 2)
-    [print(horse['B_Horse'],horse['L_Time'], horse['L_BSF']) for horse in horses]
+    horses = get_positions("PRX", "170528", 2)
+    [print(horse['B_Horse'], horse['P_Time'], horse['P_BSF']) 
+            for horse in horses]
 
 if __name__ == "__main__":
     main()
