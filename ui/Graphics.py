@@ -12,192 +12,233 @@ def check():
     root.after(50, self.check)
 
 class Window1:
+    
     def __init__(self, master):
         # setting up first window (settings)
         self.master = master
         self.settings = tk.Frame(self.master)
         self.settings.grid()
         self.s_settings()
+    
     def s_settings(self):
         # setting title
-        tk.Label(self.settings, text = 'Settings', font = (None, 15)).grid( \
-            row = 1, column = 1, columnspan = 2, pady = 10)
+        tk.Label(self.settings, text='Settings', font=(None, 15)).grid( 
+            row=1, column=1, columnspan=2, pady=10)
 
         # number of trials prompt
-        tk.Label(self.settings, text = 'Number of trials: ').grid(row = 2, \
-            column = 1, padx = 10, pady = 5, sticky = tk.W)
+        tk.Label(self.settings, text='Number of trials: ').grid(row=2,
+            column=1, padx=10, pady=5, sticky=tk.W)
 
         # number of trials text box
-        self.trials = tk.Entry(self.settings, width = 3)
-        self.trials.grid(row = 2, column = 2, sticky = tk.W)
+        self.trials = tk.Entry(self.settings, width=3)
+        self.trials.grid(row=2, column=2, sticky=tk.W)
 
         # disabling and enabling accuracy bar
         def toggleslider():
             if self.activate == True:
-                self.accuracy.config(state = 'disabled')
-                self.accuracy.config(foreground = "gainsboro")
+                self.accuracy.config(state='disabled')
+                
+                #grey out the bar
+                self.accuracy.config(foreground='gainsboro')
                 self.activate = False
             else:
-                self.accuracy.config(state = 'normal')
-                self.accuracy.config(foreground = "black")
+                self.accuracy.config(state='normal')
+                
+                #make the bar normal colored
+                self.accuracy.config(foreground='black')
                 self.activate = True
 
         # accuracy prompt
-        tk.Label(self.settings, text = 'Accuracy: ').grid(row = 3, column = 1, \
-            padx = 10, pady = 5, sticky = tk.W)
+        tk.Label(self.settings, text='Accuracy: ').grid(row=3, column=1, 
+            padx=10, pady=5, sticky=tk.W)
 
         # accuracy slider
-        self.accuracy = tk.Scale(self.settings, orient = tk.HORIZONTAL, \
-            resolution = 10, showvalue = 0, tickinterval = 10, length = 300)
+        self.accuracy = tk.Scale(self.settings, orient=tk.HORIZONTAL, 
+            resolution=10, showvalue=0, tickinterval=10, length=300)
         self.accuracy.grid(row = 3, column = 2, columnspan = 2, sticky = tk.W)
         self.activate = True
         self.checkaccuracy = tk.StringVar(self.settings)
 
         # check button for using accuracy of classifer
         # if checked, accuracy bar is disabled
-        self.CA = tk.Checkbutton(self.settings, text = "Use accuracy of classifer.", \
-            variable = self.checkaccuracy, onvalue = True, offvalue = False, \
-            command = toggleslider)
-        self.CA.grid(row = 4, column = 2, columnspan = 2, sticky = tk.W)
+        self.CA = tk.Checkbutton(self.settings, text="Use accuracy of classifer.", 
+            variable=self.checkaccuracy, onvalue=True, offvalue=False, 
+            command=toggleslider)
+        self.CA.grid(row=4, column=2, columnspan=2, sticky=tk.W)
 
-        # show prompt
-        tk.Label(self.settings, text = 'Show: ').grid(row = 5, column = 1, \
-            padx = 10, pady = 5,sticky = tk.W)
-        tk.Label(self.settings, text = 'Note: default is one horse', \
-            font = (None, 10)).grid(row = 7, column = 1, padx = 10, pady = 5, \
-            sticky = tk.S + tk.W)
+        # what data to show prompt
+        tk.Label(self.settings, text='Show: ').grid(row=5, column=1, 
+            padx=10, pady=5,sticky=tk.W)
+        tk.Label(self.settings, text='Note: default is one horse', 
+            font=(None, 10)).grid(row=7, column=1, padx=10, pady=5, 
+            sticky=tk.S + tk.W)
 
         # show check buttons - time, beyer, and show order
         self.showtime = tk.StringVar(self.settings)
         self.showbeyer = tk.StringVar(self.settings)
         self.showorder = tk.StringVar(self.settings)
+        
+        #create the time button
+        self.C1 = tk.Checkbutton(self.settings, text='Time', variable=
+            self.showtime, onvalue=True, offvalue=False)
+        self.C1.grid(row=5, column=2, sticky=tk.W)
 
-        self.C1 = tk.Checkbutton(self.settings, text = "Time", variable = \
-            self.showtime, onvalue = True, offvalue = False)
-        self.C1.grid(row = 5, column = 2, sticky = tk.W)
-        self.C2 = tk.Checkbutton(self.settings, text = "Beyer", variable = \
-            self.showbeyer, onvalue = True, offvalue = False)
-        self.C2.grid(row = 6, column = 2, sticky = tk.W)
-        self.C3 = tk.Checkbutton(self.settings, text = "Complete Order", \
-            variable = self.showorder, onvalue = True, offvalue = False)
-        self.C3.grid(row = 7, column = 2, sticky = tk.W)
+        #create the Beyer figure button
+        self.C2 = tk.Checkbutton(self.settings, text='Beyer', variable=
+            self.showbeyer, onvalue=True, offvalue=False)
+        self.C2.grid(row=6, column=2, sticky=tk.W)
+        
+        #create the order button
+        self.C3 = tk.Checkbutton(self.settings, text="Complete Order",
+            variable=self.showorder, onvalue=True, offvalue=False)
+        self.C3.grid(row=7, column=2, sticky=tk.W)
 
         # betting amount prompt
-        tk.Label(self.settings, text = 'Betting Amount: ').grid(row = 8, \
-            column = 1, padx = 10, pady = 5, sticky = tk.W)
+        tk.Label(self.settings, text='Betting Amount: ').grid(row=8,
+            column=1, padx=10, pady=5, sticky=tk.W)
+   
         # betting amount options
         # enabling and disenabling text box for fixed option
         def enableEntry():
-            self.betting.configure(state = "normal")
+            self.betting.configure(state='normal')
             self.betting.update()
         def disableEntry():
-            self.betting.configure(state = "disabled")
+            self.betting.configure(state='disabled')
             self.betting.update()
-        self.betting = tk.Entry(self.settings, width = 3)
-        self.betting.grid(row = 9, column = 2, padx = 100, sticky = tk.W)
-        self.option_betting = tk.StringVar()
+
+        self.betting = tk.Entry(self.settings, width=3)
+        self.betting.grid(row=9, column=2, padx=100, sticky=tk.W)
+        self.option_betting=tk.StringVar()
+        
         # change betting option
-        tk.Radiobutton(self.settings, variable = self.option_betting, \
-            text = 'Change', value = 'Change',
-            command = disableEntry).grid(row = 8, column = 2, sticky = tk.W)
-        # fixed betting option
-        tk.Radiobutton(self.settings, variable = self.option_betting, \
-            text = 'Fixed', value = 'Fixed', 
-            command = enableEntry).grid(row = 9, column = 2, sticky = tk.W)
+        tk.Radiobutton(self.settings, variable=self.option_betting,
+            text='Change', value='Change',
+            command=disableEntry).grid(row=8, column=2, sticky=tk.W)
+        
+        # fixed dollar amount betting option
+        tk.Radiobutton(self.settings, variable=self.option_betting,
+            text='Fixed', value='Fixed', 
+            command=enableEntry).grid(row=9, column=2, sticky=tk.W)
+
         # purse size prompt
-        tk.Label(self.settings, text = 'Initial Purse Size: ').grid(row = 10, \
-            column = 1, padx = 10, pady = 5, sticky = tk.W)
+        tk.Label(self.settings, text='Initial Purse Size: ').grid(row=10, 
+            column=1, padx=10, pady=5, sticky=tk.W)
+
         # purse size entry box
-        tk.Label(self.settings, text = '$').grid(row = 10, column = 2, \
-            sticky = tk.W)
-        self.purse = tk.Entry(self.settings, width = 5)
-        self.purse.grid(row = 10, column = 2, sticky = tk.W, padx = 15)
+        tk.Label(self.settings, text='$').grid(row=10, column=2, 
+            sticky=tk.W)
+        self.purse=tk.Entry(self.settings, width=5)
+        self.purse.grid(row=10, column=2, sticky=tk.W, padx=15)
+
         # number of horses prompt
-        tk.Label(self.settings, text = 'Number of Horses: ').grid(row = 11, \
-            column = 1, padx = 10, pady = 5, sticky = tk.W)
+        tk.Label(self.settings, text='Number of Horses: ').grid(row=11, 
+            column=1, padx=10, pady=5, sticky=tk.W)
+
         # number of horses entry box
-        self.horses = tk.Entry(self.settings, width = 3)
-        self.horses.grid(row = 11, column = 2, sticky = tk.W)
+        self.horses = tk.Entry(self.settings, width=3)
+        self.horses.grid(row=11, column=2, sticky=tk.W)
+
         # time limit per race prompt
-        tk.Label(self.settings, text = 'Time Limit per Race: ').grid(row = 12, \
-            column = 1, padx = 10, pady = 5, sticky = tk.W)
+        tk.Label(self.settings, text='Time Limit per Race: ').grid(row=12,
+            column=1, padx=10, pady=5, sticky=tk.W)
+
         # time limit per race entry box
-        self.time = tk.Entry(self.settings, width = 3)
-        self.time.grid(row = 12, column = 2, sticky = tk.W)
-        tk.Label(self.settings, text = 'minutes').grid(row = 12, column = 2, \
-            padx = 30, sticky = tk.W)
+        self.time = tk.Entry(self.settings, width=3)
+        self.time.grid(row=12, column=2, sticky=tk.W)
+        tk.Label(self.settings, text='minutes').grid(row=12, column=2, 
+            padx=30, sticky=tk.W)
 
         # submit button
-        tk.Button(self.settings, text = 'Submit', command = self.instructions).grid \
-        (row = 14, column = 1, columnspan = 2, pady = 10)
+        tk.Button(self.settings, text='Submit', command=self.instructions).grid \
+                 (row=14, column=1, columnspan=2, pady=10)
 
-        # defaults
+        # set all of the defaults
         # trials entry box
         self.trials.insert(0, 5)
+
         # accuracy slider
         self.accuracy.set(50)
+
         # use accuracy of classifer
         self.CA.deselect()
+
         # show time
         self.C1.deselect()
+
         # show beyer
         self.C2.deselect()
+
         # show order of horses
         self.C3.deselect()
+
         # betting options
         self.option_betting.set('Fixed')
+        
         # fixed bet entry box
         self.betting.insert(0, 2)
+
         # purse size
         self.purse.insert(0, "{0:.02f}".format(25.00))
+
         # number of horses
         self.horses.insert(0, 3)
+
         # time per race
         self.time.insert(0, 15)
 
     def errorcheck(self):
         # checks to make sure the settings were correct
-        elementlist = [self.trials.get(), self.accuracy.get(), \
-        self.checkaccuracy.get(), self.showtime.get(), self.showbeyer.get(), \
-        self.showorder.get(), self.purse.get(), self.betting.get(), \
+        
+        elementlist = [self.trials.get(), self.accuracy.get(), 
+        self.checkaccuracy.get(), self.showtime.get(), self.showbeyer.get(), 
+        self.showorder.get(), self.purse.get(), self.betting.get(), 
         self.horses.get(), self.time.get()]
 
         for element in elementlist:
+            
             # check if any element is empty
             if not element:
+
+                #display the error essage
                 error = tk.Tk()
-                error.title("ERROR")
+                error.title('ERROR')
                 error.bind('<Control-q>', quit)
-                tk.Label(error, text = "Fill in all settings.", \
+                tk.Label(error, text = "Fill in all settings.", 
                     font = (None, 20)).pack(padx = 10, pady = 10)
-                tk.Button(error, text = "OK", command = lambda : \
-                    error.destroy()).pack(padx = 10, pady = 10)
+                tk.Button(error, text='OK', command=lambda : 
+                    error.destroy()).pack(padx=10, pady=10)
                 return False
+           
             # check if purse is a float number
             elif element == self.purse.get():
                 try:
                     float(element)
                 except:
+                    
+                    #display the error message
                     error = tk.Tk()
-                    error.title("ERROR")
+                    error.title('ERROR')
                     error.bind('<Control-q>', quit)
-                    tk.Label(error, text = "Please correct format for purse.", \
+                    tk.Label(error, text="Please correct format for purse.", 
                         font = (None, 20)).pack(padx = 10, pady = 10)
-                    tk.Button(error, text = "OK", command = lambda : \
-                        error.destroy()).pack(padx = 10, pady = 10)
+                    tk.Button(error, text='OK', command=lambda : 
+                        error.destroy()).pack(padx=10, pady=10)
                     return False
+
             # check if other elements are integers (not letters)
             elif element != self.showtime.get() or element != \
             self.showbeyer.get() or element != self.showorder.get():
                 try:
                     int(element)
                 except:
+
+                    #display the error message
                     error = tk.Tk()
-                    error.title("ERROR")
+                    error.title('ERROR')
                     error.bind('<Control-q>', quit)
-                    tk.Label(error, text = "Please enter integers.", \
+                    tk.Label(error, text="Please enter integers.", 
                         font = (None, 20)).pack(padx = 10, pady = 10)
-                    tk.Button(error, text = "OK", command = lambda : \
+                    tk.Button(error, text='OK', command=lambda : 
                         error.destroy()).pack(padx = 10, pady = 10)
                     return False
             else:
@@ -205,8 +246,10 @@ class Window1:
 
     def instructions(self):
         # screen that displays the instructions
+
         # checking if all entries are filled out
         if self.errorcheck():
+
             # saving data from settings
             self.trials1 = int(self.trials.get())
             self.accuracy1 = int(self.accuracy.get())
@@ -217,9 +260,12 @@ class Window1:
             self.purse1 = float(self.purse.get())
             self.purse1 = round(self.purse1, 2)
             self.betting_option = self.option_betting.get()
+
             # set fixed betting amount to 0 if betting option is change
             if not (self.betting.get()):
                 self.betting1 = 0
+            
+            #otherwise set the betting amount to the input
             else:
                 self.betting1 = int(self.betting.get())
             self.horses1 = int(self.horses.get())
@@ -242,11 +288,13 @@ class Window1:
             self.settings.destroy()
             root.destroy()
             self.window = tk.Tk()
-            self.window.title("Horse Racing")
+            self.window.title('Horse Racing')
             self.window.bind('<Control-q>', quit)
+
             # find size of screen
             self.screen_width = int(self.window.winfo_screenwidth())
             self.screen_height = int(self.window.winfo_screenheight())
+
             # fit to screen
             self.window.geometry("{}x{}".format(self.screen_width, 
                                                 self.screen_height))
