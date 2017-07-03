@@ -22,12 +22,15 @@ class Window1:
         # setting title
         tk.Label(self.settings, text = 'Settings', font = (None, 15)).grid( \
             row = 1, column = 1, columnspan = 2, pady = 10)
+
         # number of trials prompt
         tk.Label(self.settings, text = 'Number of trials: ').grid(row = 2, \
             column = 1, padx = 10, pady = 5, sticky = tk.W)
+
         # number of trials text box
         self.trials = tk.Entry(self.settings, width = 3)
         self.trials.grid(row = 2, column = 2, sticky = tk.W)
+
         # disabling and enabling accuracy bar
         def toggleslider():
             if self.activate == True:
@@ -38,31 +41,37 @@ class Window1:
                 self.accuracy.config(state = 'normal')
                 self.accuracy.config(foreground = "black")
                 self.activate = True
+
         # accuracy prompt
         tk.Label(self.settings, text = 'Accuracy: ').grid(row = 3, column = 1, \
             padx = 10, pady = 5, sticky = tk.W)
+
         # accuracy slider
         self.accuracy = tk.Scale(self.settings, orient = tk.HORIZONTAL, \
             resolution = 10, showvalue = 0, tickinterval = 10, length = 300)
         self.accuracy.grid(row = 3, column = 2, columnspan = 2, sticky = tk.W)
         self.activate = True
         self.checkaccuracy = tk.StringVar(self.settings)
+
         # check button for using accuracy of classifer
         # if checked, accuracy bar is disabled
         self.CA = tk.Checkbutton(self.settings, text = "Use accuracy of classifer.", \
             variable = self.checkaccuracy, onvalue = True, offvalue = False, \
             command = toggleslider)
         self.CA.grid(row = 4, column = 2, columnspan = 2, sticky = tk.W)
+
         # show prompt
         tk.Label(self.settings, text = 'Show: ').grid(row = 5, column = 1, \
             padx = 10, pady = 5,sticky = tk.W)
         tk.Label(self.settings, text = 'Note: default is one horse', \
             font = (None, 10)).grid(row = 7, column = 1, padx = 10, pady = 5, \
             sticky = tk.S + tk.W)
+
         # show check buttons - time, beyer, and show order
         self.showtime = tk.StringVar(self.settings)
         self.showbeyer = tk.StringVar(self.settings)
         self.showorder = tk.StringVar(self.settings)
+
         self.C1 = tk.Checkbutton(self.settings, text = "Time", variable = \
             self.showtime, onvalue = True, offvalue = False)
         self.C1.grid(row = 5, column = 2, sticky = tk.W)
@@ -72,6 +81,7 @@ class Window1:
         self.C3 = tk.Checkbutton(self.settings, text = "Complete Order", \
             variable = self.showorder, onvalue = True, offvalue = False)
         self.C3.grid(row = 7, column = 2, sticky = tk.W)
+
         # betting amount prompt
         tk.Label(self.settings, text = 'Betting Amount: ').grid(row = 8, \
             column = 1, padx = 10, pady = 5, sticky = tk.W)
@@ -95,7 +105,7 @@ class Window1:
             text = 'Fixed', value = 'Fixed', 
             command = enableEntry).grid(row = 9, column = 2, sticky = tk.W)
         # purse size prompt
-        tk.Label(self.settings, text = 'Purse Size: ').grid(row = 10, \
+        tk.Label(self.settings, text = 'Initial Purse Size: ').grid(row = 10, \
             column = 1, padx = 10, pady = 5, sticky = tk.W)
         # purse size entry box
         tk.Label(self.settings, text = '$').grid(row = 10, column = 2, \
@@ -122,7 +132,7 @@ class Window1:
         (row = 14, column = 1, columnspan = 2, pady = 10)
 
         # defaults
-        # trails entry box
+        # trials entry box
         self.trials.insert(0, 5)
         # accuracy slider
         self.accuracy.set(50)
@@ -238,7 +248,8 @@ class Window1:
             self.screen_width = int(self.window.winfo_screenwidth())
             self.screen_height = int(self.window.winfo_screenheight())
             # fit to screen
-            self.window.geometry("%sx%s" % (self.screen_width, self.screen_height))
+            self.window.geometry("{}x{}".format(self.screen_width, 
+                                                self.screen_height))
 
             print(self.screen_width, self.screen_height)
 
@@ -247,19 +258,27 @@ class Window1:
             self.screen_height = int(self.window.winfo_screenheight())- 100
             self.instructions = tk.Frame(self.window)
             self.instructions.grid()
-            self.instructions.grid_rowconfigure(0,  minsize = int(self.screen_height/3))
-            self.instructions.grid_columnconfigure(0,  minsize = int(self.screen_width/3))
-            self.instructions.grid_rowconfigure(1,  minsize = int(self.screen_height/3))
-            self.instructions.grid_columnconfigure(1,  minsize = int(self.screen_width/3))
-            self.instructions.grid_rowconfigure(2,  minsize = int(self.screen_height/3))
-            self.instructions.grid_columnconfigure(2,  minsize = int(self.screen_width/3))
+            for i in range(3):
+                self.instructions.grid_rowconfigure(
+                                        i, minsize = int(self.screen_height/3))
+                self.instructions.grid_columnconfigure(
+                                        i, minsize = int(self.screen_width/3))
+
+            # TODO change "fixed at $2" to reflect whatever the settings are.
             # instructions label
-            tk.Label(self.instructions, text = 'Welcome!\n Please decide the winner.'
-                "\n You will have %s minutes per race. \nThere are %s races." 
-                "\n Press start when you are ready." % (self.time1, self.trials1), \
-                font = (None, int(self.screen_width*.02))).grid(row = 1, column = 1)
-            tk.Button(self.instructions, text = 'Start', font = (None, int(self.screen_width*.01)), \
-                command = self.betting_screen).grid(row = 1, column = 1, sticky = tk.S)
+            welcomeText = "Welcome!\nAs a reminder, your bets are fixed at " + \
+                          "$2.\nYour task is to pick, as best you can, the " + \
+                          "winner of the race.\nYou will have up to {} " + \
+                          "minutes to look at all the data and make your " + \
+                          "choice.\nPress start when you are ready."
+                            .format(self.time1)
+            tk.Label(self.instructions, text=welcomeTxt,
+                     font=(None, int(self.screen_width*.02)))
+                    .grid(row = 1, column = 1)
+            tk.Button(self.instructions, text='Start', 
+                      font=(None, int(self.screen_width*.01)),
+                      command = self.betting_screen)
+                     .grid(row = 1, column = 1, sticky = tk.S)
 
     def generateforms(self):
         # creates forms with random horses
@@ -398,17 +417,23 @@ class Window1:
         self.horsemenu.set("Select horse")
         self.horse_select = tk.OptionMenu(self.bet, self.horsemenu, *self.horse_names)
         self.horse_select.config(font = (None, 20))
+
         # show race information on side
-        tk.Label(self.bet, text = 'Purse Total: $%s\n\n\nBetting Amount: '
-            '$%s\n\n\nOdds:\n  %s\n\n\nSystem recommendation: \n  '
-        '%s\n\n\nHorse you want to bet on: ' %(format(self.purse1, '.2f'), \
-            format(self.betting1, '.2f'), self.horses_odds, self.horse_pwin), \
-            font = (None, 20), justify = 'left').grid(row = 0, column = 5, \
-            padx = 40, pady = 10, sticky = tk.E)
-        self.horse_select.grid(row = 0, column = 5, pady = (550, 50))
+        tk.Label(self.bet, 
+                 text="Purse Total: ${:.2f}\n\n\nBetting Amount: ${:.2f}" + \
+                        "\n\n\nOdds:\n  {}\n\n\nAide's Suggestion: \n  {}" + \
+                        "\n\n\nHorse you want to bet on: "
+                            .format(self.purse1, self.betting1, 
+                                    self.horses_odds, self.horse_pwin),
+                 font=(None, 20), justify='left')
+                .grid(row=0, column=5, padx=40, pady=10, sticky=tk.E)
+
+        self.horse_select.grid(row=0, column=5, pady=(550, 50))
+
         # submit button
-        tk.Button(self.bet, text = 'Submit', command = self.retrieving_data, \
-            font = (None, 20)).grid(row = 0, column = 5, padx = 10, pady= 10, sticky = tk.S)
+        tk.Button(self.bet, text='Submit', 
+                  command=self.retrieving_data, font=(None, 20))
+                 .grid(row=0, column=5, padx=10, pady=10, sticky=tk.S)
 
     def retrieving_data(self):
         # check how long the user took to submit
@@ -465,7 +490,7 @@ class Window1:
         tk.Label(self.result, text = 'Actual result: %s' % (self.horse_win), \
             font = (None, 25)).grid(row = 2, column = 0, padx = \
             ((self.screen_width/2.5), 10), pady= 10)
-        tk.Label(self.result, text = 'System\'s choice: %s' % (self.horse_pwin), \
+        tk.Label(self.result, text = "Aide's Suggestion: {}".format(self.horse_pwin), \
             font = (None, 25)).grid(row = 3, column = 0, padx = \
             ((self.screen_width/2.5), 10), pady= 10)
         tk.Label(self.result, text = 'Your choice: %s'% (self.horsemenu.get()), \
