@@ -61,17 +61,18 @@ class Window1:
 
         # check button for using accuracy of classifer
         # if checked, accuracy bar is disabled
-        self.CA = tk.Checkbutton(self.settings, text="Use accuracy of classifer.", 
-            variable=self.checkaccuracy, onvalue=True, offvalue=False, 
-            command=toggleslider)
+        self.CA = tk.Checkbutton(self.settings, 
+                                 text="Use accuracy of classifer.", 
+                                 variable=self.checkaccuracy, onvalue=True, 
+                                 offvalue=False, command=toggleslider)
         self.CA.grid(row=4, column=2, columnspan=2, sticky=tk.W)
 
         # what data to show prompt
-        tk.Label(self.settings, text='Show: ').grid(row=5, column=1, 
-            padx=10, pady=5,sticky=tk.W)
+        tk.Label(self.settings, text='Show: ')\
+                .grid(row=5, column=1, padx=10, pady=5,sticky=tk.W)
         tk.Label(self.settings, text='Note: default is one horse', 
-            font=(None, 10)).grid(row=7, column=1, padx=10, pady=5, 
-            sticky=tk.S + tk.W)
+                 font=(None, 10))\
+                .grid(row=7, column=1, padx=10, pady=5, sticky=tk.S + tk.W)
 
         # show check buttons - time, beyer, and show order
         self.showtime = tk.StringVar(self.settings)
@@ -79,23 +80,26 @@ class Window1:
         self.showorder = tk.StringVar(self.settings)
         
         #create the time button
-        self.C1 = tk.Checkbutton(self.settings, text='Time', variable=
-            self.showtime, onvalue=True, offvalue=False)
+        self.C1 = tk.Checkbutton(self.settings, text='Time', 
+                                 variable=self.showtime, onvalue=True, 
+                                 offvalue=False)
         self.C1.grid(row=5, column=2, sticky=tk.W)
 
         #create the Beyer figure button
-        self.C2 = tk.Checkbutton(self.settings, text='Beyer', variable=
-            self.showbeyer, onvalue=True, offvalue=False)
+        self.C2 = tk.Checkbutton(self.settings, text='Beyer', 
+                                 variable=self.showbeyer, onvalue=True, 
+                                 offvalue=False)
         self.C2.grid(row=6, column=2, sticky=tk.W)
         
         #create the order button
         self.C3 = tk.Checkbutton(self.settings, text="Complete Order",
-            variable=self.showorder, onvalue=True, offvalue=False)
+                                 variable=self.showorder, onvalue=True, 
+                                 offvalue=False)
         self.C3.grid(row=7, column=2, sticky=tk.W)
 
         # betting amount prompt
-        tk.Label(self.settings, text='Betting Amount: ').grid(row=8,
-            column=1, padx=10, pady=5, sticky=tk.W)
+        tk.Label(self.settings, text='Betting Amount: ')\
+                .grid(row=8, column=1, padx=10, pady=5, sticky=tk.W)
    
         # betting amount options
         # enabling and disenabling text box for fixed option
@@ -111,22 +115,22 @@ class Window1:
         self.option_betting=tk.StringVar()
         
         # change betting option
-        tk.Radiobutton(self.settings, variable=self.option_betting,
-            text='Change', value='Change',
-            command=disableEntry).grid(row=8, column=2, sticky=tk.W)
+        tk.Radiobutton(self.settings, variable=self.option_betting, 
+                       text='Change', value='Change', command=disableEntry)\
+                      .grid(row=8, column=2, sticky=tk.W)
         
         # fixed dollar amount betting option
         tk.Radiobutton(self.settings, variable=self.option_betting,
-            text='Fixed', value='Fixed', 
-            command=enableEntry).grid(row=9, column=2, sticky=tk.W)
+                       text='Fixed', value='Fixed', command=enableEntry)\
+                      .grid(row=9, column=2, sticky=tk.W)
 
         # purse size prompt
-        tk.Label(self.settings, text='Initial Purse Size: ').grid(row=10, 
-            column=1, padx=10, pady=5, sticky=tk.W)
+        tk.Label(self.settings, text='Initial Purse Size: ')\
+                .grid(row=10, column=1, padx=10, pady=5, sticky=tk.W)
 
         # purse size entry box
-        tk.Label(self.settings, text='$').grid(row=10, column=2, 
-            sticky=tk.W)
+        tk.Label(self.settings, text='$')\
+                .grid(row=10, column=2, sticky=tk.W)
         self.purse=tk.Entry(self.settings, width=5)
         self.purse.grid(row=10, column=2, sticky=tk.W, padx=15)
 
@@ -321,25 +325,24 @@ class Window1:
                           "winner of the race.\nYou will have up to {} " + \
                           "minutes to look at all the data and make your " + \
                           "choice.\nPress start when you are ready."
-                            .format(self.time1)
-            tk.Label(self.instructions, text=welcomeTxt,
-                     font=(None, int(self.screen_width*.02)))
+            tk.Label(self.instructions, text=welcomeText.format(self.time1),
+                     font=(None, int(self.screen_height*.02)))\
                     .grid(row=1, column=1)
             tk.Button(self.instructions, text='Start', 
                       font=(None, int(self.screen_width*.01)),
-                      command=self.betting_screen)
+                      command=self.betting_screen)\
                      .grid(row=1, column=1, sticky=tk.S)
 
     def generateforms(self):
         # creates forms with random horses
         # folder where forms are found
         # TODO: move this folder to data/
-        folder = "split_jpgs"
+        folder = "data/split_jpgs"
         # randomly generate race forms
         pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?\.jpg')
 
         #race = random.choice(os.listdir(folder))
-        race = "AJX170618_3_1.jpg"
+        race = "ARP170618_1_1.jpg"
         m = pattern.match(race)
 
         # get filepaths and make sure they exist before continuing
@@ -350,6 +353,11 @@ class Window1:
               m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LT.CSV"
         lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
               m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LB.CSV"
+
+        print("Looking for:",p)
+        print("           :",ltp)
+        print("           :",lbp)
+        print("           :",folder+"/ARP170618_3_header.jpg")
 
         # find a race, and ensure that the files necessary exist
         while not (os.path.isfile(p) and os.path.isfile(ltp) 
@@ -473,8 +481,8 @@ class Window1:
         self.t = self.time1 * 60
         self.timer_label = tk.Label(self.bet, textvariable="", 
                                     font=(None, 25), width=10)
-                                   .grid(row=0, column=5, padx=10, pady=10, 
-                                         sticky=tk.N + tk.E)
+        self.timer_label.grid(row=0, column=5, padx=10, pady=10, 
+                              sticky=tk.N + tk.E)
         self.countdown()
 
         # show forms
@@ -492,20 +500,20 @@ class Window1:
         self.horse_select.config(font=(None, 20))
 
         # show race information on side
+        sideBarText = "Purse Total: ${:.2f}\n\n\nBetting Amount: ${:.2f}" + \
+                      "\n\n\nOdds:\n  {}\n\n\nAide's Suggestion: \n  {}" + \
+                      "\n\n\nHorse you want to bet on: "
         tk.Label(self.bet, 
-                 text="Purse Total: ${:.2f}\n\n\nBetting Amount: ${:.2f}" + \
-                        "\n\n\nOdds:\n  {}\n\n\nAide's Suggestion: \n  {}" + \
-                        "\n\n\nHorse you want to bet on: "
-                            .format(self.purse1, self.betting1, 
-                                    self.horses_odds, self.horse_pwin),
-                 font=(None, 20), justify='left')
+                 text=sideBarText.format(self.purse1, self.betting1, 
+                                         self.horses_odds, self.horse_pwin),
+                 font=(None, 20), justify='left')\
                 .grid(row=0, column=5, padx=40, pady=10, sticky=tk.E)
 
         self.horse_select.grid(row=0, column=5, pady=(550, 50))
 
         # submit button
         tk.Button(self.bet, text='Submit', 
-                  command=self.retrieving_data, font=(None, 20))
+                  command=self.retrieving_data, font=(None, 20))\
                  .grid(row=0, column=5, padx=10, pady=10, sticky=tk.S)
 
     def retrieving_data(self):
@@ -518,9 +526,9 @@ class Window1:
             error.title("ERROR")
             error.bind('<Control-q>', quit)
             tk.Label(error, text="Please select a horse.", 
-                     font=(None, 20))
+                     font=(None, 20))\
                     .pack(padx=10, pady=10)
-            tk.Button(error, text="OK", command=lambda: error.destroy())
+            tk.Button(error, text="OK", command=lambda: error.destroy())\
                      .pack(padx=10, pady=10)
         else:
             # delete old frame
@@ -535,7 +543,7 @@ class Window1:
             self.retrieve.bind('<Control-q>', quit)
 
             tk.Label(self.retrieve, text="Retrieving Data...", 
-                     font=(None, 50))
+                     font=(None, 50))\
                     .pack(padx=10, pady=10)
 
             # delete window after 2 seconds
@@ -566,39 +574,40 @@ class Window1:
         self.result.grid_columnconfigure(0, weight=1)
 
         # result labels
-        tk.Label(self.result, text='Results', font=(None, 35))
+        tk.Label(self.result, text='Results', font=(None, 35))\
                 .grid(row=0, column=0, padx=((self.screen_width/2.5), 10), 
                       pady=((self.screen_height/3), 10))
         tk.Label(self.result, text='Actual result: {}'.format(self.horse_win), 
-                 font=(None, 25))
+                 font=(None, 25))\
                 .grid(row=2, column=0, padx=((self.screen_width/2.5), 10), 
                       pady=10)
-        tk.Label(self.result, text="Aide's Suggestion: {}"
+        tk.Label(self.result, text="Aide's Suggestion: {}"\
                                         .format(self.horse_pwin),
-                 font=(None, 25))
+                 font=(None, 25))\
                 .grid(row=3, column=0, 
                       padx=((self.screen_width/2.5), 10), pady= 10)
         tk.Label(self.result, 
                  text='Your choice: {}'.format(self.horsemenu.get()),
-                 font=(None, 25))
+                 font=(None, 25))\
                 .grid(row=4, column=0, 
                       padx=((self.screen_width/2.5), 10), pady=10)
 
         # update the users purse
         self.update_purse()
-        tk.Label(self.result, text='Current Purse: ${:.2f}'.format(self.purse1)),
-                 font=(None, 25)).grid(row=5, column=0, 
-                 padx=((self.screen_width/2.5), 10), pady= 10)
+        tk.Label(self.result, text='Current Purse: ${:.2f}'.format(self.purse1),
+                 font=(None, 25))\
+                .grid(row=5, column=0, padx=((self.screen_width/2.5), 10), 
+                      pady=10)
 
         # check if there are more races to display 'next race' or 'exit'
         if self.trials1 == 1:
             tk.Button(self.result, text='Exit', 
-                      font=(None, 20), command=self.exit)
+                      font=(None, 20), command=self.exit)\
                      .grid(row=6, column=0, 
                            padx=((self.screen_width/2.5), 10), pady=10)
         else:
             tk.Button(self.result, text='Next Race', 
-                      font=(None, 20), command=self.races)
+                      font=(None, 20), command=self.races)\
                      .grid(row=6, column=0, 
                            padx=((self.screen_width/2.5), 10), pady=10)
 
@@ -618,22 +627,22 @@ class Window1:
 
         # instructions for what to do next
         tk.Label(self.exit, text='Thank you!\nPlease notify the researcher.',
-                 font=(None, 50))
+                 font=(None, 50))\
                 .grid(row=0, column=1, columnspan=2, 
                       padx=((self.screen_width/3), 100), 
                       pady=((self.screen_height/3), 10))
 
-    # instructions for inserting ID number
-    tk.Label(self.exit, text='Please enter ID number in order to save.')
-            .grid(row=2, column=1, columnspan=2, 
-                  padx=((self.screen_width/3), 100))
+        # instructions for inserting ID number
+        tk.Label(self.exit, text='Please enter ID number in order to save.')\
+                .grid(row=2, column=1, columnspan=2, 
+                      padx=((self.screen_width/3), 100))
         self.save=tk.Entry(self.exit, width=30)
         self.save.grid(row=3, column=1, columnspan=2, 
                        padx=((self.screen_width/3), 100))
 
         # save button
         tk.Button(self.exit, text='Save', font=(None, 15), 
-                  command=self.checksave)
+                  command=self.checksave)\
                  .grid(row=4, column=1, columnspan=2, 
                        padx=((self.screen_width/3), 50), pady=10)
 
@@ -652,9 +661,9 @@ class Window1:
             error = tk.Tk()
             error.title("ERROR")
             error.bind('<Control-q>', quit)
-            tk.Label(error, text="Please insert ID number.", font=(None, 20))
+            tk.Label(error, text="Please insert ID number.", font=(None, 20))\
                     .pack(padx=10, pady=10)
-            tk.Button(error, text="OK", command=lambda: error.destroy())
+            tk.Button(error, text="OK", command=lambda: error.destroy())\
                      .pack(padx=10, pady=10)
 
         # save if pass all tests
@@ -669,9 +678,9 @@ class Window1:
                 error = tk.Tk()
                 error.title("ERROR")
                 error.bind('<Control-q>', quit)
-                tk.Label(error, text="Please insert numbers.", font=(None, 20))
+                tk.Label(error, text="Please insert numbers.", font=(None, 20))\
                         .pack(padx=10, pady=10)
-                tk.Button(error, text="OK", command=lambda: error.destroy())
+                tk.Button(error, text="OK", command=lambda: error.destroy())\
                          .pack(padx=10, pady=10)
 
 root = tk.Tk()

@@ -58,8 +58,8 @@ def add_labels(horses, labelpath):
     """ given a list of horses, and a base path to the two labels files, 
         return the list with labels for each horse added to the dictionary.
     """
-    with open(labelpath + "_lt.csv") as tLabel, \
-         open(labelpath + "_lb.csv") as bLabel:
+    with open(labelpath + "_LT.CSV") as tLabel, \
+         open(labelpath + "_LB.CSV") as bLabel:
         tReader = csv.DictReader(tLabel, dialect='unix')
         bReader = csv.DictReader(bLabel, dialect='unix')
         rank = 1
