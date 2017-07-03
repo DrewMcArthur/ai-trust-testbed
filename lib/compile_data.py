@@ -205,6 +205,9 @@ def fixLabelName(row):
         n = n[:n.index("-")]
     if '?' in n:
         n = n.replace('?', '')
+    for c in n:
+        if ord(c) > 127:
+            n = n.replace(c, "")
     row['B_Horse'] = n
     return row
 
