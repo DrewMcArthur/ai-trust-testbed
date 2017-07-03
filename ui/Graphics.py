@@ -342,7 +342,7 @@ class Window1:
         pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?\.jpg')
 
         #race = random.choice(os.listdir(folder))
-        race = "AJX170618_3_1.jpg"
+        race = "ARP170618_1_1.jpg"
         m = pattern.match(race)
 
         # get filepaths and make sure they exist before continuing
@@ -353,6 +353,11 @@ class Window1:
               m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LT.CSV"
         lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
               m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LB.CSV"
+
+        print("Looking for:",p)
+        print("           :",ltp)
+        print("           :",lbp)
+        print("           :",folder+"/ARP170618_3_header.jpg")
 
         # find a race, and ensure that the files necessary exist
         while not (os.path.isfile(p) and os.path.isfile(ltp) 
@@ -495,12 +500,12 @@ class Window1:
         self.horse_select.config(font=(None, 20))
 
         # show race information on side
+        sideBarText = "Purse Total: ${:.2f}\n\n\nBetting Amount: ${:.2f}" + \
+                      "\n\n\nOdds:\n  {}\n\n\nAide's Suggestion: \n  {}" + \
+                      "\n\n\nHorse you want to bet on: "
         tk.Label(self.bet, 
-                 text="Purse Total: ${:.2f}\n\n\nBetting Amount: ${:.2f}" + \
-                        "\n\n\nOdds:\n  {}\n\n\nAide's Suggestion: \n  {}" + \
-                        "\n\n\nHorse you want to bet on: "
-                            .format(self.purse1, self.betting1, 
-                                    self.horses_odds, self.horse_pwin),
+                 text=sideBarText.format(self.purse1, self.betting1, 
+                                         self.horses_odds, self.horse_pwin),
                  font=(None, 20), justify='left')\
                 .grid(row=0, column=5, padx=40, pady=10, sticky=tk.E)
 
