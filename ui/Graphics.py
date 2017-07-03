@@ -337,7 +337,7 @@ class Window1:
         # creates forms with random horses
         # folder where forms are found
         # TODO: move this folder to data/
-        folder = "split_jpgs"
+        folder = "data/split_jpgs"
         # randomly generate race forms
         pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?\.jpg')
 
