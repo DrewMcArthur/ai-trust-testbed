@@ -389,9 +389,10 @@ input_data_col_headers: >
 # end horse_data_col_headers
 
 # headers for LABELS.data.csv
+# TODO: add back L_BSF at some point
 label_data_col_headers: >
     ID, R_RCTrack, R_RCDate, R_RCRace, B_Horse,
-    L_Position, L_Time, L_BSF
+    L_Position, L_Time
 
 # Path to the folder containing the raw data to be compiled
 raw_data_path: "data"
