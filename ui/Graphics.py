@@ -32,7 +32,19 @@ class MainWindow:
     def s_settings(self):
         # setting title
         tk.Label(self.settings, text='Settings', font=(None, 15)).grid( 
-            row=1, column=1, columnspan=2, pady=10)
+            row=0, column=1, columnspan=2, pady=10)
+
+        # drop-down of default settings
+        tk.Label(self.settings, text="Select settings: ").grid(row=1, column=1,
+                 padx=10, pady=5, sticky=tk.W)
+
+        defaults = ["first","second","third"]
+
+        self.defaultmenu = tk.StringVar(self.settings)
+        self.defaultmenu.set(defaults[0])
+        self.default_select = tk.OptionMenu(self.settings, self.defaultmenu, 
+                                          *defaults)
+        self.default_select.grid(row=1, column=2, sticky = tk.W)
 
         # number of trials prompt
         tk.Label(self.settings, text='Number of trials: ').grid(row=2,
@@ -262,7 +274,6 @@ class MainWindow:
         if self.errorcheck():
 
             # saving data from settings
-            # TODO: make into something (whole)
 
             self.Settings.trials = int(self.trials.get())
             self.Settings.accuracy = int(self.accuracy.get())
@@ -322,16 +333,32 @@ class MainWindow:
                 self.instructions.grid_columnconfigure(
                                         i, minsize=int(self.screen_width/3))
 
-            # TODO change "fixed at $2" to reflect whatever the settings are.
             # instructions label
-            welcomeText = "Welcome!\nAs a reminder, your bets are fixed at " + \
-                          "$2.\nYour task is to pick, as best you can, the " + \
+            welcomeTextChange = "Welcome!\nAs a reminder, you can choose your bets." + \
+                          "\nYour task is to pick, as best you can, the " + \
                           "winner of the race.\nYou will have up to {} " + \
                           "minutes to look at all the data and make your " + \
                           "choice.\nPress start when you are ready."
-            tk.Label(self.instructions, text=welcomeText.format(self.Settings.time_limit),
-                     font=(None, int(self.screen_height*.02)))\
-                    .grid(row=1, column=1)
+
+            welcomeTextFixed = "Welcome!\nAs a reminder, your bets are fixed at " + \
+                          "${:.2f}.\nYour task is to pick, as best you can, the " + \
+                          "winner of the race.\nYou will have up to {} " + \
+                          "minutes to look at all the data and make your " + \
+                          "choice.\nPress start when you are ready."
+
+            if self.Settings.betting_option == "Fixed":
+                tk.Label(self.instructions, text=welcomeTextFixed\
+                         .format(self.Settings.betting_amount, 
+                         self.Settings.time_limit),\
+                         font=(None, int(self.screen_height*.02)))\
+                        .grid(row=1, column=1)
+            else:
+                tk.Label(self.instructions, text=welcomeTextChange\
+                         .format(self.Settings.betting_amount, 
+                         self.Settings.time_limit),\
+                         font=(None, int(self.screen_height*.02)))\
+                        .grid(row=1, column=1)
+
             tk.Button(self.instructions, text='Start', 
                       font=(None, int(self.screen_width*.01)),
                       command=self.betting_screen)\
@@ -425,7 +452,7 @@ class MainWindow:
         self.horses_racing.sort(key=lambda x:x['B_ProgNum'])
         for horse in self.horses_racing:
             self.horses_odds += (horse['B_Horse'] + " : " + 
-                                 horse['B_MLOdds'] + "\n  ")
+                                 horse['B_MLOdds'] + "\n ")
         end = time.time()
 
     def scrolledcanvas(self):
@@ -440,11 +467,11 @@ class MainWindow:
         # create a scroll bar to view the form
         sbarV = tk.Scrollbar(self.bet, orient='vertical', 
                              command=self.canv.yview)
-        sbarV.grid(row=0, column=5, rowspan=5, sticky=tk.N + tk.S + tk.W)
+        sbarV.grid(row=0, column=0, rowspan=10, sticky=tk.N + tk.S + tk.E)
         self.canv.config(yscrollcommand=sbarV.set)
 
         # load the form onto the canvas and resize it to fit the screen
-        self.canv.grid(row=0, column=0, rowspan=5, 
+        self.canv.grid(row=0, column=0, rowspan=10, 
                        sticky=tk.N + tk.S + tk.W + tk.E)
         self.im = Image.open("test.jpg")
         self.im = self.im.resize((1500, 
@@ -477,14 +504,14 @@ class MainWindow:
         # betting screen
         self.bet = tk.Frame(self.window)
         self.bet.grid()
-        self.bet.grid_rowconfigure(0, weight=1)
-        self.bet.grid_columnconfigure(0, weight=1)
+        self.bet.grid_columnconfigure(0, minsize=1500)
+        self.bet.grid_columnconfigure(1, minsize=self.screen_width-1500)
 
         # set up for countdown timer
         self.t = self.Settings.time_limit * 60
         self.timer_label = tk.Label(self.bet, textvariable="", 
-                                    font=(None, 25), width=10)
-        self.timer_label.grid(row=0, column=5, padx=10, pady=10, 
+                                    font=(None, 25), justify='right')
+        self.timer_label.grid(row=0, column=1, padx=15, pady=10, 
                               sticky=tk.N + tk.E)
         self.countdown()
 
@@ -503,25 +530,42 @@ class MainWindow:
         self.horse_select.config(font=(None, 20))
 
         # show race information on side
-        sideBarText = "Purse Total: ${:.2f}\n\n\nBetting Amount: ${:.2f}" + \
-                      "\n\n\nOdds:\n  {}\n\n\nAide's Suggestion: \n  {}" + \
-                      "\n\n\nHorse you want to bet on: "
-        tk.Label(self.bet, 
-                 text=sideBarText.format(self.Settings.purse, self.Settings.betting_amount, 
-                                         self.horses_odds, self.horse_pwin),
-                 font=(None, 20), justify='left')\
-                .grid(row=0, column=5, padx=40, pady=10, sticky=tk.E)
+        tk.Label(self.bet, text="Purse Total: ${:.2f}".format(self.Settings.purse),\
+                 font=(None,20))\
+                .grid(row=1, column=1, padx=10, pady=10, sticky= tk.W)
+        if self.Settings.betting_option == 'Fixed':
+            tk.Label(self.bet, text="Betting Amount: ${:.2f}"\
+                     .format(self.Settings.betting_amount), font=(None, 20))\
+                    .grid(row=2, column=1, padx=10, pady=10, sticky=tk.W)
+        else:
+            tk.Label(self.bet, text="Betting Amount: $", font=(None,20))\
+                     .grid(row=2, column=1, sticky=tk.W, padx=10, pady=10)
+            self.new_bet = tk.Spinbox(self.bet, from_=2.00, to=self.Settings.purse, \
+                                      width=5, format="%.2f", font=(None, 20),\
+                                      state='readonly')
+            self.new_bet.grid(row=2, column=1, padx=(50,0))
+        tk.Label(self.bet, text="Odds:\n {}".format(self.horses_odds),\
+                 justify='left', font=(None, 20))\
+                .grid(row=3, column=1, padx=10, pady=10, sticky= tk.W)
+        tk.Label(self.bet, text="Aide's Suggestions: \n {}".format(self.horse_pwin),\
+                 justify='left', font=(None, 20))\
+                .grid(row=4, column=1, padx=10, pady=10, sticky= tk.W)
+        tk.Label(self.bet, text="Horse you want to bet on:", font=(None, 20))\
+                .grid(row=5, column=1, padx=10, sticky= tk.W)
 
-        self.horse_select.grid(row=0, column=5, pady=(550, 50))
+        self.horse_select.grid(row=5, column=1, padx=15, pady=5, sticky=tk.W + tk.S)
 
         # submit button
         tk.Button(self.bet, text='Submit', 
                   command=self.retrieving_data, font=(None, 20))\
-                 .grid(row=0, column=5, padx=10, pady=10, sticky=tk.S)
+                 .grid(row=7, column=1, padx=10, pady=10)
 
     def retrieving_data(self):
         # check how long the user took to submit
         print(self.timer_label['text'])
+
+        if self.Settings.betting_option == 'Change':
+                self.Settings.betting_amount = float(self.new_bet.get())
 
         # check if a horse is selected
         if self.horsemenu.get() == "Select horse":
@@ -687,12 +731,11 @@ class MainWindow:
                          .pack(padx=10, pady=10)
 
 
-
 root = tk.Tk()
 
 def run():
     root.title("Horse Racing")
-    root.geometry("500x425")
+    root.geometry("500x460")
     root.bind('<Control-q>', quit)
     app = MainWindow(root)
     root.mainloop()
