@@ -11,7 +11,7 @@ def check():
     # quits if ctrl+q is pressed
     root.after(50, self.check)
 
-class Window1:
+class MainWindow:
     
     def __init__(self, master):
         # setting up first window (settings)
@@ -255,6 +255,7 @@ class Window1:
         if self.errorcheck():
 
             # saving data from settings
+            # TODO: make into something (whole)
             self.trials1 = int(self.trials.get())
             self.accuracy1 = int(self.accuracy.get())
             self.checkaccuracy1 = self.checkaccuracy.get()
@@ -336,7 +337,6 @@ class Window1:
     def generateforms(self):
         # creates forms with random horses
         # folder where forms are found
-        # TODO: move this folder to data/
         folder = "data/split_jpgs"
         # randomly generate race forms
         pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?\.jpg')
@@ -379,8 +379,7 @@ class Window1:
         beginning = time.time()
 
         # pick random horses and make a form
-        # TODO: better variable name than string
-        string = "convert -append " + os.path.join(folder, m.group(1) + \
+        convert_string = "convert -append " + os.path.join(folder, m.group(1) + \
             m.group(2) + '_' + m.group(3) + "_header.jpg ")
             
         # generate a list of possible filenames
@@ -394,14 +393,14 @@ class Window1:
         nums = []
         # 
         for filename in sorted(filenames[:self.horses1]):
-            string += os.path.join(folder, filename) + " "
+            convert_string += os.path.join(folder, filename) + " "
             m = pattern.match(filename)
             nums += m.group(4)
 
-        string += "test.jpg"
+        convert_string += "test.jpg"
         # TODO: why does this convert the jpgs while running? 
         #       conversion should be done beforehand for limited cases
-        os.system(string)
+        os.system(convert_string)
 
         # find horses in csv files
         self.superhorses = get_positions(m.group(1), m.group(2), m.group(3))
@@ -427,8 +426,6 @@ class Window1:
         end = time.time()
 
     def scrolledcanvas(self):
-        # TODO: are these the forms of race information? 
-        #       rename im/im2 to be more descriptive
         # generate forms
         self.generateforms()
 
@@ -521,7 +518,7 @@ class Window1:
 
     def retrieving_data(self):
         # check how long the user took to submit
-        print(self.timeformat)
+        print(self.timer_label['text'])
 
         # check if a horse is selected
         if self.horsemenu.get() == "Select horse":
@@ -686,13 +683,16 @@ class Window1:
                 tk.Button(error, text="OK", command=lambda: error.destroy())\
                          .pack(padx=10, pady=10)
 
+class Settings(MainWindow):
+    pass
+
 root = tk.Tk()
 
 def run():
     root.title("Horse Racing")
     root.geometry("500x425")
     root.bind('<Control-q>', quit)
-    app = Window1(root)
+    app = MainWindow(root)
     root.mainloop()
 
 if __name__ == "__main__":
