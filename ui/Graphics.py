@@ -24,35 +24,86 @@ class MainWindow:
     class Settings:
         def save(self, filename):
             pickle.dump({i: getattr(self,i) for i in self.__dict__ if not callable(getattr(self, i)) and not i.startswith('__')},\
-                        open(os.path.join(self.path,filename), 'wb'))
+                        open(os.path.join(self.path,filename + '_s.p'), 'wb'))
 
         def load(self, filename):
-            temp = pickle.load(open(os.path.join(self.path,filename), 'rb'))
+            temp = pickle.load(open(os.path.join(self.path,filename+'_s.p'), 'rb'))
             print(temp)
             for i in temp.keys():
                 setattr(self, i, temp[i]) 
 
-    def load_settings(self):
-        if os.path.isfile(os.path.join(self.Settings.path, self.defaultmenu.get() + '.p')):
-            self.Settings.load(self.defaultmenu.get())
+    def load_settings(self, event):
+        if os.path.isfile(os.path.join(self.Settings.path, self.defaultmenu.get() + '_s.p')):
+            self.Settings.load(self.Settings,self.defaultmenu.get())
+            self.set_all_defaults()
 
+    def set_all_defaults(self):
+        # trials entry box
+        self.trials.delete(0, 'end')
+        self.trials.insert(0, self.Settings.trials)
+
+        # accuracy slider
+        self.accuracy.set(self.Settings.accuracy)
+
+        # use accuracy of classifer
+        if not self.Settings.checkaccuracy:
+            self.CA.deselect()
+        else:
+            self.CA.select()
+
+        # show time
+        if not self.Settings.showtime:
+            self.C1.deselect()
+        else:
+            self.C1.select()
+
+        # show beyer
+        if not self.Settings.showbeyer:
+            self.C2.deselect()
+        else:
+            self.C2.select()
+
+        # show order of horses
+        if not self.Settings.showorder:
+            self.C3.deselect()
+        else:
+            self.C3.select()
+
+        # betting options
+        self.option_betting.set(self.Settings.betting_option)
+        
+        # fixed bet entry box
+        self.betting.delete(0, 'end')
+        self.betting.insert(0, self.Settings.betting_amount)
+
+        # purse size
+        self.purse.delete(0, 'end')
+        self.purse.insert(0, "{0:.02f}".format(self.Settings.purse))
+
+        # number of horses
+        self.horses.delete(0, 'end')
+        self.horses.insert(0, self.Settings.num_of_horses)
+
+        # time per race
+        self.time.delete(0, 'end')
+        self.time.insert(0, self.Settings.time_limit)
     def s_settings(self):
         # setting title
         self.Settings.path = os.path.join('ui','settings')
 
-        self.Settings.load(self.Settings,'test.p')
+        self.Settings.load(self.Settings,'default')
         tk.Label(self.settings, text='Settings', font=(None, 15)).grid( 
             row=0, column=1, columnspan=2, pady=10)
 
         # drop-down of default settings
         tk.Label(self.settings, text="Select settings: ").grid(row=1, column=1,
                  padx=10, pady=5, sticky=tk.W)
-        defaults = [f.replace('.p', '') for f in os.listdir(self.Settings.path)]
+        defaults = [f.replace('_s.p', '') for f in os.listdir(self.Settings.path)]
 
         self.defaultmenu = tk.StringVar(self.settings)
         self.defaultmenu.set(defaults[0])
         self.default_select = tk.OptionMenu(self.settings, self.defaultmenu, 
-                                          *defaults, command = self.load_settings)
+                                          *defaults, command=self.load_settings)
         self.default_select.grid(row=1, column=2, sticky = tk.W)
 
         # number of trials prompt
@@ -187,7 +238,8 @@ class MainWindow:
                  (row=14, column=1, columnspan=2, pady=10)
 
         # set all of the defaults
-        # trials entry box
+
+                # trials entry box
         self.trials.insert(0, self.Settings.trials)
 
         # accuracy slider
@@ -295,7 +347,6 @@ class MainWindow:
         if self.errorcheck():
 
             # saving data from settings
-
             self.Settings.trials = int(self.trials.get())
             self.Settings.accuracy = int(self.accuracy.get())
             self.Settings.checkaccuracy = int(self.checkaccuracy.get())
@@ -309,7 +360,7 @@ class MainWindow:
             self.Settings.num_of_horses = int(self.horses.get())
             self.Settings.time_limit = int(self.time.get())
 
-            self.Settings.save(self.Settings,'test.p')
+            self.Settings.save(self.Settings,'test')
 
             # checking values
             print("Trials: ", self.Settings.trials, 
