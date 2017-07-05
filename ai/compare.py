@@ -8,6 +8,10 @@ from learn import split_data
 from itertools import permutations
 from collections import OrderedDict
 from joblib import dump, load
+from sklearn.metrics import accuracy_score, explained_variance_score, r2_score
+from sklearn.preprocessing import Imputer, MinMaxScaler
+from sklearn.neural_network import MLPClassifier
+
 import yaml, os, csv 
 
 def get_raceID(horse):
@@ -40,11 +44,6 @@ def get_comparison(horses):
         boolean value == (horseA['position'] < horseB['position'])
         i.e. true if horseA finished before horseB                  """
     horseA, horseB = horses
-    [print() for _ in range(10)]
-    print(horseA)
-    [print() for _ in range(10)]
-    print(horseB)
-    [print() for _ in range(10)]
     return 1 if horseA['L_Position'] < horseB['L_Position'] else 0
 
 def get_label(horse):
@@ -57,18 +56,18 @@ def read_output(filename, races):
     with open(filename) as lFile:
         labelreader = csv.DictReader(lFile, dialect='unix')
         r = []
-        print(races.keys())
+#       print(races.keys())
         # iterate through the file and keep track of times
         for row in labelreader:
             ID = get_raceID(row)
-            print("Getting label for: ", ID)
+#           print("Getting label for: ", ID)
             if ID in races:
                 for horse in races[ID]:
-                    print("applying label to ", horse['B_Horse'], " in ", ID)
-                    print("IDs:", horse['ID'], row['ID'])
-                    print("Names:", horse['B_Horse'], row['B_Horse'])
+#                   print("applying label to ", horse['B_Horse'], " in ", ID)
+#                   print("IDs:", horse['ID'], row['ID'])
+#                   print("Names:", horse['B_Horse'], row['B_Horse'])
                     if horse['ID'] == row['ID']:
-                        print("gave horse position",horse['B_Horse'])
+#                       print("gave horse position",horse['B_Horse'])
                         horse.update({"L_Position": row['L_Position']})
         return races
 
@@ -101,11 +100,11 @@ def format_pair(pair):
     keys, ret = zip(*A.items())
     keys, items = zip(*B.items())
 
+    # remove duplicate information from the beginning of the list
     items = remove_raceInfo(list(items))
 
     # combine the lists and return them
-    ret = list(ret) + items
-    return ret
+    return list(ret) + items
 
 def isint(x):
     """ returns true if x is probably an int hidden in a string """
@@ -129,10 +128,14 @@ def get_model(Xs, Ys):
         each row consists of information on two horses
     """
     # create necessary sklearn objects
+    #cat_feats = []
+    #enc = OneHotEncoder(categorical_features=cat_feats)
+    imp = Imputer(missing_values='', strategy='mean', axis=0)
+    scaler = MinMaxScaler()
     nn = MLPClassifier()
 
     # construct a pipe from previous objects
-    model = make_pipeline()
+    model = make_pipeline(imp, scaler, nn)
 
     # train the model
     model.fit(Xs, Ys)
@@ -145,12 +148,14 @@ def test_model(model, x_test, y_test):
     """
     # get accuracy and predictions
     y_pred = model.predict(x_test)
-    deltas = [abs(p-l) for p, l in zip(y_pred, y_test)]
 
     print("results for classifying winners")
-    print(sum(deltas)/len(deltas))
+    print(accuracy_score(y_test, y_pred))
     print(explained_variance_score(y_test, y_pred))
     print(r2_score(y_test, y_pred))
+    print("=== pickle dump of model ===")
+    print(pickle.dumps(model))
+    print("=== end pickle dump ===")
 
 def generate_datadump(toFile=False):
     """ loads data from file, formats it, and if toFile is set to true, 
@@ -160,7 +165,7 @@ def generate_datadump(toFile=False):
     races = read_data(config['final_data_filename'])
     races = read_output("LABELS." + config['final_data_filename'], races)
 
-    print("Read data from file.")
+    #print("Read data from file.")
 
     # races now equals a dictionary, where each item is a race, 
     #       with key equal to the race's ID (given by get_raceID).  
@@ -171,22 +176,15 @@ def generate_datadump(toFile=False):
     labels = []
     i = 0
     for ID, race in races.items():
-        print(ID, "horses in race:")
-        [print(h['B_Horse']) for h in race]
         pairs = generate_pairs(race)
         newlabels = [get_comparison(pair) for pair in pairs]
-        print("Labels:")
-        [print(l) for l in newlabels]
         data += [format_pair(pair) for pair in pairs]
         labels += newlabels
-        print("Parsed {0:.2f}% of races.".format(i / (len(races)/100)), 
-              end='\r')
+#       print("Parsed {0:.2f}% of races.".format(i / (len(races)/100)), 
+#             end='\r')
         i += 1
 
     data = [format_data(d) for d in data]
-    print("Formatted data by removing empty strings ")
-    print(" and converting numberical ones.")
-
 
     todelete = [1053, 2288, 173, 174, 175, 176, 177, 1408, 1409, 1410, 1411, 1412, 512, 1747, 1143, 2378, 602, 1837, 1233, 2468, 692, 1927, 782, 2017, 872, 2107, 962, 
                 2197, 1052, 2287, 1142, 2377, 244, 1479, 51, 1286, 1232, 2467, 334, 1569, 424, 1659, 514, 1749, 604, 1839, 694, 1929, 784, 2019, 288, 1523, 468, 1703, 
@@ -208,9 +206,7 @@ def generate_datadump(toFile=False):
     import numpy as np
 
     a = np.array(data)
-    print("deleting columns...")
     np.delete(a, todelete)
-    print(a)
 
     data = a.tolist()
     if toFile:
@@ -235,4 +231,4 @@ def main():
     test_model(model, x_test, y_test)
 
 if __name__ == "__main__":
-    generate_datadump(True)
+    main()
