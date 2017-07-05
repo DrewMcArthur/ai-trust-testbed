@@ -433,11 +433,11 @@ class MainWindow:
         # create a scroll bar to view the form
         sbarV = tk.Scrollbar(self.bet, orient='vertical', 
                              command=self.canv.yview)
-        sbarV.grid(row=0, column=5, rowspan=5, sticky=tk.N + tk.S + tk.W)
+        sbarV.grid(row=0, column=1, rowspan=2, sticky=tk.N + tk.S + tk.W)
         self.canv.config(yscrollcommand=sbarV.set)
 
         # load the form onto the canvas and resize it to fit the screen
-        self.canv.grid(row=0, column=0, rowspan=5, 
+        self.canv.grid(row=0, column=0, rowspan=2, 
                        sticky=tk.N + tk.S + tk.W + tk.E)
         self.im = Image.open("test.jpg")
         self.im = self.im.resize((1500, 
@@ -470,14 +470,17 @@ class MainWindow:
         # betting screen
         self.bet = tk.Frame(self.window)
         self.bet.grid()
-        self.bet.grid_rowconfigure(0, weight=1)
-        self.bet.grid_columnconfigure(0, weight=1)
+        for i in range(4):
+            self.bet.grid_columnconfigure(
+                i, minsize=int(self.screen_width/4))
+        self.bet.grid_columnconfigure(0, minsize=1500)
+        self.bet.grid_columnconfigure(1, minsize=self.screen_height-1500)
 
         # set up for countdown timer
         self.t = self.time1 * 60
         self.timer_label = tk.Label(self.bet, textvariable="", 
                                     font=(None, 25), width=10)
-        self.timer_label.grid(row=0, column=5, padx=10, pady=10, 
+        self.timer_label.grid(row=0, column=1, padx=10, pady=10, 
                               sticky=tk.N + tk.E)
         self.countdown()
 
@@ -503,14 +506,14 @@ class MainWindow:
                  text=sideBarText.format(self.purse1, self.betting1, 
                                          self.horses_odds, self.horse_pwin),
                  font=(None, 20), justify='left')\
-                .grid(row=0, column=5, padx=40, pady=10, sticky=tk.E)
+                .grid(row=0, column=1, padx=40, pady=10, sticky=tk.E)
 
-        self.horse_select.grid(row=0, column=5, pady=(550, 50))
+        self.horse_select.grid(row=0, column=1, pady=(550, 50))
 
         # submit button
         tk.Button(self.bet, text='Submit', 
                   command=self.retrieving_data, font=(None, 20))\
-                 .grid(row=0, column=5, padx=10, pady=10, sticky=tk.S)
+                 .grid(row=0, column=1, padx=10, pady=10, sticky=tk.S)
 
     def retrieving_data(self):
         # check how long the user took to submit
