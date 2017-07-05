@@ -247,40 +247,39 @@ class MainWindow:
                     return False
             else:
                 return True
-
+    class Settings:
+            pass
     def instructions(self):
         # screen that displays the instructions
-
         # checking if all entries are filled out
         if self.errorcheck():
 
             # saving data from settings
-            # TODO: make into something (whole)
-            self.trials1 = int(self.trials.get())
-            self.accuracy1 = int(self.accuracy.get())
-            self.checkaccuracy1 = self.checkaccuracy.get()
-            self.showtime1 = self.showtime.get()
-            self.showbeyer1 = self.showbeyer.get()
-            self.showorder1 = self.showorder.get()
-            self.purse1 = float(self.purse.get())
-            self.purse1 = round(self.purse1, 2)
-            self.betting_option = self.option_betting.get()
-            self.betting1 = int(self.betting.get())
-            self.horses1 = int(self.horses.get())
-            self.time1 = int(self.time.get())
+            self.Settings.trials = int(self.trials.get())
+            self.Settings.accuracy = int(self.accuracy.get())
+            self.Settings.checkaccuracy = self.checkaccuracy.get()
+            self.Settings.showtime = self.showtime.get()
+            self.Settings.showbeyer = self.showbeyer.get()
+            self.Settings.showorder = self.showorder.get()
+            self.Settings.purse = float(self.purse.get())
+            self.Settings.purse = round(self.Settings.purse, 2)
+            self.Settings.betting_option = self.option_betting.get()
+            self.Settings.betting_amount = int(self.betting.get())
+            self.Settings.num_of_horses = int(self.horses.get())
+            self.Settings.time_limit = int(self.time.get())
 
             # checking values
-            print("Trials: ", self.trials1, 
-                "\nAccuracy: ", self.accuracy1,
-                "\nCheck Accuracy: ", self.checkaccuracy1,
-                "\nTime: ", self.showtime1,
-                "\nBeyer: ", self.showbeyer1,
-                "\nOrder: ", self.showorder1,
-                "\nBetting Style: ", self.betting_option,
-                "\nBetting Amount: ", self.betting1,
-                "\nPurse: ", self.purse1,
-                "\nNumber of Horses: ", self.horses1,
-                "\nTime Limit per Race: ", self.time1)
+            print("Trials: ", self.Settings.trials, 
+                "\nAccuracy: ", self.Settings.accuracy,
+                "\nCheck Accuracy: ", self.Settings.checkaccuracy,
+                "\nTime: ", self.Settings.showtime,
+                "\nBeyer: ", self.Settings.showbeyer,
+                "\nOrder: ", self.Settings.showorder,
+                "\nBetting Style: ", self.Settings.betting_option,
+                "\nBetting Amount: ", self.Settings.betting_amount,
+                "\nPurse: ", self.Settings.purse,
+                "\nNumber of Horses: ", self.Settings.num_of_horses,
+                "\nTime Limit per Race: ", self.Settings.time_limit)
 
             # clearing screen and making a new instructions window
             self.settings.destroy()
@@ -313,7 +312,7 @@ class MainWindow:
                                         i, minsize=int(self.screen_width/3))
 
             # instructions label
-            if self.betting_option == 'Change':
+            if self.Settings.betting_option == 'Change':
                 bet_option = ' each'
             else:
                 bet_option = ""
@@ -322,8 +321,10 @@ class MainWindow:
                           "winner of the race.\nYou will have up to {} " + \
                           "minutes to look at all the data and make your " + \
                           "choice.\nPress start when you are ready."
-            tk.Label(self.instructions, text=welcomeText.format(self.betting1, 
-                     bet_option, self.time1), font=(None, int(self.screen_height*.02)))\
+
+            tk.Label(self.instructions, text=welcomeText.format(self.Settings.betting_amount, 
+                     bet_option, self.Settings.time_limit),\
+                     font=(None, int(self.screen_height*.02)))\
                     .grid(row=1, column=1)
             tk.Button(self.instructions, text='Start', 
                       font=(None, int(self.screen_width*.01)),
@@ -388,7 +389,7 @@ class MainWindow:
         random.shuffle(filenames)
         nums = []
         # 
-        for filename in sorted(filenames[:self.horses1]):
+        for filename in sorted(filenames[:self.Settings.num_of_horses]):
             convert_string += os.path.join(folder, filename) + " "
             m = pattern.match(filename)
             nums += m.group(4)
@@ -418,7 +419,7 @@ class MainWindow:
         self.horses_racing.sort(key=lambda x:x['B_ProgNum'])
         for horse in self.horses_racing:
             self.horses_odds += (horse['B_Horse'] + " : " + 
-                                 horse['B_MLOdds'] + "\n  ")
+                                 horse['B_MLOdds'] + "\n ")
         end = time.time()
 
     def scrolledcanvas(self):
@@ -433,11 +434,11 @@ class MainWindow:
         # create a scroll bar to view the form
         sbarV = tk.Scrollbar(self.bet, orient='vertical', 
                              command=self.canv.yview)
-        sbarV.grid(row=0, column=1, rowspan=2, sticky=tk.N + tk.S + tk.W)
+        sbarV.grid(row=0, column=0, rowspan=10, sticky=tk.N + tk.S + tk.E)
         self.canv.config(yscrollcommand=sbarV.set)
 
         # load the form onto the canvas and resize it to fit the screen
-        self.canv.grid(row=0, column=0, rowspan=2, 
+        self.canv.grid(row=0, column=0, rowspan=10, 
                        sticky=tk.N + tk.S + tk.W + tk.E)
         self.im = Image.open("test.jpg")
         self.im = self.im.resize((1500, 
@@ -470,17 +471,14 @@ class MainWindow:
         # betting screen
         self.bet = tk.Frame(self.window)
         self.bet.grid()
-        for i in range(4):
-            self.bet.grid_columnconfigure(
-                i, minsize=int(self.screen_width/4))
         self.bet.grid_columnconfigure(0, minsize=1500)
-        self.bet.grid_columnconfigure(1, minsize=self.screen_height-1500)
+        self.bet.grid_columnconfigure(1, minsize=self.screen_width-1500)
 
         # set up for countdown timer
-        self.t = self.time1 * 60
+        self.t = self.Settings.time_limit * 60
         self.timer_label = tk.Label(self.bet, textvariable="", 
-                                    font=(None, 25), width=10)
-        self.timer_label.grid(row=0, column=1, padx=10, pady=10, 
+                                    font=(None, 25), justify='right')
+        self.timer_label.grid(row=0, column=1, padx=15, pady=10, 
                               sticky=tk.N + tk.E)
         self.countdown()
 
@@ -499,21 +497,34 @@ class MainWindow:
         self.horse_select.config(font=(None, 20))
 
         # show race information on side
-        sideBarText = "Purse Total: ${:.2f}\n\n\nBetting Amount: ${:.2f}" + \
-                      "\n\n\nOdds:\n  {}\n\n\nAide's Suggestion: \n  {}" + \
-                      "\n\n\nHorse you want to bet on: "
-        tk.Label(self.bet, 
-                 text=sideBarText.format(self.purse1, self.betting1, 
-                                         self.horses_odds, self.horse_pwin),
-                 font=(None, 20), justify='left')\
-                .grid(row=0, column=1, padx=40, pady=10, sticky=tk.E)
+        tk.Label(self.bet, text="Purse Total: ${:.2f}".format(self.Settings.purse),\
+                 font=(None,20))\
+                .grid(row=1, column=1, padx=10, pady=10, sticky= tk.W)
+        if self.Settings.betting_option == 'Fixed':
+            tk.Label(self.bet, text="Betting Amount: ${:.2f}"\
+                     .format(self.Settings.betting_amount), font=(None, 20))\
+                    .grid(row=2, column=1, padx=10, pady=10, sticky=tk.W)
+        else:
+            tk.Label(self.bet, text="Betting Amount: $", font=(None,20))\
+                     .grid(row=2, column=1, sticky=tk.W, padx=10, pady=10)
+            tk.Spinbox(self.bet, from_=2.00, to=self.Settings.purse, width=5,\
+                       format="%.2f", font=(None, 20), state='readonly')\
+                      .grid(row=2, column=1, padx=(50,0))
+        tk.Label(self.bet, text="Odds:\n {}".format(self.horses_odds),\
+                 justify='left', font=(None, 20))\
+                .grid(row=3, column=1, padx=10, pady=10, sticky= tk.W)
+        tk.Label(self.bet, text="Aide's Suggestions: \n {}".format(self.horse_pwin),\
+                 justify='left', font=(None, 20))\
+                .grid(row=4, column=1, padx=10, pady=10, sticky= tk.W)
+        tk.Label(self.bet, text="Horse you want to bet on:", font=(None, 20))\
+                .grid(row=5, column=1, padx=10, sticky= tk.W)
 
-        self.horse_select.grid(row=0, column=1, pady=(550, 50))
+        self.horse_select.grid(row=5, column=1, padx=15, pady=5, sticky=tk.W + tk.S)
 
         # submit button
         tk.Button(self.bet, text='Submit', 
                   command=self.retrieving_data, font=(None, 20))\
-                 .grid(row=0, column=1, padx=10, pady=10, sticky=tk.S)
+                 .grid(row=7, column=1, padx=10, pady=10)
 
     def retrieving_data(self):
         # check how long the user took to submit
@@ -552,16 +563,16 @@ class MainWindow:
     def update_purse(self):
         """ updates the purse """
         # take away money used to bet
-        self.purse1 -= self.betting1
+        self.Settings.purse -= self.Settings.betting_amount
 
         # if bet on the right horse, calculate winnings
         if self.horse_win == self.horsemenu.get():
             for horse in self.superhorses:
                 if horse['B_Horse'] == self.horsemenu.get():
                     odds = horse['B_MLOdds'].split('-')
-            if self.betting1 != '0':
-                self.purse1 = (((self.betting1 * float(odds[0])) / 
-                                float(odds[1])) + self.purse1)
+            if self.Settings.betting_amount != '0':
+                self.Settings.purse = (((self.Settings.betting_amount * float(odds[0])) / 
+                                float(odds[1])) + self.Settings.purse)
 
     def results(self):
         """ displays the results of the race """
@@ -593,13 +604,13 @@ class MainWindow:
 
         # update the users purse
         self.update_purse()
-        tk.Label(self.result, text='Current Purse: ${:.2f}'.format(self.purse1),
+        tk.Label(self.result, text='Current Purse: ${:.2f}'.format(self.Settings.purse),
                  font=(None, 25))\
                 .grid(row=5, column=0, padx=((self.screen_width/2.5), 10), 
                       pady=10)
 
         # check if there are more races to display 'next race' or 'exit'
-        if self.trials1 == 1:
+        if self.Settings.trials == 1:
             tk.Button(self.result, text='Exit', 
                       font=(None, 20), command=self.exit)\
                      .grid(row=6, column=0, 
@@ -612,9 +623,9 @@ class MainWindow:
 
     def races(self):
         # if there are more races, decrement trials and load another race
-        if self.trials1 > 0:
+        if self.Settings.trials > 0:
             self.betting_screen()
-            self.trials1 -= 1
+            self.Settings.trials -= 1
 
     def exit(self):
         # destroy result screen and make a new exit screen
