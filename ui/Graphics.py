@@ -5,6 +5,7 @@ import random
 import os
 from PIL import Image, ImageTk
 from lib.load_ai import get_positions
+import pickle
 
 def check():
     # checks every 50 milliseconds for keyboard interrupts (ctrl+q)
@@ -19,7 +20,15 @@ class MainWindow:
         self.settings = tk.Frame(self.master)
         self.settings.grid()
         self.s_settings()
-    
+
+    class Settings:
+        def save(self, filename):
+            pickle.dump({i: getattr(self,i) for i in self.__dict__ if not callable(getattr(self, i)) and not i.startswith('__')},\
+                        open(filename, 'wb'))
+
+        def load(self, filename):
+            self.__dict__.update(pickle.load(open(filename, 'rb')))
+
     def s_settings(self):
         # setting title
         tk.Label(self.settings, text='Settings', font=(None, 15)).grid( 
@@ -247,8 +256,6 @@ class MainWindow:
                     return False
             else:
                 return True
-    class Settings:
-            pass
     def instructions(self):
         # screen that displays the instructions
         # checking if all entries are filled out
@@ -256,6 +263,7 @@ class MainWindow:
 
             # saving data from settings
             # TODO: make into something (whole)
+
             self.Settings.trials = int(self.trials.get())
             self.Settings.accuracy = int(self.accuracy.get())
             self.Settings.checkaccuracy = self.checkaccuracy.get()
@@ -268,6 +276,8 @@ class MainWindow:
             self.Settings.betting_amount = int(self.betting.get())
             self.Settings.num_of_horses = int(self.horses.get())
             self.Settings.time_limit = int(self.time.get())
+
+            self.Settings.save(self.Settings,'test.p')
 
             # checking values
             print("Trials: ", self.Settings.trials, 
@@ -298,7 +308,7 @@ class MainWindow:
                                                 self.screen_height))
 
             print(self.screen_width, self.screen_height)
-            
+            print(self.Settings.__dict__)
             # get screen dimensions
             self.screen_width = int(self.window.winfo_screenwidth())
             self.screen_height = int(self.window.winfo_screenheight())- 100
@@ -676,8 +686,7 @@ class MainWindow:
                 tk.Button(error, text="OK", command=lambda: error.destroy())\
                          .pack(padx=10, pady=10)
 
-class Settings(MainWindow):
-    pass
+
 
 root = tk.Tk()
 
