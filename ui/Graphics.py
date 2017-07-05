@@ -376,6 +376,8 @@ class Window1:
             lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
                   m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LB.CSV"
 
+        beginning = time.time()
+
         # pick random horses and make a form
         # TODO: better variable name than string
         string = "convert -append " + os.path.join(folder, m.group(1) + \
@@ -422,6 +424,7 @@ class Window1:
         for horse in self.horses_racing:
             self.horses_odds += (horse['B_Horse'] + " : " + 
                                  horse['B_MLOdds'] + "\n  ")
+        end = time.time()
 
     def scrolledcanvas(self):
         # TODO: are these the forms of race information? 
