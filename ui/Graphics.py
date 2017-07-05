@@ -265,14 +265,7 @@ class MainWindow:
             self.purse1 = float(self.purse.get())
             self.purse1 = round(self.purse1, 2)
             self.betting_option = self.option_betting.get()
-
-            # set fixed betting amount to 0 if betting option is change
-            if not (self.betting.get()):
-                self.betting1 = 0
-            
-            #otherwise set the betting amount to the input
-            else:
-                self.betting1 = int(self.betting.get())
+            self.betting1 = int(self.betting.get())
             self.horses1 = int(self.horses.get())
             self.time1 = int(self.time.get())
 
@@ -319,15 +312,18 @@ class MainWindow:
                 self.instructions.grid_columnconfigure(
                                         i, minsize=int(self.screen_width/3))
 
-            # TODO change "fixed at $2" to reflect whatever the settings are.
             # instructions label
+            if self.betting_option == 'Change':
+                bet_option = ' each'
+            else:
+                bet_option = ""
             welcomeText = "Welcome!\nAs a reminder, your bets are fixed at " + \
-                          "$2.\nYour task is to pick, as best you can, the " + \
+                          "${}{}.\nYour task is to pick, as best you can, the " + \
                           "winner of the race.\nYou will have up to {} " + \
                           "minutes to look at all the data and make your " + \
                           "choice.\nPress start when you are ready."
-            tk.Label(self.instructions, text=welcomeText.format(self.time1),
-                     font=(None, int(self.screen_height*.02)))\
+            tk.Label(self.instructions, text=welcomeText.format(self.betting1, 
+                     bet_option, self.time1), font=(None, int(self.screen_height*.02)))\
                     .grid(row=1, column=1)
             tk.Button(self.instructions, text='Start', 
                       font=(None, int(self.screen_width*.01)),
@@ -682,9 +678,6 @@ class MainWindow:
                         .pack(padx=10, pady=10)
                 tk.Button(error, text="OK", command=lambda: error.destroy())\
                          .pack(padx=10, pady=10)
-
-class Settings(MainWindow):
-    pass
 
 root = tk.Tk()
 
