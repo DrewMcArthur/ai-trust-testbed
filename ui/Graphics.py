@@ -23,7 +23,19 @@ class MainWindow:
     def s_settings(self):
         # setting title
         tk.Label(self.settings, text='Settings', font=(None, 15)).grid( 
-            row=1, column=1, columnspan=2, pady=10)
+            row=0, column=1, columnspan=2, pady=10)
+
+        # drop-down of default settings
+        tk.Label(self.settings, text="Select settings: ").grid(row=1, column=1,
+                 padx=10, pady=5, sticky=tk.W)
+
+        defaults = ["first","second","third"]
+
+        self.defaultmenu = tk.StringVar(self.settings)
+        self.defaultmenu.set(defaults[0])
+        self.default_select = tk.OptionMenu(self.settings, self.defaultmenu, 
+                                          *defaults)
+        self.default_select.grid(row=1, column=2, sticky = tk.W)
 
         # number of trials prompt
         tk.Label(self.settings, text='Number of trials: ').grid(row=2,
@@ -317,7 +329,7 @@ class MainWindow:
                           "winner of the race.\nYou will have up to {} " + \
                           "minutes to look at all the data and make your " + \
                           "choice.\nPress start when you are ready."
-                          
+
             welcomeTextFixed = "Welcome!\nAs a reminder, your bets are fixed at " + \
                           "${:.2f}.\nYour task is to pick, as best you can, the " + \
                           "winner of the race.\nYou will have up to {} " + \
@@ -712,7 +724,7 @@ root = tk.Tk()
 
 def run():
     root.title("Horse Racing")
-    root.geometry("500x425")
+    root.geometry("500x460")
     root.bind('<Control-q>', quit)
     app = MainWindow(root)
     root.mainloop()
