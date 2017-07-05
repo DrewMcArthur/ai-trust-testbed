@@ -312,20 +312,31 @@ class MainWindow:
                                         i, minsize=int(self.screen_width/3))
 
             # instructions label
-            if self.Settings.betting_option == 'Change':
-                bet_option = ' each'
-            else:
-                bet_option = ""
-            welcomeText = "Welcome!\nAs a reminder, your bets are fixed at " + \
-                          "${}{}.\nYour task is to pick, as best you can, the " + \
+            welcomeTextChange = "Welcome!\nAs a reminder, you can choose your bets." + \
+                          "\nYour task is to pick, as best you can, the " + \
+                          "winner of the race.\nYou will have up to {} " + \
+                          "minutes to look at all the data and make your " + \
+                          "choice.\nPress start when you are ready."
+                          
+            welcomeTextFixed = "Welcome!\nAs a reminder, your bets are fixed at " + \
+                          "${:.2f}.\nYour task is to pick, as best you can, the " + \
                           "winner of the race.\nYou will have up to {} " + \
                           "minutes to look at all the data and make your " + \
                           "choice.\nPress start when you are ready."
 
-            tk.Label(self.instructions, text=welcomeText.format(self.Settings.betting_amount, 
-                     bet_option, self.Settings.time_limit),\
-                     font=(None, int(self.screen_height*.02)))\
-                    .grid(row=1, column=1)
+            if self.Settings.betting_option == "Fixed":
+                tk.Label(self.instructions, text=welcomeTextFixed\
+                         .format(self.Settings.betting_amount, 
+                         self.Settings.time_limit),\
+                         font=(None, int(self.screen_height*.02)))\
+                        .grid(row=1, column=1)
+            else:
+                tk.Label(self.instructions, text=welcomeTextChange\
+                         .format(self.Settings.betting_amount, 
+                         self.Settings.time_limit),\
+                         font=(None, int(self.screen_height*.02)))\
+                        .grid(row=1, column=1)
+
             tk.Button(self.instructions, text='Start', 
                       font=(None, int(self.screen_width*.01)),
                       command=self.betting_screen)\
@@ -507,9 +518,10 @@ class MainWindow:
         else:
             tk.Label(self.bet, text="Betting Amount: $", font=(None,20))\
                      .grid(row=2, column=1, sticky=tk.W, padx=10, pady=10)
-            tk.Spinbox(self.bet, from_=2.00, to=self.Settings.purse, width=5,\
-                       format="%.2f", font=(None, 20), state='readonly')\
-                      .grid(row=2, column=1, padx=(50,0))
+            self.new_bet = tk.Spinbox(self.bet, from_=2.00, to=self.Settings.purse, \
+                                      width=5, format="%.2f", font=(None, 20),\
+                                      state='readonly')
+            self.new_bet.grid(row=2, column=1, padx=(50,0))
         tk.Label(self.bet, text="Odds:\n {}".format(self.horses_odds),\
                  justify='left', font=(None, 20))\
                 .grid(row=3, column=1, padx=10, pady=10, sticky= tk.W)
@@ -529,6 +541,9 @@ class MainWindow:
     def retrieving_data(self):
         # check how long the user took to submit
         print(self.timer_label['text'])
+
+        if self.Settings.betting_option == 'Change':
+                self.Settings.betting_amount = float(self.new_bet.get())
 
         # check if a horse is selected
         if self.horsemenu.get() == "Select horse":
