@@ -24,26 +24,35 @@ class MainWindow:
     class Settings:
         def save(self, filename):
             pickle.dump({i: getattr(self,i) for i in self.__dict__ if not callable(getattr(self, i)) and not i.startswith('__')},\
-                        open(filename, 'wb'))
+                        open(os.path.join(self.path,filename), 'wb'))
 
         def load(self, filename):
-            self.__dict__.update(pickle.load(open(filename, 'rb')))
+            temp = pickle.load(open(os.path.join(self.path,filename), 'rb'))
+            print(temp)
+            for i in temp.keys():
+                setattr(self, i, temp[i]) 
+
+    def load_settings(self):
+        if os.path.isfile(os.path.join(self.Settings.path, self.defaultmenu.get() + '.p')):
+            self.Settings.load(self.defaultmenu.get())
 
     def s_settings(self):
         # setting title
+        self.Settings.path = os.path.join('ui','settings')
+
+        self.Settings.load(self.Settings,'test.p')
         tk.Label(self.settings, text='Settings', font=(None, 15)).grid( 
             row=0, column=1, columnspan=2, pady=10)
 
         # drop-down of default settings
         tk.Label(self.settings, text="Select settings: ").grid(row=1, column=1,
                  padx=10, pady=5, sticky=tk.W)
-
-        defaults = ["first","second","third"]
+        defaults = [f.replace('.p', '') for f in os.listdir(self.Settings.path)]
 
         self.defaultmenu = tk.StringVar(self.settings)
         self.defaultmenu.set(defaults[0])
         self.default_select = tk.OptionMenu(self.settings, self.defaultmenu, 
-                                          *defaults)
+                                          *defaults, command = self.load_settings)
         self.default_select.grid(row=1, column=2, sticky = tk.W)
 
         # number of trials prompt
@@ -179,37 +188,49 @@ class MainWindow:
 
         # set all of the defaults
         # trials entry box
-        self.trials.insert(0, 5)
+        self.trials.insert(0, self.Settings.trials)
 
         # accuracy slider
-        self.accuracy.set(50)
+        self.accuracy.set(self.Settings.accuracy)
 
         # use accuracy of classifer
-        self.CA.deselect()
+        if not self.Settings.checkaccuracy:
+            self.CA.deselect()
+        else:
+            self.CA.select()
 
         # show time
-        self.C1.deselect()
+        if not self.Settings.showtime:
+            self.C1.deselect()
+        else:
+            self.C1.select()
 
         # show beyer
-        self.C2.deselect()
+        if not self.Settings.showbeyer:
+            self.C2.deselect()
+        else:
+            self.C2.select()
 
         # show order of horses
-        self.C3.deselect()
+        if not self.Settings.showorder:
+            self.C3.deselect()
+        else:
+            self.C3.select()
 
         # betting options
-        self.option_betting.set('Fixed')
+        self.option_betting.set(self.Settings.betting_option)
         
         # fixed bet entry box
-        self.betting.insert(0, 2)
+        self.betting.insert(0, self.Settings.betting_amount)
 
         # purse size
-        self.purse.insert(0, "{0:.02f}".format(25.00))
+        self.purse.insert(0, "{0:.02f}".format(self.Settings.purse))
 
         # number of horses
-        self.horses.insert(0, 3)
+        self.horses.insert(0, self.Settings.num_of_horses)
 
         # time per race
-        self.time.insert(0, 15)
+        self.time.insert(0, self.Settings.time_limit)
 
     def errorcheck(self):
         # checks to make sure the settings were correct
@@ -277,10 +298,10 @@ class MainWindow:
 
             self.Settings.trials = int(self.trials.get())
             self.Settings.accuracy = int(self.accuracy.get())
-            self.Settings.checkaccuracy = self.checkaccuracy.get()
-            self.Settings.showtime = self.showtime.get()
-            self.Settings.showbeyer = self.showbeyer.get()
-            self.Settings.showorder = self.showorder.get()
+            self.Settings.checkaccuracy = int(self.checkaccuracy.get())
+            self.Settings.showtime = int(self.showtime.get())
+            self.Settings.showbeyer = int(self.showbeyer.get())
+            self.Settings.showorder = int(self.showorder.get())
             self.Settings.purse = float(self.purse.get())
             self.Settings.purse = round(self.Settings.purse, 2)
             self.Settings.betting_option = self.option_betting.get()
