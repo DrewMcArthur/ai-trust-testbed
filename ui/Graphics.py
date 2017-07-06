@@ -240,49 +240,7 @@ class MainWindow:
         # set all of the defaults
 
                 # trials entry box
-        self.trials.insert(0, self.Settings.trials)
-
-        # accuracy slider
-        self.accuracy.set(self.Settings.accuracy)
-
-        # use accuracy of classifer
-        if not self.Settings.checkaccuracy:
-            self.CA.deselect()
-        else:
-            self.CA.select()
-
-        # show time
-        if not self.Settings.showtime:
-            self.C1.deselect()
-        else:
-            self.C1.select()
-
-        # show beyer
-        if not self.Settings.showbeyer:
-            self.C2.deselect()
-        else:
-            self.C2.select()
-
-        # show order of horses
-        if not self.Settings.showorder:
-            self.C3.deselect()
-        else:
-            self.C3.select()
-
-        # betting options
-        self.option_betting.set(self.Settings.betting_option)
-        
-        # fixed bet entry box
-        self.betting.insert(0, self.Settings.betting_amount)
-
-        # purse size
-        self.purse.insert(0, "{0:.02f}".format(self.Settings.purse))
-
-        # number of horses
-        self.horses.insert(0, self.Settings.num_of_horses)
-
-        # time per race
-        self.time.insert(0, self.Settings.time_limit)
+        self.set_all_defaults()
 
     def errorcheck(self):
         # checks to make sure the settings were correct
