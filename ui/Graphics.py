@@ -47,7 +47,7 @@ class MainWindow:
 
         # disabling and enabling accuracy bar
         def toggleslider():
-            if self.activate == True:
+            if self.checkaccuracy.get() == '1':
                 self.accuracy.config(state='disabled')
                 
                 #grey out the bar
@@ -60,6 +60,15 @@ class MainWindow:
                 self.accuracy.config(foreground='black')
                 self.activate = True
 
+        # check button for using accuracy of classifer
+        # if checked, accuracy bar is disabled
+        self.checkaccuracy = tk.StringVar(self.settings)
+        self.CA = tk.Checkbutton(self.settings, 
+                                 text="Use accuracy of classifer.", 
+                                 variable=self.checkaccuracy, onvalue=True, 
+                                 offvalue=False, command=toggleslider)
+        self.CA.grid(row=4, column=2, columnspan=2, sticky=tk.W)
+
         # accuracy prompt
         tk.Label(self.settings, text='Accuracy: ').grid(row=3, column=1, 
             padx=10, pady=5, sticky=tk.W)
@@ -68,16 +77,6 @@ class MainWindow:
         self.accuracy = tk.Scale(self.settings, orient=tk.HORIZONTAL, 
             resolution=10, showvalue=0, tickinterval=10, length=300)
         self.accuracy.grid(row = 3, column = 2, columnspan = 2, sticky = tk.W)
-        self.activate = True
-        self.checkaccuracy = tk.StringVar(self.settings)
-
-        # check button for using accuracy of classifer
-        # if checked, accuracy bar is disabled
-        self.CA = tk.Checkbutton(self.settings, 
-                                 text="Use accuracy of classifer.", 
-                                 variable=self.checkaccuracy, onvalue=True, 
-                                 offvalue=False, command=toggleslider)
-        self.CA.grid(row=4, column=2, columnspan=2, sticky=tk.W)
 
         # what data to show prompt
         tk.Label(self.settings, text='Show: ')\
@@ -631,7 +630,7 @@ class MainWindow:
         self.retrieve.destroy()
         self.result = tk.Frame(self.window)
         self.result.grid()
-        for i in range(7):
+        for i in range(8):
             if i == 0 or i == 7:
                 self.result.grid_rowconfigure(
                     i, minsize=int(self.screen_height/5))
@@ -640,15 +639,15 @@ class MainWindow:
                     i, minsize=int(((3/5)*self.screen_height)/6))
         if self.Settings.showtime == '1' and self.Settings.showbeyer == '0' or\
            self.Settings.showtime == '0' and self.Settings.showbeyer == '1':
-            for i in range(3):
+            for i in range(4):
                 if i == 0 or i == 3:
                     self.result.grid_columnconfigure(
-                        i, minsize=int(self.screen_width/5))
+                        i, minsize=int(self.screen_width/4))
                 else:
                     self.result.grid_columnconfigure(
-                        i, minsize=int(((3/5)*self.screen_width)/3))
+                        i, minsize=int(((1/2)*self.screen_width)/3))
         elif self.Settings.showtime == '1' and self.Settings.showbeyer == '1':
-            for i in range(4):
+            for i in range(5):
                 if i == 0 or i == 4:
                     self.result.grid_columnconfigure(
                         i, minsize=int(self.screen_width/5))
@@ -656,44 +655,28 @@ class MainWindow:
                     self.result.grid_columnconfigure(
                         i, minsize=int(((3/5)*self.screen_width)/4))
         else:
-            for i in range(2):
-                if i == 0 or i == 2:
-                    self.result.grid_columnconfigure(
-                        i, minsize=int(self.screen_width/4))
-                else:
-                    self.result.grid_columnconfigure(
-                        i, minsize=int(((1/2)*self.screen_width)/2))
+            for i in range(4):
+                self.result.grid_columnconfigure(
+                     i, minsize=int(self.screen_width/4))
 
         # result labels
         tk.Label(self.result, text='Results', font=(None, 35))\
-                .grid(row=1, column=1, columnspan=4, pady=(50,20))
+                .grid(row=1, column=1, columnspan=2, pady=(50,20))
         tk.Label(self.result, text='Actual result:', font=(None, 25), justify='left')\
                 .grid(row=2, column=1, pady=10, 
                       sticky=tk.N + tk.W)
-        tk.Label(self.result, text='{}'.format(self.horse_win), font=(None,25),
-                 justify='left').grid(row=2, column=2, pady=10, sticky=tk.N + tk.W)
+        tk.Label(self.result, text='{}'.format(self.horse_win), font=(None,25))\
+                .grid(row=2, column=2, pady=10, sticky=tk.N + tk.W)
         if self.Settings.showtime == '1':
-            if self.Settings.showorder == '0':
-                tk.Label(self.result, text='{}'.format(self.horse_time), font=(None,25),
-                     justify='left').grid(row=2, column=3, pady=10, sticky=tk.N + tk.W)
-            else:
-                tk.Label(self.result, text='{}'.format(self.horse_time), font=(None,25),
-                         justify='left').grid(row=2, column=3, pady=10, sticky=tk.N + tk.W)
+            tk.Label(self.result, text='{}'.format(self.horse_time), font=(None,25))\
+                    .grid(row=2, column=3, pady=10, sticky=tk.N + tk.W)
         if self.Settings.showbeyer == '1':
-            if self.Settings.showorder == '0':
-                if self.Settings.showtime == '0':
-                    tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
-                     justify='left').grid(row=2, column=3, pady=10, sticky=tk.N + tk.W)
-                else:
-                    tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
-                         justify='left').grid(row=2, column=4, pady=10, sticky=tk.N + tk.W)
+            if self.Settings.showtime == '0':
+                tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25))\
+                        .grid(row=2, column=3, pady=10, sticky=tk.N + tk.W)
             else:
-                if self.Settings.showtime == '0':
-                    tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
-                         justify='left').grid(row=2, column=3, pady=10, sticky=tk.N + tk.W)
-                else:
-                    tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
-                             justify='left').grid(row=2, column=4, pady=10, sticky=tk.N + tk.W)
+                tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25))\
+                    .grid(row=2, column=4, pady=10, sticky=tk.N + tk.W)
         tk.Label(self.result, text="Aide's suggestion: ", font=(None, 25))\
                 .grid(row=3, column=1, pady=10, sticky=tk.N + tk.W)
         tk.Label(self.result, text='{}'.format(self.horse_pwin), font=(None,25))\
@@ -715,11 +698,11 @@ class MainWindow:
         if self.Settings.trials == 1:
             tk.Button(self.result, text='Exit', 
                       font=(None, 20), command=self.exit)\
-                     .grid(row=6, column=1, columnspan=4, pady=10)
+                     .grid(row=6, column=1, columnspan=2, pady=10)
         else:
             tk.Button(self.result, text='Next Race', 
                       font=(None, 20), command=self.races)\
-                     .grid(row=6, column=1, columnspan=4, pady=10)
+                     .grid(row=6, column=1, columnspan=2, pady=10)
 
     def races(self):
         # if there are more races, decrement trials and load another race
