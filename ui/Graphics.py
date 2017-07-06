@@ -296,7 +296,6 @@ class MainWindow:
             
             # check if any element is empty
             if not element:
-
                 #display the error essage
                 error = tk.Tk()
                 error.title('ERROR')
@@ -324,8 +323,8 @@ class MainWindow:
                     return False
 
             # check if other elements are integers (not letters)
-            elif element != self.showtime.get() or element != \
-            self.showbeyer.get() or element != self.showorder.get():
+            elif element != self.showtime.get() and element != \
+                self.showbeyer.get() and element != self.showorder.get():
                 try:
                     int(element)
                 except:
@@ -345,7 +344,6 @@ class MainWindow:
         # screen that displays the instructions
         # checking if all entries are filled out
         if self.errorcheck():
-
             # saving data from settings
             self.Settings.trials = int(self.trials.get())
             self.Settings.accuracy = int(self.accuracy.get())
@@ -507,7 +505,6 @@ class MainWindow:
         # find horses in csv files
         self.superhorses = get_positions(m.group(1), m.group(2), m.group(3))
         self.horses_racing = []
-        self.horses_odds = ""
         for horse in self.superhorses:
             if (horse['B_ProgNum'] in nums):
                 self.horses_racing.append(horse)
@@ -518,9 +515,36 @@ class MainWindow:
 
         # find actual winning horse
         self.horses_racing.sort(key=lambda x:x['L_Rank'])
-        self.horse_win = self.horses_racing[0]['B_Horse']
+        if self.Settings.showorder == '0':
+            self.horse_win = self.horses_racing[0]['B_Horse']
+        else:
+            self.horse_win = ""
+            for horse in self.horses_racing[:-1]:
+                self.horse_win += (horse['B_Horse'] + "\n")
+            self.horse_win += self.horses_racing[-1]['B_Horse']
+
+        # if show time, find times
+        if self.Settings.showtime == '1':
+            self.horse_time = ""
+            if self.Settings.showorder == '0':
+                self.horse_time += self.horses_racing[0]['L_Time']
+            else:
+                for horse in self.horses_racing[:-1]:
+                    self.horse_time += (horse['L_Time'] + "\n")
+                self.horse_time += self.horses_racing[-1]['L_Time']
+
+        # if show beyer, find beyer figures
+        if self.Settings.showbeyer == '1':
+            self.horse_beyer = ""
+            if self.Settings.showorder == '0':
+                self.horse_beyer += str(self.horses_racing[0]['P_BSF'])
+            else:
+                for horse in self.horses_racing[:-1]:
+                    self.horse_beyer += (str(horse['P_BSF']) + "\n")
+                self.horse_beyer += str(self.horses_racing[-1]['P_BSF'])
 
         # find odds for horses
+        self.horses_odds = ""
         self.horses_racing.sort(key=lambda x:x['B_ProgNum'])
         for horse in self.horses_racing:
             self.horses_odds += (horse['B_Horse'] + " : " + 
@@ -689,46 +713,69 @@ class MainWindow:
         self.retrieve.destroy()
         self.result = tk.Frame(self.window)
         self.result.grid()
-        self.result.grid_rowconfigure(0, weight=1)
-        self.result.grid_columnconfigure(0, weight=1)
+        for i in range(7):
+            if i == 0 or i == 7:
+                self.result.grid_rowconfigure(
+                    i, minsize=int(self.screen_height/5))
+            else:
+                self.result.grid_rowconfigure(
+                    i, minsize=int(((3/5)*self.screen_height)/6))
+        for i in range(4):
+            if i == 0 or i == 4:
+                self.result.grid_columnconfigure(
+                    i, minsize=int(self.screen_width/5))
+            else:
+                self.result.grid_columnconfigure(
+                    i, minsize=int(((3/5)*self.screen_width)/4))
 
         # result labels
         tk.Label(self.result, text='Results', font=(None, 35))\
-                .grid(row=0, column=0, padx=((self.screen_width/2.5), 10), 
-                      pady=((self.screen_height/3), 10))
-        tk.Label(self.result, text='Actual result: {}'.format(self.horse_win), 
-                 font=(None, 25))\
-                .grid(row=2, column=0, padx=((self.screen_width/2.5), 10), 
-                      pady=10)
-        tk.Label(self.result, text="Aide's Suggestion: {}"\
-                                        .format(self.horse_pwin),
-                 font=(None, 25))\
-                .grid(row=3, column=0, 
-                      padx=((self.screen_width/2.5), 10), pady= 10)
+                .grid(row=1, column=1, columnspan=4, pady=(50,20))
+        tk.Label(self.result, text='Actual result:', font=(None, 25), justify='left')\
+                .grid(row=2, column=1, pady=10, 
+                      sticky=tk.N + tk.W)
+        tk.Label(self.result, text='{}'.format(self.horse_win), font=(None,25),
+                 justify='left').grid(row=2, column=2, pady=10, sticky=tk.N + tk.W)
+        if self.Settings.showtime == '1':
+            if self.Settings.showorder == '0':
+                tk.Label(self.result, text='{}'.format(self.horse_time), font=(None,25),
+                     justify='left').grid(row=2, column=3, pady=10, sticky=tk.N + tk.W)
+            else:
+                tk.Label(self.result, text='{}'.format(self.horse_time), font=(None,25),
+                         justify='left').grid(row=2, column=3, pady=10, sticky=tk.N + tk.W)
+        if self.Settings.showbeyer == '1':
+            if self.Settings.showorder == '0':
+                tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
+                     justify='left').grid(row=2, column=4, pady=10, sticky=tk.N + tk.W)
+            else:
+                tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
+                         justify='left').grid(row=2, column=4, pady=10, sticky=tk.N + tk.W)
+        tk.Label(self.result, text="Aide's suggestion: ", font=(None, 25))\
+                .grid(row=3, column=1, pady=10, sticky=tk.N + tk.W)
+        tk.Label(self.result, text='{}'.format(self.horse_pwin), font=(None,25))\
+                .grid(row=3, column=2, pady=10, sticky=tk.N + tk.W)
         tk.Label(self.result, 
-                 text='Your choice: {}'.format(self.horsemenu.get()),
-                 font=(None, 25))\
-                .grid(row=4, column=0, 
-                      padx=((self.screen_width/2.5), 10), pady=10)
+                 text='Your choice: ', font=(None, 25))\
+                .grid(row=4, column=1, pady=10, sticky = tk.N + tk.W)
+        tk.Label(self.result, text='{}'.format(self.horsemenu.get()), font=(None, 25))\
+                .grid(row=4, column=2, pady=10, sticky=tk.N + tk.W)
 
         # update the users purse
         self.update_purse()
-        tk.Label(self.result, text='Current Purse: ${:.2f}'.format(self.Settings.purse),
-                 font=(None, 25))\
-                .grid(row=5, column=0, padx=((self.screen_width/2.5), 10), 
-                      pady=10)
+        tk.Label(self.result, text='Current Purse: ', font=(None, 25))\
+                .grid(row=5, column=1, pady=10, sticky=tk.N + tk.W)
+        tk.Label(self.result, text='${:.2f}'.format(self.Settings.purse),
+                 font=(None, 25)).grid(row=5, column=2, pady=10, sticky=tk.N + tk.W)
 
         # check if there are more races to display 'next race' or 'exit'
         if self.Settings.trials == 1:
             tk.Button(self.result, text='Exit', 
                       font=(None, 20), command=self.exit)\
-                     .grid(row=6, column=0, 
-                           padx=((self.screen_width/2.5), 10), pady=10)
+                     .grid(row=6, column=1, columnspan=4, pady=10)
         else:
             tk.Button(self.result, text='Next Race', 
                       font=(None, 20), command=self.races)\
-                     .grid(row=6, column=0, 
-                           padx=((self.screen_width/2.5), 10), pady=10)
+                     .grid(row=6, column=1, columnspan=4, pady=10)
 
     def races(self):
         # if there are more races, decrement trials and load another race
