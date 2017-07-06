@@ -669,6 +669,7 @@ class MainWindow:
         self.retrieve.destroy()
         self.result = tk.Frame(self.window)
         self.result.grid()
+        # nine rows
         for i in range(9):
             if i == 0 or i == 8:
                 self.result.grid_rowconfigure(
@@ -676,6 +677,7 @@ class MainWindow:
             else:
                 self.result.grid_rowconfigure(
                     i, minsize=int(((3/5)*self.screen_height)/6))
+        # different number of columns for different settings
         if self.Settings.showtime and not self.Settings.showbeyer or\
            not self.Settings.showtime and self.Settings.showbeyer:
             for i in range(5):
@@ -703,11 +705,21 @@ class MainWindow:
                          i, minsize=int(((1/3)*self.screen_width)/2))
 
         # result labels
-        tk.Label(self.result, text='Results', font=(None, 35))\
-                .grid(row=1, column=1, columnspan=2, pady=(50,20))
+        # different spacing for different settings
+        if self.Settings.showtime and not self.Settings.showbeyer or\
+           not self.Settings.showtime and self.Settings.showbeyer:
+           tk.Label(self.result, text='Results', font=(None, 35))\
+                .grid(row=1, column=2, pady=(50,20))
+        elif self.Settings.showtime and self.Settings.showbeyer:
+            tk.Label(self.result, text='Results', font=(None, 35))\
+                .grid(row=1, column=2, columnspan=2, pady=(50,20))
+        else:
+            tk.Label(self.result, text='Results', font=(None, 35))\
+                    .grid(row=1, column=1, columnspan=2, pady=(50,20))
         tk.Label(self.result, text='Actual result:', font=(None, 25), justify='left')\
                 .grid(row=2, column=1, pady=10, 
                       sticky=tk.N + tk.W)
+        # if show order is checked, show times
         if self.Settings.showorder:
             tk.Label(self.result, text='{}'.format(self.horse_winl), font=(None,25),
                 justify='left').grid(row=2, column=2, pady=10, sticky=tk.N + tk.W)
@@ -717,6 +729,7 @@ class MainWindow:
         if self.Settings.showtime:
             tk.Label(self.result, text='{}'.format(self.horse_time), font=(None,25),
                     justify='left').grid(row=2, column=3, pady=10, sticky=tk.N + tk.W)
+        # if show beyer is checked, show beyer figures
         if self.Settings.showbeyer:
             if not self.Settings.showtime:
                 tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
@@ -742,14 +755,35 @@ class MainWindow:
                  font=(None, 25)).grid(row=5, column=2, pady=10, sticky=tk.N + tk.W)
 
         # check if there are more races to display 'next race' or 'exit'
-        if self.Settings.trials == 1:
-            tk.Button(self.result, text='Exit', 
-                      font=(None, 20), command=self.exit)\
-                     .grid(row=6, column=1, columnspan=2, pady=10)
+        # different spacing for different settings
+        if self.Settings.showtime and not self.Settings.showbeyer or\
+           not self.Settings.showtime and self.Settings.showbeyer:
+            if self.Settings.trials == 1:
+                tk.Button(self.result, text='Exit', 
+                          font=(None, 20), command=self.exit)\
+                         .grid(row=6, column=2, pady=10)
+            else:
+                tk.Button(self.result, text='Next Race', 
+                          font=(None, 20), command=self.races)\
+                         .grid(row=6, column=2, pady=10)
+        elif self.Settings.showtime and self.Settings.showbeyer:
+            if self.Settings.trials == 1:
+                tk.Button(self.result, text='Exit', 
+                          font=(None, 20), command=self.exit)\
+                         .grid(row=6, column=2, columnspan=2, pady=10)
+            else:
+                tk.Button(self.result, text='Next Race', 
+                          font=(None, 20), command=self.races)\
+                         .grid(row=6, column=2, columnspan=2, pady=10)
         else:
-            tk.Button(self.result, text='Next Race', 
-                      font=(None, 20), command=self.races)\
-                     .grid(row=6, column=1, columnspan=2, pady=10)
+            if self.Settings.trials == 1:
+                tk.Button(self.result, text='Exit', 
+                          font=(None, 20), command=self.exit)\
+                         .grid(row=6, column=1, columnspan=2, pady=10)
+            else:
+                tk.Button(self.result, text='Next Race', 
+                          font=(None, 20), command=self.races)\
+                         .grid(row=6, column=1, columnspan=2, pady=10)
 
     def races(self):
         # if there are more races, decrement trials and load another race
