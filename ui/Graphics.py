@@ -720,13 +720,31 @@ class MainWindow:
             else:
                 self.result.grid_rowconfigure(
                     i, minsize=int(((3/5)*self.screen_height)/6))
-        for i in range(4):
-            if i == 0 or i == 4:
-                self.result.grid_columnconfigure(
-                    i, minsize=int(self.screen_width/5))
-            else:
-                self.result.grid_columnconfigure(
-                    i, minsize=int(((3/5)*self.screen_width)/4))
+        if self.Settings.showtime == '1' and self.Settings.showbeyer == '0' or\
+           self.Settings.showtime == '0' and self.Settings.showbeyer == '1':
+            for i in range(3):
+                if i == 0 or i == 3:
+                    self.result.grid_columnconfigure(
+                        i, minsize=int(self.screen_width/5))
+                else:
+                    self.result.grid_columnconfigure(
+                        i, minsize=int(((3/5)*self.screen_width)/3))
+        elif self.Settings.showtime == '1' and self.Settings.showbeyer == '1':
+            for i in range(4):
+                if i == 0 or i == 4:
+                    self.result.grid_columnconfigure(
+                        i, minsize=int(self.screen_width/5))
+                else:
+                    self.result.grid_columnconfigure(
+                        i, minsize=int(((3/5)*self.screen_width)/4))
+        else:
+            for i in range(2):
+                if i == 0 or i == 2:
+                    self.result.grid_columnconfigure(
+                        i, minsize=int(self.screen_width/4))
+                else:
+                    self.result.grid_columnconfigure(
+                        i, minsize=int(((1/2)*self.screen_width)/2))
 
         # result labels
         tk.Label(self.result, text='Results', font=(None, 35))\
@@ -745,11 +763,19 @@ class MainWindow:
                          justify='left').grid(row=2, column=3, pady=10, sticky=tk.N + tk.W)
         if self.Settings.showbeyer == '1':
             if self.Settings.showorder == '0':
-                tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
-                     justify='left').grid(row=2, column=4, pady=10, sticky=tk.N + tk.W)
-            else:
-                tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
+                if self.Settings.showtime == '0':
+                    tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
+                     justify='left').grid(row=2, column=3, pady=10, sticky=tk.N + tk.W)
+                else:
+                    tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
                          justify='left').grid(row=2, column=4, pady=10, sticky=tk.N + tk.W)
+            else:
+                if self.Settings.showtime == '0':
+                    tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
+                         justify='left').grid(row=2, column=3, pady=10, sticky=tk.N + tk.W)
+                else:
+                    tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
+                             justify='left').grid(row=2, column=4, pady=10, sticky=tk.N + tk.W)
         tk.Label(self.result, text="Aide's suggestion: ", font=(None, 25))\
                 .grid(row=3, column=1, pady=10, sticky=tk.N + tk.W)
         tk.Label(self.result, text='{}'.format(self.horse_pwin), font=(None,25))\
