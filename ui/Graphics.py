@@ -15,11 +15,11 @@ def check():
 class MainWindow:
     
     def __init__(self, master):
-        # setting up first window (settings)
+        # setting up first windows (welcome and settings)
         self.master = master
-        self.settings = tk.Frame(self.master)
-        self.settings.grid()
-        self.s_settings()
+
+        # go to settings screen
+        self.s_welcome()
 
     class Settings:
         def save(self, filename):
@@ -87,11 +87,31 @@ class MainWindow:
         # time per race
         self.time.delete(0, 'end')
         self.time.insert(0, self.Settings.time_limit)
-    def s_settings(self):
-        # setting title
-        self.Settings.path = os.path.join('ui','settings')
 
+    def s_welcome(self):
+        self.welcome = tk.Frame(self.master)
+        self.welcome.grid()
+        for i in range(2):
+            self.welcome.grid_rowconfigure(
+                                    i, minsize=int(screen_width/2))
+            self.welcome.grid_columnconfigure(
+                                    i, minsize=int(screen_height/2))
+        tk.Label(self.welcome, text='Welcome!', font=(None, 50)).grid(row=0, column=0, 
+                 columnspan=2, padx=20, pady= 50, sticky=tk.W + tk.E + tk.S)
+        tk.Button(self.welcome, text='Settings', font=(None, 30)).grid(row=1, column=0,
+                  padx=30, pady=15, sticky=tk.N + tk.E)
+        tk.Button(self.welcome, text='Experiment', font=(None, 30)).grid(row=1, column=1,
+                  padx=30, pady=15, sticky=tk.N + tk.W)
+
+    def s_settings(self):
+        self.Settings.path = os.path.join('ui','settings')
         self.Settings.load(self.Settings,'default')
+
+        # create settings frame
+        self.settings = tk.Frame(self.master)
+        self.settings.grid()
+
+        # setting title
         tk.Label(self.settings, text='Settings', font=(None, 15)).grid( 
             row=0, column=1, columnspan=2, pady=10)
 
@@ -146,7 +166,7 @@ class MainWindow:
         self.accuracy.grid(row = 3, column = 2, columnspan = 2, sticky = tk.W)
 
         # what data to show prompt
-        tk.Label(self.settings, text='Show: ')\
+        tk.Label(self.settings, text='Display: ')\
                 .grid(row=5, column=1, padx=10, pady=5,sticky=tk.W)
         tk.Label(self.settings, text='Note: default is one horse', 
                  font=(None, 10))\
@@ -194,7 +214,7 @@ class MainWindow:
         
         # change betting option
         tk.Radiobutton(self.settings, variable=self.option_betting, 
-                       text='Change', value='Change', command=disableEntry)\
+                       text='Variable', value='Variable', command=disableEntry)\
                       .grid(row=8, column=2, sticky=tk.W)
         
         # fixed dollar amount betting option
@@ -335,57 +355,53 @@ class MainWindow:
             self.window.title('Horse Racing')
             self.window.bind('<Control-q>', quit)
 
-            # find size of screen
-            self.screen_width = int(self.window.winfo_screenwidth())
-            self.screen_height = int(self.window.winfo_screenheight())
-
             # fit to screen
-            self.window.geometry("{}x{}".format(self.screen_width, 
-                                                self.screen_height))
+            self.window.geometry("{}x{}".format(screen_width, 
+                                                screen_height))
 
-            print(self.screen_width, self.screen_height)
+            print(screen_width, screen_height)
             print(self.Settings.__dict__)
             # get screen dimensions
-            self.screen_width = int(self.window.winfo_screenwidth())
-            self.screen_height = int(self.window.winfo_screenheight())- 100
+            screen_width = int(self.window.winfo_screenwidth())
+            screen_height = int(self.window.winfo_screenheight())- 100
 
             # configure instructions frame
             self.instructions = tk.Frame(self.window)
             self.instructions.grid()
             for i in range(3):
                 self.instructions.grid_rowconfigure(
-                                        i, minsize=int(self.screen_height/3))
+                                        i, minsize=int(screen_width/3))
                 self.instructions.grid_columnconfigure(
-                                        i, minsize=int(self.screen_width/3))
+                                        i, minsize=int(screen_height/3))
 
             # instructions label
             welcomeTextChange = "Welcome!\nAs a reminder, you can choose your bets." + \
                           "\nYour task is to pick, as best you can, the " + \
                           "winner of the race.\nYou will have up to {} " + \
-                          "minutes to look at all the data and make your " + \
+                          "minute(s) to look at all the data and make your " + \
                           "choice.\nPress start when you are ready."
 
             welcomeTextFixed = "Welcome!\nAs a reminder, your bets are fixed at " + \
                           "${:.2f}.\nYour task is to pick, as best you can, the " + \
                           "winner of the race.\nYou will have up to {} " + \
-                          "minutes to look at all the data and make your " + \
+                          "minute(s) to look at all the data and make your " + \
                           "choice.\nPress start when you are ready."
 
             if self.Settings.betting_option == "Fixed":
                 tk.Label(self.instructions, text=welcomeTextFixed\
                          .format(self.Settings.betting_amount, 
                          self.Settings.time_limit),\
-                         font=(None, int(self.screen_height*.02)))\
+                         font=(None, int(screen_height*.02)))\
                         .grid(row=1, column=1)
             else:
                 tk.Label(self.instructions, text=welcomeTextChange\
                          .format(self.Settings.betting_amount, 
                          self.Settings.time_limit),\
-                         font=(None, int(self.screen_height*.02)))\
+                         font=(None, int(screen_height*.02)))\
                         .grid(row=1, column=1)
 
             tk.Button(self.instructions, text='Start', 
-                      font=(None, int(self.screen_width*.01)),
+                      font=(None, int(screen_width*.01)),
                       command=self.betting_screen)\
                      .grid(row=1, column=1, sticky=tk.S)
 
@@ -557,7 +573,7 @@ class MainWindow:
         self.bet = tk.Frame(self.window)
         self.bet.grid()
         self.bet.grid_columnconfigure(0, minsize=1500)
-        self.bet.grid_columnconfigure(1, minsize=self.screen_width-1500)
+        self.bet.grid_columnconfigure(1, minsize=screen_width-1500)
 
         # set up for countdown timer
         self.t = self.Settings.time_limit * 60
@@ -616,7 +632,7 @@ class MainWindow:
         # check how long the user took to submit
         print(self.timer_label['text'])
 
-        if self.Settings.betting_option == 'Change':
+        if self.Settings.betting_option == 'Variable':
                 self.Settings.betting_amount = float(self.new_bet.get())
 
         # check if a horse is selected
@@ -673,36 +689,36 @@ class MainWindow:
         for i in range(9):
             if i == 0 or i == 8:
                 self.result.grid_rowconfigure(
-                    i, minsize=int(self.screen_height/5))
+                    i, minsize=int(screen_height/5))
             else:
                 self.result.grid_rowconfigure(
-                    i, minsize=int(((3/5)*self.screen_height)/6))
+                    i, minsize=int(((3/5)*screen_height)/6))
         # different number of columns for different settings
         if self.Settings.showtime and not self.Settings.showbeyer or\
            not self.Settings.showtime and self.Settings.showbeyer:
             for i in range(5):
                 if i == 0 or i == 4:
                     self.result.grid_columnconfigure(
-                        i, minsize=int(self.screen_width/4))
+                        i, minsize=int(screen_width/4))
                 else:
                     self.result.grid_columnconfigure(
-                        i, minsize=int(((1/2)*self.screen_width)/3))
+                        i, minsize=int(((1/2)*screen_width)/3))
         elif self.Settings.showtime and self.Settings.showbeyer:
             for i in range(6):
                 if i == 0 or i == 5:
                     self.result.grid_columnconfigure(
-                        i, minsize=int(self.screen_width/5))
+                        i, minsize=int(screen_width/5))
                 else:
                     self.result.grid_columnconfigure(
-                        i, minsize=int(((3/5)*self.screen_width)/4))
+                        i, minsize=int(((3/5)*screen_width)/4))
         else:
             for i in range(4):
                 if i == 0 or i == 3:
                     self.result.grid_columnconfigure(
-                        i, minsize=int(self.screen_width/3))
+                        i, minsize=int(screen_width/3))
                 else:
                     self.result.grid_columnconfigure(
-                         i, minsize=int(((1/3)*self.screen_width)/2))
+                         i, minsize=int(((1/3)*screen_width)/2))
 
         # result labels
         # different spacing for different settings
@@ -712,7 +728,7 @@ class MainWindow:
                 .grid(row=1, column=2, pady=(50,20))
         elif self.Settings.showtime and self.Settings.showbeyer:
             tk.Label(self.result, text='Results', font=(None, 35))\
-                .grid(row=1, column=2, columnspan=2, pady=(50,20))
+                .grid(row=1, column=2, columnspan=2, sticky=tk.W + tk.E)
         else:
             tk.Label(self.result, text='Results', font=(None, 35))\
                     .grid(row=1, column=1, columnspan=2, pady=(50,20))
@@ -803,22 +819,22 @@ class MainWindow:
         tk.Label(self.exit, text='Thank you!\nPlease notify the researcher.',
                  font=(None, 50))\
                 .grid(row=0, column=1, columnspan=2, 
-                      padx=((self.screen_width/3), 100), 
-                      pady=((self.screen_height/3), 10))
+                      padx=((screen_width/3), 100), 
+                      pady=((screen_height/3), 10))
 
         # instructions for inserting ID number
         tk.Label(self.exit, text='Please enter ID number in order to save.')\
                 .grid(row=2, column=1, columnspan=2, 
-                      padx=((self.screen_width/3), 100))
+                      padx=((screen_width/3), 100))
         self.save=tk.Entry(self.exit, width=30)
         self.save.grid(row=3, column=1, columnspan=2, 
-                       padx=((self.screen_width/3), 100))
+                       padx=((screen_width/3), 100))
 
         # save button
         tk.Button(self.exit, text='Save', font=(None, 15), 
                   command=self.checksave)\
                  .grid(row=4, column=1, columnspan=2, 
-                       padx=((self.screen_width/3), 50), pady=10)
+                       padx=((screen_width/3), 50), pady=10)
 
     def checksave(self):
         # check the ID number
@@ -859,10 +875,14 @@ class MainWindow:
 
 
 root = tk.Tk()
+# find screen size
+screen_height = root.winfo_screenwidth()
+screen_width = root.winfo_screenheight()
 
 def run():
     root.title("Horse Racing")
-    root.geometry("500x460")
+    # full screen window
+    root.geometry("%dx%d+0+0" % (screen_height, screen_width))
     root.bind('<Control-q>', quit)
     app = MainWindow(root)
     root.mainloop()
