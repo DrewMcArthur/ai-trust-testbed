@@ -70,6 +70,9 @@ class MainWindow:
         else:
             self.C3.select()
 
+        # suggestion options
+        self.option_suggestion.set(self.Settings.betting_option)
+
         # betting options
         self.option_betting.set(self.Settings.betting_option)
         
@@ -217,9 +220,24 @@ class MainWindow:
         #tk.Label(self.settings, bg='red').grid(row=4, column=1, sticky=tk.W+tk.E)
         #tk.Label(self.settings, bg='blue').grid(row=4, column=2, sticky=tk.W+tk.E)
 
+        # suggestion prompt
+        tk.Label(self.settings, text='Aide\'s suggestion: ')\
+                .grid(row=8, column=0, padx=10, pady=5, sticky=tk.W)
+        self.option_suggestion=tk.StringVar()
+
+        # change betting option
+        tk.Radiobutton(self.settings, variable=self.option_suggestion, 
+                       text='Bet screen', value='Bet')\
+                      .grid(row=8, column=1, sticky=tk.W)
+        
+        # fixed dollar amount betting option
+        tk.Radiobutton(self.settings, variable=self.option_suggestion,
+                       text='After bet screen', value='After')\
+                      .grid(row=8, column=2, sticky=tk.W)
+
         # betting amount prompt
         tk.Label(self.settings, text='Betting Amount: ')\
-                .grid(row=8, column=0, padx=10, pady=5, sticky=tk.W)
+                .grid(row=9, column=0, padx=10, pady=5, sticky=tk.W)
    
         # betting amount options
         # enabling and disenabling text box for fixed option
@@ -230,20 +248,20 @@ class MainWindow:
             self.betting.configure(state='disabled')
             self.betting.update()
 
-        tk.Label(self.settings, text='$').grid(row=8, column=2, padx=(50,0))
+        tk.Label(self.settings, text='$').grid(row=9, column=2, padx=(50,0))
         self.betting = tk.Entry(self.settings, width=3)
-        self.betting.grid(row=8, column=2, padx=10, sticky=tk.E)
+        self.betting.grid(row=9, column=2, padx=10, sticky=tk.E)
         self.option_betting=tk.StringVar()
         
-        # change betting option
+        # variable betting option
         tk.Radiobutton(self.settings, variable=self.option_betting, 
                        text='Variable', value='Variable', command=disableEntry)\
-                      .grid(row=8, column=1, sticky=tk.W)
+                      .grid(row=9, column=1, sticky=tk.W)
         
         # fixed dollar amount betting option
         tk.Radiobutton(self.settings, variable=self.option_betting,
                        text='Fixed', value='Fixed', command=enableEntry)\
-                      .grid(row=8, column=2, sticky=tk.W)
+                      .grid(row=9, column=2, sticky=tk.W)
 
         # purse size prompt
         tk.Label(self.settings, text='Initial Purse Size: ')\
@@ -284,6 +302,7 @@ class MainWindow:
                  (row=14, column=2, padx=10, pady=10)
         # set all of the defaults
         self.set_all_defaults()
+
     def save_settings(self):
         #make pop up window to enter name of settings
         def save():
@@ -727,6 +746,16 @@ class MainWindow:
                 self.Settings.purse = (((self.Settings.betting_amount * float(odds[0])) / 
                                 float(odds[1])) + self.Settings.purse)
 
+        if self.Settings.purse == 0:
+            no_money = tk.Tk()
+            no_money.title('No Money')
+            no_money.bind('<Control-q>', quit)
+            tk.Label(no_money, text="You ran out of money! Game over.", 
+                    font = (None, 20)).pack(padx = 10, pady = 10)
+            tk.Button(no_money, text='OK', command=lambda : 
+                    no_money.destroy()).pack(padx=10, pady=10)
+            self.Settings.trials = 1
+
     def results(self):
         """ displays the results of the race """
         # destroy the retrieving screen and create a new screen for results
@@ -857,7 +886,8 @@ class MainWindow:
 
     def exit(self):
         # destroy result screen and make a new exit screen
-        self.result.destroy()
+        if hasattr(self, 'result'):
+            self.result.destroy()
         self.exit = tk.Frame(self.window)
         self.exit.grid()
         self.exit.grid_rowconfigure(0, weight=1)
