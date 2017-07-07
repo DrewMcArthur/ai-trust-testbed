@@ -1,4 +1,5 @@
 import tkinter as tk
+import tkinter.ttk as ttk
 import time
 import re
 import random
@@ -116,10 +117,10 @@ class MainWindow:
                  columnspan=2, padx=20, pady= 50, sticky=tk.W + tk.E + tk.S)
         tk.Button(self.welcome, text='Settings', font=(None, 30), 
                   command=self.s_settings)\
-                 .grid(row=1, column=0, padx=30, pady=15, sticky=tk.N + tk.E)
+                 .grid(row=1, column=0, padx=30, pady=10, sticky=tk.N + tk.E)
         tk.Button(self.welcome, text='Experiment', font=(None, 30), 
                   command=self.instructions)\
-                 .grid(row=1, column=1, padx=30, pady=15, sticky=tk.N + tk.W)
+                 .grid(row=1, column=1, padx=30, pady=10, sticky=tk.N + tk.W)
 
     def s_settings(self):
         self.Settings.path = os.path.join('ui','settings')
@@ -131,13 +132,13 @@ class MainWindow:
         self.settings.title('Settings')
         self.settings.bind('<Control-q>', quit)
         self.settings.grid()
+        self.settings.grid_columnconfigure(0, minsize=50)
+        self.settings.grid_columnconfigure(5, minsize=50)
 
-        # setting title
-        tk.Label(self.settings, text='Settings', font=(None, 15)).grid( 
-            row=0, column=1, pady=10)
+        tk.Label(self.settings).grid(rowspan=22, columnspan=3, padx=20, pady=20, sticky=tk.N+tk.S+tk.W+tk.E)
 
         # drop-down of default settings
-        tk.Label(self.settings, text="Select settings: ").grid(row=1, column=0,
+        tk.Label(self.settings, text="Select settings: ").grid(row=0, column=1,
                  padx=10, pady=5, sticky=tk.W)
         defaults = [f.replace('_s.p', '') for f in os.listdir(self.Settings.path) if f.endswith('_s.p')]
 
@@ -145,15 +146,19 @@ class MainWindow:
         self.defaultmenu.set(self.Settings.name)
         self.default_select = tk.OptionMenu(self.settings, self.defaultmenu, 
                                           *defaults, command=self.load_settings)
-        self.default_select.grid(row=1, column=1, sticky = tk.W)
+        self.default_select.grid(row=0, column=2, pady=10, sticky = tk.W)
+
+        ttk.Separator(self.settings).grid(row=1, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # number of trials prompt
         tk.Label(self.settings, text='Number of trials: ').grid(row=2,
-            column=0, padx=10, pady=5, sticky=tk.W)
+            column=1, padx=10, pady=5, sticky=tk.W)
 
         # number of trials text box
         self.trials = tk.Entry(self.settings, width=3)
-        self.trials.grid(row=2, column=1, sticky=tk.W)
+        self.trials.grid(row=2, column=2, sticky=tk.W)
+
+        ttk.Separator(self.settings).grid(row=3, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # disabling and enabling accuracy bar
         def toggleslider():
@@ -175,23 +180,25 @@ class MainWindow:
                                  text="Use accuracy of classifer.", 
                                  variable=self.checkaccuracy, onvalue=True, 
                                  offvalue=False, command=toggleslider)
-        self.CA.grid(row=4, column=1, columnspan=2, sticky=tk.W)
+        self.CA.grid(row=5, column=2, columnspan=2, sticky=tk.W)
 
         # accuracy prompt
-        tk.Label(self.settings, text='Accuracy: ').grid(row=3, column=0, 
+        tk.Label(self.settings, text='Accuracy: ').grid(row=4, column=1, 
             padx=10, pady=5, sticky=tk.W)
 
         # accuracy slider
         self.accuracy = tk.Scale(self.settings, orient=tk.HORIZONTAL, 
             resolution=10, showvalue=0, tickinterval=10, length=300)
-        self.accuracy.grid(row = 3, column = 1, columnspan = 2, padx=10, sticky = tk.W)
+        self.accuracy.grid(row=4, column=2, columnspan=2, padx=10, sticky = tk.W)
+
+        ttk.Separator(self.settings).grid(row=6, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # what data to show prompt
         tk.Label(self.settings, text='Display: ')\
-                .grid(row=5, column=0, padx=10, pady=5,sticky=tk.W)
+                .grid(row=7, column=1, padx=10, pady=5,sticky=tk.W)
         tk.Label(self.settings, text='Note: default is one horse', 
                  font=(None, 10))\
-                .grid(row=7, column=0, padx=10, pady=5, sticky=tk.S + tk.W)
+                .grid(row=9, column=1, padx=10, pady=5, sticky=tk.S + tk.W)
 
         # show check buttons - time, beyer, and show order
         self.displaytime = tk.StringVar(self.settings)
@@ -202,42 +209,46 @@ class MainWindow:
         self.C1 = tk.Checkbutton(self.settings, text='Time', 
                                  variable=self.displaytime, onvalue=True, 
                                  offvalue=False)
-        self.C1.grid(row=5, column=1, sticky=tk.W)
+        self.C1.grid(row=7, column=2, sticky=tk.W)
 
         #create the Beyer figure button
         self.C2 = tk.Checkbutton(self.settings, text='Beyer', 
                                  variable=self.displaybeyer, onvalue=True, 
                                  offvalue=False)
-        self.C2.grid(row=6, column=1, sticky=tk.W)
+        self.C2.grid(row=8, column=2, sticky=tk.W)
         
         #create the order button
         self.C3 = tk.Checkbutton(self.settings, text="Complete Order",
                                  variable=self.displayorder, onvalue=True, 
                                  offvalue=False)
-        self.C3.grid(row=7, column=1, columnspan=2, sticky=tk.W)
+        self.C3.grid(row=9, column=2, columnspan=2, sticky=tk.W)
 
         #tk.Label(self.settings, bg='yellow').grid(row=4,column=0, sticky=tk.W+tk.E)
         #tk.Label(self.settings, bg='red').grid(row=4, column=1, sticky=tk.W+tk.E)
         #tk.Label(self.settings, bg='blue').grid(row=4, column=2, sticky=tk.W+tk.E)
 
+        ttk.Separator(self.settings).grid(row=10, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
+
         # suggestion prompt
         tk.Label(self.settings, text='Aide\'s suggestion: ')\
-                .grid(row=8, column=0, padx=10, pady=5, sticky=tk.W)
+                .grid(row=11, column=1, padx=10, pady=5, sticky=tk.W)
         self.option_suggestion=tk.StringVar()
 
         # change betting option
         tk.Radiobutton(self.settings, variable=self.option_suggestion, 
                        text='Bet screen', value='Bet')\
-                      .grid(row=8, column=1, sticky=tk.W)
+                      .grid(row=11, column=2, sticky=tk.W)
         
         # fixed dollar amount betting option
         tk.Radiobutton(self.settings, variable=self.option_suggestion,
                        text='After bet screen', value='After')\
-                      .grid(row=8, column=2, sticky=tk.W)
+                      .grid(row=11, column=3, sticky=tk.W)
+
+        ttk.Separator(self.settings).grid(row=12, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # betting amount prompt
         tk.Label(self.settings, text='Betting Amount: ')\
-                .grid(row=9, column=0, padx=10, pady=5, sticky=tk.W)
+                .grid(row=13, column=1, padx=10, pady=5, sticky=tk.W)
    
         # betting amount options
         # enabling and disenabling text box for fixed option
@@ -248,58 +259,71 @@ class MainWindow:
             self.betting.configure(state='disabled')
             self.betting.update()
 
-        tk.Label(self.settings, text='$').grid(row=9, column=2, padx=(50,0))
+        tk.Label(self.settings, text='$').grid(row=13, column=3, padx=(70,0))
         self.betting = tk.Entry(self.settings, width=3)
-        self.betting.grid(row=9, column=2, padx=10, sticky=tk.E)
+        self.betting.grid(row=13, column=3, padx=(0,10), sticky=tk.E)
         self.option_betting=tk.StringVar()
         
+        ttk.Separator(self.settings).grid(row=16, columnspan=3, sticky=tk.W + tk.E, padx=15)
+
         # variable betting option
         tk.Radiobutton(self.settings, variable=self.option_betting, 
                        text='Variable', value='Variable', command=disableEntry)\
-                      .grid(row=9, column=1, sticky=tk.W)
+                      .grid(row=13, column=2, sticky=tk.W)
         
         # fixed dollar amount betting option
         tk.Radiobutton(self.settings, variable=self.option_betting,
                        text='Fixed', value='Fixed', command=enableEntry)\
-                      .grid(row=9, column=2, sticky=tk.W)
+                      .grid(row=13, column=3, sticky=tk.W)
+
+        ttk.Separator(self.settings).grid(row=14, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # purse size prompt
         tk.Label(self.settings, text='Initial Purse Size: ')\
-                .grid(row=10, column=0, padx=10, pady=5, sticky=tk.W)
+                .grid(row=15, column=1, padx=10, pady=5, sticky=tk.W)
 
         # purse size entry box
         tk.Label(self.settings, text='$')\
-                .grid(row=10, column=1, sticky=tk.W)
+                .grid(row=15, column=2, sticky=tk.W)
         self.purse=tk.Entry(self.settings, width=5)
-        self.purse.grid(row=10, column=1, sticky=tk.W, padx=15)
+        self.purse.grid(row=15, column=2, sticky=tk.W, padx=15)
+
+        ttk.Separator(self.settings).grid(row=16, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # number of horses prompt
-        tk.Label(self.settings, text='Number of Horses: ').grid(row=11, 
-            column=0, padx=10, pady=5, sticky=tk.W)
+        tk.Label(self.settings, text='Number of Horses: ').grid(row=17, 
+            column=1, padx=10, pady=5, sticky=tk.W)
 
         # number of horses entry box
         self.horses = tk.Entry(self.settings, width=3)
-        self.horses.grid(row=11, column=1, sticky=tk.W)
+        self.horses.grid(row=17, column=2, sticky=tk.W)
+        tk.Label(self.settings, text='horses').grid(row=17, column=2,
+                 padx=40, sticky=tk.W)
+
+        ttk.Separator(self.settings).grid(row=18, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # time limit per race prompt
-        tk.Label(self.settings, text='Time Limit per Race: ').grid(row=12,
-            column=0, padx=10, pady=5, sticky=tk.W)
+        tk.Label(self.settings, text='Time Limit per Race: ').grid(row=19,
+            column=1, padx=10, pady=5, sticky=tk.W)
 
         # time limit per race entry box
         self.time = tk.Entry(self.settings, width=3)
-        self.time.grid(row=12, column=1, sticky=tk.W)
-        tk.Label(self.settings, text='minutes').grid(row=12, column=1, 
-            padx=30, sticky=tk.W)
+        self.time.grid(row=19, column=2, sticky=tk.W)
+        tk.Label(self.settings, text='minutes').grid(row=19, column=2, 
+                padx=40, sticky=tk.W)
+
+        ttk.Separator(self.settings).grid(row=20, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # submit button
         tk.Button(self.settings, text='Save as', command=self.save_settings).grid \
-                 (row=14, column=0, padx=10, pady=10)
+                 (row=21, column=1, padx=10, pady=10)
 
         tk.Button(self.settings, text='Don\'t save', command=self.instructions).grid \
-                 (row=14, column=1, padx=10, pady=10)
+                 (row=21, column=2, padx=10, pady=10)
 
         tk.Button(self.settings, text='Update '+ self.Settings.name, command=self.update_settings).grid \
-                 (row=14, column=2, padx=10, pady=10)
+                 (row=21, column=3, padx=10, pady=10)
+
         # set all of the defaults
         self.set_all_defaults()
 
