@@ -27,16 +27,67 @@ class MainWindow:
                         open(os.path.join(self.path,filename + '_s.p'), 'wb'))
 
         def load(self, filename):
+            if filename == 'None':
+                return
             temp = pickle.load(open(os.path.join(self.path,filename+'_s.p'), 'rb'))
             print(temp)
             for i in temp.keys():
                 setattr(self, i, temp[i]) 
 
-    def load_settings(self, event):
-        if os.path.isfile(os.path.join(self.Settings.path, self.defaultmenu.get() + '_s.p')):
+    def load_settings(self, *event):
+        self.Settings.name = self.defaultmenu.get()
+        if self.Settings.name == 'None':
+            self.revert.config(state='disabled')
+            self.apply.config(state='disabled')
+        elif self.Settings.name == 'Edit Settings':
+            self.edit_settings()
+        elif os.path.isfile(os.path.join(self.Settings.path, self.defaultmenu.get() + '_s.p')):
             self.Settings.load(self.Settings,self.defaultmenu.get())
             self.set_all_defaults()
             self.Settings.name = self.defaultmenu.get()
+            self.revert.config(state='normal')
+            self.apply.config(state='normal')
+
+
+    def save_setttings(self):
+        # saving data from settings
+        print('hi')
+        #if not self.errorcheck():
+        print(self.Settings.__dict__)
+        self.Settings.trials = int(self.trials.get())
+        self.Settings.accuracy = int(self.accuracy.get())
+        self.Settings.checkaccuracy = int(self.checkaccuracy.get())
+        self.Settings.displaytime = int(self.displaytime.get())
+        self.Settings.displaybeyer = int(self.displaybeyer.get())
+        self.Settings.displayorder = int(self.displayorder.get())
+        self.Settings.purse = float(self.purse.get())
+        self.Settings.purse = round(self.Settings.purse, 2)
+        self.Settings.betting_option = self.option_betting.get()
+        self.Settings.betting_amount = int(self.betting.get())
+        self.Settings.num_of_horses = int(self.horses.get())
+        self.Settings.time_limit = int(self.time.get())
+        self.Settings.save(self.Settings, self.Settings.name)
+
+
+    def edit_settings(self):
+        #make pop up window to enter name of settings
+        def save():
+            self.Settings.name = name.get()
+            self.update_settings()
+            save_window.destroy()
+        save_window = tk.Tk()
+        save_window.grid()
+        save_window.title('Save As')
+        save_window.bind('<Control-q>', quit)
+        name = tk.Entry(save_window, width=10).grid(row=1,column=1)
+        tk.Label(name, text='File name: ').grid(row=1,column=0)
+        tk.Button(save_window, text='Save',command=save).grid(row=2,column=1)
+        tk.Button(save_window, text='Cancel',command=lambda : save_window.destroy()).grid(row=2,column=0)
+
+    def update_settings(self):
+        self.Settings.load(self.Settings,self.Settings.name)
+        self.set_all_defaults()
+
 
     def set_all_defaults(self):
         # trials entry box
@@ -119,8 +170,12 @@ class MainWindow:
                  .grid(row=1, column=1, padx=30, pady=15, sticky=tk.N + tk.W)
 
     def s_settings(self):
+        self.Settings.displaytime = 1
+        self.Settings.displaybeyer = 1
+        self.Settings.displayorder = 1
+        self.Settings.trials = 1
         self.Settings.path = os.path.join('ui','settings')
-        self.Settings.name = pickle.load(open(os.path.join(self.Settings.path, 'start_load.p'),'rb'))
+        self.Settings.name = 'test'
         self.Settings.load(self.Settings,self.Settings.name)
         root.destroy()
         # create settings window
@@ -137,7 +192,8 @@ class MainWindow:
         tk.Label(self.settings, text="Select settings: ").grid(row=1, column=0,
                  padx=10, pady=5, sticky=tk.W)
         defaults = [f.replace('_s.p', '') for f in os.listdir(self.Settings.path) if f.endswith('_s.p')]
-
+        defaults.append('None')
+        defaults.append('Edit Settings')
         self.defaultmenu = tk.StringVar(self.settings)
         self.defaultmenu.set(self.Settings.name)
         self.default_select = tk.OptionMenu(self.settings, self.defaultmenu, 
@@ -274,34 +330,18 @@ class MainWindow:
             padx=30, sticky=tk.W)
 
         # submit button
-        tk.Button(self.settings, text='Save as', command=self.save_settings).grid \
-                 (row=14, column=0, padx=10, pady=10)
+        self.revert = tk.Button(self.settings, text='Revert', command=self.update_settings)
+        self.revert.grid(row=14, column=0, padx=10, pady=10)
 
-        tk.Button(self.settings, text='Don\'t save', command=self.instructions).grid \
-                 (row=14, column=1, padx=10, pady=10)
+        self.apply = tk.Button(self.settings, text='Apply', command=self.save_setttings)
+        self.apply.grid(row=14, column=1, padx=10, pady=10)
 
-        tk.Button(self.settings, text='Update '+ self.Settings.name, command=self.update_settings).grid \
+        tk.Button(self.settings, text='Continue', command=self.instructions).grid \
                  (row=14, column=2, padx=10, pady=10)
         # set all of the defaults
         self.set_all_defaults()
-    def save_settings(self):
-        #make pop up window to enter name of settings
-        def save():
-            self.Settings.name = name.get()
-            self.update_settings()
-            save_window.destroy()
-        save_window = tk.Tk()
-        save_window.grid()
-        save_window.title('Save As')
-        save_window.bind('<Control-q>', quit)
-        name = tk.Entry(save_window, width=10).grid(row=1,column=1)
-        tk.Label(name, text='File name: ').grid(row=1,column=0)
-        tk.Button(save_window, text='Save',command=save).grid(row=2,column=1)
-        tk.Button(save_window, text='Cancel',command=lambda : save_window.destroy()).grid(row=2,column=0)
 
-    def update_settings(self):
-        self.Settings.save(self.Settings.name)
-        self.instructions()
+
 
     def errorcheck(self):
         # checks to make sure the settings were correct
@@ -323,6 +363,7 @@ class MainWindow:
                     font = (None, 20)).pack(padx = 10, pady = 10)
                 tk.Button(error, text='OK', command=lambda : 
                     error.destroy()).pack(padx=10, pady=10)
+                return True
            
             # check if purse is a float number
             elif element == self.purse.get():
@@ -338,6 +379,7 @@ class MainWindow:
                         font = (None, 20)).pack(padx = 10, pady = 10)
                     tk.Button(error, text='OK', command=lambda : 
                         error.destroy()).pack(padx=10, pady=10)
+                return True
 
             # check if other elements are integers (not letters)
             elif element != self.displaytime.get() and element != \
@@ -354,29 +396,21 @@ class MainWindow:
                         font = (None, 20)).pack(padx = 10, pady = 10)
                     tk.Button(error, text='OK', command=lambda : 
                         error.destroy()).pack(padx = 10, pady = 10)
-            else:
-                # saving data from settings
-                self.Settings.trials = int(self.trials.get())
-                self.Settings.accuracy = int(self.accuracy.get())
-                self.Settings.checkaccuracy = int(self.checkaccuracy.get())
-                self.Settings.displaytime = int(self.displaytime.get())
-                self.Settings.displaybeyer = int(self.displaybeyer.get())
-                self.Settings.displayorder = int(self.displayorder.get())
-                self.Settings.purse = float(self.purse.get())
-                self.Settings.purse = round(self.Settings.purse, 2)
-                self.Settings.betting_option = self.option_betting.get()
-                self.Settings.betting_amount = int(self.betting.get())
-                self.Settings.num_of_horses = int(self.horses.get())
-                self.Settings.time_limit = int(self.time.get())
-                self.Settings.save(self.Settings,'test')
-                self.instructions()
+                return True
+        return False
+
+
 
     def instructions(self):
         # screen that displays the instructions
-        # checking if all entries are filled out
-        self.Settings.path = os.path.join('ui','settings')
-        self.Settings.name = pickle.load(open(os.path.join(self.Settings.path, 'start_load.p'),'rb'))
-        self.Settings.load(self.Settings,self.Settings.name)
+        # clearing screen and making a new instructions window
+        if hasattr(self, 'settings'):
+            self.settings.destroy()
+        else:
+            self.Settings.path = os.path.join('ui','settings')
+            self.Settings.name = pickle.load(open(os.path.join(self.Settings.path, 'start_load.p'),'rb'))
+            self.Settings.load(self.Settings,self.Settings.name)
+            root.destroy()
 
         # checking values
         print("Trials: ", self.Settings.trials, 
@@ -391,11 +425,7 @@ class MainWindow:
             "\nNumber of Horses: ", self.Settings.num_of_horses,
             "\nTime Limit per Race: ", self.Settings.time_limit)
 
-        # clearing screen and making a new instructions window
-        if hasattr(self, 'settings'):
-            self.settings.destroy()
-        else:
-            root.destroy()
+
 
         self.window = tk.Tk()
         self.window.title('Horse Racing')
