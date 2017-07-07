@@ -372,13 +372,14 @@ class MainWindow:
 
         # submit button
         self.revert = tk.Button(self.settings, text='Revert', command=self.update_settings)
-        self.revert.grid(row=14, column=0, padx=10, pady=10)
+        self.revert.grid(row=21, column=1, padx=10, pady=10, sticky=tk.E)
 
         self.apply = tk.Button(self.settings, text='Apply', command=self.save_setttings)
-        self.apply.grid(row=14, column=1, padx=10, pady=10)
+        self.apply.grid(row=21, column=2, padx=10, pady=10, sticky=tk.E)
 
         tk.Button(self.settings, text='Continue', command=self.instructions).grid \
-                 (row=14, column=2, padx=10, pady=10)
+                 (row=21, column=3, padx=10, pady=10, sticky=tk.E)
+
         # set all of the defaults
         self.set_all_defaults()
 
@@ -600,7 +601,7 @@ class MainWindow:
                 self.horses_racing.append(horse)
         
         # find predicted winning horse
-        self.horses_racing.sort(key=lambda x:x['L_Time'])
+        self.horses_racing.sort(key=lambda x:x['P_Time'])
         self.horse_pwin = self.horses_racing[0]['B_Horse']
 
         # find actual winning horse
@@ -853,51 +854,62 @@ class MainWindow:
         # different spacing for different settings
         if self.Settings.displaytime and not self.Settings.displaybeyer or\
            not self.Settings.displaytime and self.Settings.displaybeyer:
-           tk.Label(self.result, text='Results', font=(None, 35))\
-                .grid(row=1, column=2, pady=(50,20))
+            tk.Label(self.result, text='Results', font=(None, 35))\
+                    .grid(row=1, column=2, pady=(50,20))
+            if self.Settings.displaytime == 1:
+                tk.Label(self.result, text='Time', font=(None, 30))\
+                        .grid(row=2, column=3, sticky=tk.W)
+            else:
+                tk.Label(self.result, text='Beyer', font=(None, 30))\
+                        .grid(row=2, column=3, sticky=tk.W)
         elif self.Settings.displaytime and self.Settings.displaybeyer:
             tk.Label(self.result, text='Results', font=(None, 35))\
-                .grid(row=1, column=2, columnspan=2, sticky=tk.W + tk.E)
+                    .grid(row=1, column=2, columnspan=2, sticky=tk.W + tk.E)
+            tk.Label(self.result, text='Time', font=(None, 30))\
+                    .grid(row=2, column=3, sticky=tk.W)
+            tk.Label(self.result, text='Beyer', font=(None, 30))\
+                    .grid(row=2, column=4, sticky=tk.W)
         else:
             tk.Label(self.result, text='Results', font=(None, 35))\
                     .grid(row=1, column=1, columnspan=2, pady=(50,20))
+
         tk.Label(self.result, text='Actual result:', font=(None, 25), justify='left')\
-                .grid(row=2, column=1, pady=10, 
+                .grid(row=3, column=1, pady=10, 
                       sticky=tk.N + tk.W)
         # if show order is checked, show times
         if self.Settings.displayorder:
             tk.Label(self.result, text='{}'.format(self.horse_winl), font=(None,25),
-                justify='left').grid(row=2, column=2, pady=10, sticky=tk.N + tk.W)
+                fg='red', justify='left').grid(row=3, column=2, pady=10, sticky=tk.N + tk.W)
         else:
             tk.Label(self.result, text='{}'.format(self.horse_win), font=(None,25),
-                    justify='left').grid(row=2, column=2, pady=10, sticky=tk.N + tk.W)
+                    fg='red', justify='left').grid(row=3, column=2, pady=10, sticky=tk.N + tk.W)
         if self.Settings.displaytime:
             tk.Label(self.result, text='{}'.format(self.horse_time), font=(None,25),
-                    justify='left').grid(row=2, column=3, pady=10, sticky=tk.N + tk.W)
+                    fg='red', justify='left').grid(row=3, column=3, pady=10, sticky=tk.N + tk.W)
         # if show beyer is checked, show beyer figures
         if self.Settings.displaybeyer:
             if not self.Settings.displaytime:
                 tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
-                        justify='left').grid(row=2, column=3, pady=10, sticky=tk.N + tk.W)
+                        fg='red', justify='left').grid(row=3, column=3, pady=10, sticky=tk.N + tk.W)
             else:
                 tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
-                    justify='left').grid(row=2, column=4, pady=10, sticky=tk.N + tk.W)
+                    fg='red', justify='left').grid(row=3, column=4, pady=10, sticky=tk.N + tk.W)
         tk.Label(self.result, text="Aide's suggestion: ", font=(None, 25))\
-                .grid(row=3, column=1, pady=10, sticky=tk.N + tk.W)
-        tk.Label(self.result, text='{}'.format(self.horse_pwin), font=(None,25))\
-                .grid(row=3, column=2, pady=10, sticky=tk.N + tk.W)
+                .grid(row=4, column=1, pady=10, sticky=tk.N + tk.W)
+        tk.Label(self.result, text='{}'.format(self.horse_pwin), font=(None,25), fg='red')\
+                .grid(row=4, column=2, pady=10, sticky=tk.N + tk.W)
         tk.Label(self.result, 
                  text='Your choice: ', font=(None, 25))\
-                .grid(row=4, column=1, pady=10, sticky = tk.N + tk.W)
-        tk.Label(self.result, text='{}'.format(self.horsemenu.get()), font=(None, 25))\
-                .grid(row=4, column=2, pady=10, sticky=tk.N + tk.W)
+                .grid(row=5, column=1, pady=10, sticky = tk.N + tk.W)
+        tk.Label(self.result, text='{}'.format(self.horsemenu.get()), font=(None, 25), fg='red')\
+                .grid(row=5, column=2, pady=10, sticky=tk.N + tk.W)
 
         # update the users purse
         self.update_purse()
         tk.Label(self.result, text='Current Purse: ', font=(None, 25))\
-                .grid(row=5, column=1, pady=10, sticky=tk.N + tk.W)
+                .grid(row=6, column=1, pady=10, sticky=tk.N + tk.W)
         tk.Label(self.result, text='${:.2f}'.format(self.Settings.purse),
-                 font=(None, 25)).grid(row=5, column=2, pady=10, sticky=tk.N + tk.W)
+                 font=(None, 25), fg='red').grid(row=6, column=2, pady=10, sticky=tk.N + tk.W)
 
         # check if there are more races to display 'next race' or 'exit'
         # different spacing for different settings
@@ -906,29 +918,29 @@ class MainWindow:
             if self.Settings.trials == 1:
                 tk.Button(self.result, text='Exit', 
                           font=(None, 20), command=self.exit)\
-                         .grid(row=6, column=2, pady=10)
+                         .grid(row=7, column=2, pady=10)
             else:
                 tk.Button(self.result, text='Next Race', 
                           font=(None, 20), command=self.races)\
-                         .grid(row=6, column=2, pady=10)
+                         .grid(row=7, column=2, pady=10)
         elif self.Settings.displaytime and self.Settings.displaybeyer:
             if self.Settings.trials == 1:
                 tk.Button(self.result, text='Exit', 
                           font=(None, 20), command=self.exit)\
-                         .grid(row=6, column=2, columnspan=2, pady=10)
+                         .grid(row=7, column=2, columnspan=2, pady=10)
             else:
                 tk.Button(self.result, text='Next Race', 
                           font=(None, 20), command=self.races)\
-                         .grid(row=6, column=2, columnspan=2, pady=10)
+                         .grid(row=7, column=2, columnspan=2, pady=10)
         else:
             if self.Settings.trials == 1:
                 tk.Button(self.result, text='Exit', 
                           font=(None, 20), command=self.exit)\
-                         .grid(row=6, column=1, columnspan=2, pady=10)
+                         .grid(row=7, column=1, columnspan=2, pady=10)
             else:
                 tk.Button(self.result, text='Next Race', 
                           font=(None, 20), command=self.races)\
-                         .grid(row=6, column=1, columnspan=2, pady=10)
+                         .grid(row=7, column=1, columnspan=2, pady=10)
 
     def races(self):
         # if there are more races, decrement trials and load another race
