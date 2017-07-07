@@ -93,22 +93,27 @@ class MainWindow:
         self.welcome.grid()
         for i in range(2):
             self.welcome.grid_rowconfigure(
-                                    i, minsize=int(screen_width/2))
-            self.welcome.grid_columnconfigure(
                                     i, minsize=int(screen_height/2))
+            self.welcome.grid_columnconfigure(
+                                    i, minsize=int(screen_width/2))
         tk.Label(self.welcome, text='Welcome!', font=(None, 50)).grid(row=0, column=0, 
                  columnspan=2, padx=20, pady= 50, sticky=tk.W + tk.E + tk.S)
-        tk.Button(self.welcome, text='Settings', font=(None, 30)).grid(row=1, column=0,
-                  padx=30, pady=15, sticky=tk.N + tk.E)
-        tk.Button(self.welcome, text='Experiment', font=(None, 30)).grid(row=1, column=1,
-                  padx=30, pady=15, sticky=tk.N + tk.W)
+        tk.Button(self.welcome, text='Settings', font=(None, 30), 
+                  command=self.s_settings)\
+                 .grid(row=1, column=0, padx=30, pady=15, sticky=tk.N + tk.E)
+        tk.Button(self.welcome, text='Experiment', font=(None, 30), 
+                  command=self.instructions)\
+                 .grid(row=1, column=1, padx=30, pady=15, sticky=tk.N + tk.W)
 
     def s_settings(self):
         self.Settings.path = os.path.join('ui','settings')
         self.Settings.load(self.Settings,'default')
 
-        # create settings frame
-        self.settings = tk.Frame(self.master)
+        root.destroy()
+        # create settings window
+        self.settings = tk.Tk()
+        self.settings.title('Settings')
+        self.settings.bind('<Control-q>', quit)
         self.settings.grid()
 
         # setting title
@@ -350,12 +355,13 @@ class MainWindow:
 
             # clearing screen and making a new instructions window
             self.settings.destroy()
-            root.destroy()
             self.window = tk.Tk()
             self.window.title('Horse Racing')
             self.window.bind('<Control-q>', quit)
 
             # fit to screen
+            global screen_width
+            global screen_height
             self.window.geometry("{}x{}".format(screen_width, 
                                                 screen_height))
 
@@ -370,9 +376,9 @@ class MainWindow:
             self.instructions.grid()
             for i in range(3):
                 self.instructions.grid_rowconfigure(
-                                        i, minsize=int(screen_width/3))
-                self.instructions.grid_columnconfigure(
                                         i, minsize=int(screen_height/3))
+                self.instructions.grid_columnconfigure(
+                                        i, minsize=int(screen_width/3))
 
             # instructions label
             welcomeTextChange = "Welcome!\nAs a reminder, you can choose your bets." + \
@@ -876,13 +882,13 @@ class MainWindow:
 
 root = tk.Tk()
 # find screen size
-screen_height = root.winfo_screenwidth()
-screen_width = root.winfo_screenheight()
+screen_height = root.winfo_screenheight()
+screen_width = root.winfo_screenwidth()
 
 def run():
     root.title("Horse Racing")
     # full screen window
-    root.geometry("%dx%d+0+0" % (screen_height, screen_width))
+    root.geometry("%dx%d+0+0" % (screen_width, screen_height))
     root.bind('<Control-q>', quit)
     app = MainWindow(root)
     root.mainloop()
