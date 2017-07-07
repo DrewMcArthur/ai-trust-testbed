@@ -154,7 +154,7 @@ class MainWindow:
 
         # disabling and enabling accuracy bar
         def toggleslider():
-            if self.checkaccuracy.get():
+            if self.checkaccuracy.get() == '1':
                 self.accuracy.config(state='disabled')
                 
                 #grey out the bar
