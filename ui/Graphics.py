@@ -36,6 +36,7 @@ class MainWindow:
         if os.path.isfile(os.path.join(self.Settings.path, self.defaultmenu.get() + '_s.p')):
             self.Settings.load(self.Settings,self.defaultmenu.get())
             self.set_all_defaults()
+            self.Settings.name = self.defaultmenu.get()
 
     def set_all_defaults(self):
         # trials entry box
@@ -87,21 +88,31 @@ class MainWindow:
         # time per race
         self.time.delete(0, 'end')
         self.time.insert(0, self.Settings.time_limit)
+        if self.checkaccuracy.get() == '1':
+            self.accuracy.config(state='disabled')
+            
+            #grey out the bar
+            self.accuracy.config(foreground='gainsboro')
+        else:
+            self.accuracy.config(state='normal')
+            
+            #make the bar normal colored
+            self.accuracy.config(foreground='black')
     def s_settings(self):
         # setting title
         self.Settings.path = os.path.join('ui','settings')
-
-        self.Settings.load(self.Settings,'default')
+        self.Settings.name = pickle.load(open(os.path.join(self.Settings.path, 'start_load.p'),'rb'))
+        self.Settings.load(self.Settings,self.Settings.name)
         tk.Label(self.settings, text='Settings', font=(None, 15)).grid( 
             row=0, column=1, columnspan=2, pady=10)
 
         # drop-down of default settings
         tk.Label(self.settings, text="Select settings: ").grid(row=1, column=1,
                  padx=10, pady=5, sticky=tk.W)
-        defaults = [f.replace('_s.p', '') for f in os.listdir(self.Settings.path)]
+        defaults = [f.replace('_s.p', '') for f in os.listdir(self.Settings.path) if f.endswith('_s.p')]
 
         self.defaultmenu = tk.StringVar(self.settings)
-        self.defaultmenu.set(defaults[0])
+        self.defaultmenu.set(self.Settings.name)
         self.default_select = tk.OptionMenu(self.settings, self.defaultmenu, 
                                           *defaults, command=self.load_settings)
         self.default_select.grid(row=1, column=2, sticky = tk.W)
@@ -121,13 +132,11 @@ class MainWindow:
                 
                 #grey out the bar
                 self.accuracy.config(foreground='gainsboro')
-                self.activate = False
             else:
                 self.accuracy.config(state='normal')
                 
                 #make the bar normal colored
                 self.accuracy.config(foreground='black')
-                self.activate = True
 
         # check button for using accuracy of classifer
         # if checked, accuracy bar is disabled
@@ -233,13 +242,34 @@ class MainWindow:
             padx=30, sticky=tk.W)
 
         # submit button
-        tk.Button(self.settings, text='Submit', command=self.instructions).grid \
+        tk.Button(self.settings, text='Save settings as', command=self.save_settings).grid \
+                 (row=14, column=0, columnspan=2, pady=10)
+
+        tk.Button(self.settings, text='Continue without saving', command=self.instructions).grid \
                  (row=14, column=1, columnspan=2, pady=10)
 
+        tk.Button(self.settings, text='Update '+ self.Settings.name, command=self.update_settings).grid \
+                 (row=14, column=1, columnspan=2, pady=10, sticky=tk.E)
         # set all of the defaults
-
-                # trials entry box
         self.set_all_defaults()
+    def save_settings(self):
+        #make pop up window to enter name of settings
+        def save():
+            self.Settings.name = name.get()
+            self.update_settings()
+            save_window.destroy()
+        save_window = tk.Tk()
+        save_window.grid()
+        save_window.title('Save As')
+        save_window.bind('<Control-q>', quit)
+        name = tk.Entry(save_window, width=10).grid(row=1,column=1)
+        tk.Label(name, text='File name: ').grid(row=1,column=0)
+        tk.Button(save_window, text='Save',command=save).grid(row=2,column=1)
+        tk.Button(save_window, text='Cancel',command=lambda : save_window.destroy()).grid(row=2,column=0)
+
+    def update_settings(self):
+        self.Settings.save(self.Settings.name)
+        self.instructions()
 
     def errorcheck(self):
         # checks to make sure the settings were correct
@@ -315,7 +345,9 @@ class MainWindow:
             self.Settings.num_of_horses = int(self.horses.get())
             self.Settings.time_limit = int(self.time.get())
 
-            self.Settings.save(self.Settings,'test')
+            self.Settings.name = self.defaultmenu.get()
+            self.Settings.save(self.Settings,self.Settings.name)
+            pickle.dump('test', open(os.path.join(self.Settings.path,'start_load.p'), 'wb'))
 
             # checking values
             print("Trials: ", self.Settings.trials, 
