@@ -318,7 +318,6 @@ class MainWindow:
                     font = (None, 20)).pack(padx = 10, pady = 10)
                 tk.Button(error, text='OK', command=lambda : 
                     error.destroy()).pack(padx=10, pady=10)
-                return False
            
             # check if purse is a float number
             elif element == self.purse.get():
@@ -334,7 +333,6 @@ class MainWindow:
                         font = (None, 20)).pack(padx = 10, pady = 10)
                     tk.Button(error, text='OK', command=lambda : 
                         error.destroy()).pack(padx=10, pady=10)
-                    return False
 
             # check if other elements are integers (not letters)
             elif element != self.showtime.get() and element != \
@@ -351,101 +349,104 @@ class MainWindow:
                         font = (None, 20)).pack(padx = 10, pady = 10)
                     tk.Button(error, text='OK', command=lambda : 
                         error.destroy()).pack(padx = 10, pady = 10)
-                    return False
             else:
-                return True
+                # saving data from settings
+                self.Settings.trials = int(self.trials.get())
+                self.Settings.accuracy = int(self.accuracy.get())
+                self.Settings.checkaccuracy = int(self.checkaccuracy.get())
+                self.Settings.showtime = int(self.showtime.get())
+                self.Settings.showbeyer = int(self.showbeyer.get())
+                self.Settings.showorder = int(self.showorder.get())
+                self.Settings.purse = float(self.purse.get())
+                self.Settings.purse = round(self.Settings.purse, 2)
+                self.Settings.betting_option = self.option_betting.get()
+                self.Settings.betting_amount = int(self.betting.get())
+                self.Settings.num_of_horses = int(self.horses.get())
+                self.Settings.time_limit = int(self.time.get())
+                self.Settings.save(self.Settings,'test')
+                self.instructions()
+
     def instructions(self):
         # screen that displays the instructions
         # checking if all entries are filled out
-        if self.errorcheck():
-            # saving data from settings
-            self.Settings.trials = int(self.trials.get())
-            self.Settings.accuracy = int(self.accuracy.get())
-            self.Settings.checkaccuracy = int(self.checkaccuracy.get())
-            self.Settings.showtime = int(self.showtime.get())
-            self.Settings.showbeyer = int(self.showbeyer.get())
-            self.Settings.showorder = int(self.showorder.get())
-            self.Settings.purse = float(self.purse.get())
-            self.Settings.purse = round(self.Settings.purse, 2)
-            self.Settings.betting_option = self.option_betting.get()
-            self.Settings.betting_amount = int(self.betting.get())
-            self.Settings.num_of_horses = int(self.horses.get())
-            self.Settings.time_limit = int(self.time.get())
+        self.Settings.path = os.path.join('ui','settings')
+        self.Settings.name = pickle.load(open(os.path.join(self.Settings.path, 'start_load.p'),'rb'))
+        self.Settings.load(self.Settings,self.Settings.name)
 
-            self.Settings.name = self.defaultmenu.get()
-            self.Settings.save(self.Settings,self.Settings.name)
-            pickle.dump('test', open(os.path.join(self.Settings.path,'start_load.p'), 'wb'))
+        # checking values
+        print("Trials: ", self.Settings.trials, 
+            "\nAccuracy: ", self.Settings.accuracy,
+            "\nCheck Accuracy: ", self.Settings.checkaccuracy,
+            "\nTime: ", self.Settings.showtime,
+            "\nBeyer: ", self.Settings.showbeyer,
+            "\nOrder: ", self.Settings.showorder,
+            "\nBetting Style: ", self.Settings.betting_option,
+            "\nBetting Amount: ", self.Settings.betting_amount,
+            "\nPurse: ", self.Settings.purse,
+            "\nNumber of Horses: ", self.Settings.num_of_horses,
+            "\nTime Limit per Race: ", self.Settings.time_limit)
 
-            # checking values
-            print("Trials: ", self.Settings.trials, 
-                "\nAccuracy: ", self.Settings.accuracy,
-                "\nCheck Accuracy: ", self.Settings.checkaccuracy,
-                "\nTime: ", self.Settings.showtime,
-                "\nBeyer: ", self.Settings.showbeyer,
-                "\nOrder: ", self.Settings.showorder,
-                "\nBetting Style: ", self.Settings.betting_option,
-                "\nBetting Amount: ", self.Settings.betting_amount,
-                "\nPurse: ", self.Settings.purse,
-                "\nNumber of Horses: ", self.Settings.num_of_horses,
-                "\nTime Limit per Race: ", self.Settings.time_limit)
-
-            # clearing screen and making a new instructions window
+        # clearing screen and making a new instructions window
+        if hasattr(self, 'settings'):
             self.settings.destroy()
-            self.window = tk.Tk()
-            self.window.title('Horse Racing')
-            self.window.bind('<Control-q>', quit)
+        else:
+            root.destroy()
 
-            # fit to screen
-            global screen_width
-            global screen_height
-            self.window.geometry("{}x{}".format(screen_width, 
-                                                screen_height))
+        self.window = tk.Tk()
+        self.window.title('Horse Racing')
+        self.window.bind('<Control-q>', quit)
 
-            print(screen_width, screen_height)
-            print(self.Settings.__dict__)
-            # get screen dimensions
-            screen_width = int(self.window.winfo_screenwidth())
-            screen_height = int(self.window.winfo_screenheight())- 100
+        # fit to screen
+        global screen_width
+        global screen_height
+        self.window.geometry("{}x{}".format(screen_width, 
+                                            screen_height))
 
-            # configure instructions frame
-            self.instructions = tk.Frame(self.window)
-            self.instructions.grid()
-            for i in range(3):
-                self.instructions.grid_rowconfigure(
-                                        i, minsize=int(screen_height/3))
-                self.instructions.grid_columnconfigure(
-                                        i, minsize=int(screen_width/3))
+        print(screen_width, screen_height)
+        print(self.Settings.__dict__)
+        # get screen dimensions
+        screen_width = int(self.window.winfo_screenwidth())
+        screen_height = int(self.window.winfo_screenheight())- 100
 
-            # instructions label
-            welcomeTextChange = "Welcome!\nAs a reminder, you can choose your bets." + \
-                          "\nYour task is to pick, as best you can, the " + \
-                          "winner of the race.\nYou will have up to {} " + \
-                          "minute(s) to look at all the data and make your " + \
-                          "choice.\nPress start when you are ready."
+        # configure instructions frame
+        self.instructions = tk.Frame(self.window)
+        self.instructions.grid()
+        for i in range(3):
+            self.instructions.grid_rowconfigure(
+                                    i, minsize=int(screen_height/3))
+            self.instructions.grid_columnconfigure(
+                                    i, minsize=int(screen_width/3))
 
-            welcomeTextFixed = "Welcome!\nAs a reminder, your bets are fixed at " + \
-                          "${:.2f}.\nYour task is to pick, as best you can, the " + \
-                          "winner of the race.\nYou will have up to {} " + \
-                          "minute(s) to look at all the data and make your " + \
-                          "choice.\nPress start when you are ready."
+        # instructions label
+        welcomeTextChange = "Welcome!\nAs a reminder, you can choose your bets." + \
+                      "\nYour task is to pick, as best you can, the " + \
+                      "winner of the race.\nYou will have up to {} " + \
+                      "minute(s) to look at all the data and make your " + \
+                      "choice.\nPress start when you are ready."
 
-            if self.Settings.betting_option == "Fixed":
-                tk.Label(self.instructions, text=welcomeTextFixed\
-                         .format(self.Settings.betting_amount, 
-                         self.Settings.time_limit),\
-                         font=(None, int(screen_height*.02)))\
-                        .grid(row=1, column=1)
-            else:
-                tk.Label(self.instructions, text=welcomeTextChange\
-                         .format(self.Settings.betting_amount, 
-                         self.Settings.time_limit),\
-                         font=(None, int(screen_height*.02)))\
-                        .grid(row=1, column=1)
+        welcomeTextFixed = "Welcome!\nAs a reminder, your bets are fixed at " + \
+                      "${:.2f}.\nYour task is to pick, as best you can, the " + \
+                      "winner of the race.\nYou will have up to {} " + \
+                      "minute(s) to look at all the data and make your " + \
+                      "choice.\nPress start when you are ready."
 
-            tk.Button(self.instructions, text='Start', 
-                      font=(None, int(screen_width*.01)),
-                      command=self.betting_screen)\
-                     .grid(row=1, column=1, sticky=tk.S)
+        if self.Settings.betting_option == "Fixed":
+            tk.Label(self.instructions, text=welcomeTextFixed\
+                     .format(self.Settings.betting_amount, 
+                     self.Settings.time_limit),\
+                     font=(None, int(screen_height*.02)))\
+                    .grid(row=1, column=1)
+        else:
+            tk.Label(self.instructions, text=welcomeTextChange\
+                     .format(self.Settings.betting_amount, 
+                     self.Settings.time_limit),\
+                     font=(None, int(screen_height*.02)))\
+                    .grid(row=1, column=1)
+
+        tk.Button(self.instructions, text='Start', 
+                  font=(None, int(screen_width*.01)),
+                  command=self.betting_screen)\
+                 .grid(row=1, column=1, sticky=tk.S)
 
     def generateforms(self):
         # creates forms with random horses
