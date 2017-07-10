@@ -152,9 +152,6 @@ class MainWindow:
         else:
             self.C3.select()
 
-        # suggestion options
-        self.option_suggestion.set(self.Settings.betting_option)
-
         # betting options
         self.option_betting.set(self.Settings.betting_option)
         
@@ -404,7 +401,7 @@ class MainWindow:
         # time limit per race prompt
         time_limit = tk.Label(self.settings, text='Time Limit per Race: ')
         time_limit.grid(row=19, column=1, padx=10, pady=5, sticky=tk.W)
-        HoverInfo(time_limit, "Time limit each each race")
+        HoverInfo(time_limit, "Time limit for each race")
 
         # time limit per race entry box
         self.time = tk.Entry(self.settings, width=3)
@@ -792,19 +789,44 @@ class MainWindow:
         tk.Label(self.bet, text="Possible Winnings:\n ${}".format(self.horses_winnings),\
                  justify='left', font=(None,20))\
                 .grid(row=3, column=2, padx=20, sticky=tk.W)
-        tk.Label(self.bet, text="Aide's Suggestions: {}".format(self.horse_pwin),\
-                 justify='left', font=(None, 20))\
-                .grid(row=4, column=1, columnspan=2, padx=20, pady=10, sticky= tk.W)
-        tk.Label(self.bet, text="Horse you want to bet on:", font=(None, 20))\
-                .grid(row=5, column=1, columnspan=2, padx=20, sticky= tk.W)
+        if self.option_suggestion.get() == "Bet":
+            tk.Label(self.bet, text="Aide's Suggestion: {}".format(self.horse_pwin),\
+                     justify='left', font=(None, 20))\
+                    .grid(row=4, column=1, columnspan=2, padx=20, pady=10, sticky= tk.W)
+            tk.Label(self.bet, text="Horse you want to bet on:", font=(None, 20))\
+                    .grid(row=5, column=1, columnspan=2, padx=20, sticky=tk.W)
 
-        self.horse_select.grid(row=5, column=1, columnspan=2, padx=35, pady=5, 
-                               sticky=tk.W + tk.S)
+            self.horse_select.grid(row=5, column=1, columnspan=2, padx=35, pady=5, 
+                                   sticky=tk.W + tk.S)
 
-        # submit button
-        tk.Button(self.bet, text='Submit', 
-                  command=self.retrieving_data, font=(None, 20))\
-                 .grid(row=7, column=1, columnspan=2, padx=10, pady=10)
+            # submit button
+            tk.Button(self.bet, text='Submit', 
+                      command=self.retrieving_data, font=(None, 20))\
+                     .grid(row=7, column=1, columnspan=2, padx=10, pady=10)
+        else:
+            tk.Label(self.bet, text="Horse you want to bet on:", font=(None, 20))\
+                    .grid(row=4, column=1, columnspan=2, padx=20, sticky=tk.W)
+
+            self.horse_select.grid(row=4, column=1, columnspan=2, padx=35, pady=5, 
+                                   sticky=tk.W + tk.S)
+
+            # submit button
+            tk.Button(self.bet, text='Submit', 
+                      command=self.s_suggestion, font=(None, 20))\
+                     .grid(row=6, column=1, columnspan=2, padx=10, pady=10)
+
+    def s_suggestion(self):
+        # check if a horse is selected
+        if self.horsemenu.get() == "Select horse":
+            error = tk.Tk()
+            error.title("ERROR")
+            error.bind('<Control-q>', quit)
+            tk.Label(error, text="Please select a horse.", 
+                     font=(None, 20))\
+                    .pack(padx=10, pady=10)
+            tk.Button(error, text="OK", command=lambda: error.destroy())\
+                     .pack(padx=10, pady=10)
+
 
     def retrieving_data(self):
         # check how long the user took to submit
