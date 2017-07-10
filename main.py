@@ -7,7 +7,8 @@ import os
 
 def main():
     Graphics.run()
-    os.remove('test.jpg')
+    if os.path.isfile('test.jpg'):
+        os.remove('test.jpg')
 
 
 if __name__ == "__main__":
