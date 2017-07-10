@@ -52,7 +52,6 @@ class MainWindow:
 
     def save_setttings(self):
         # saving data from settings
-        print('hi')
         #if not self.errorcheck():
         print(self.Settings.__dict__)
         self.Settings.trials = int(self.trials.get())
@@ -67,23 +66,71 @@ class MainWindow:
         self.Settings.betting_amount = int(self.betting.get())
         self.Settings.num_of_horses = int(self.horses.get())
         self.Settings.time_limit = int(self.time.get())
+        self.option_suggestion = self.option_suggestion.get()
         self.Settings.save(self.Settings, self.Settings.name)
 
 
     def edit_settings(self):
         #make pop up window to enter name of settings
-        def save():
-            self.Settings.name = name.get()
-            self.update_settings()
-            save_window.destroy()
+        def remove():
+            f = lb.curselection()
+            os.remove(os.path.join(self.Settings.path, lb.get(int(f[0]))+'_s.p'))
+            lb.delete(f[0])
+        
+        def save_file():
+            n = name.get()
+            if n != '' and n not in os.listdir(self.Settings.path):
+                name.grid_remove()
+                lb.insert('end', n)
+                lb.config(height=lb.size()+1)
+                self.Settings.name = n
+                self.Settings.trials = 3
+                self.Settings.accuracy = 50
+                self.Settings.checkaccuracy = 0
+                self.Settings.displaytime = 0
+                self.Settings.displaybeyer = 0
+                self.Settings.displayorder = 0
+                self.Settings.purse = 25
+                self.Settings.purse = round(self.Settings.purse, 2)
+                self.Settings.betting_option = 'Fixed'
+                self.Settings.betting_amount = 2
+                self.Settings.num_of_horses = 3
+                self.Settings.time_limit = 15
+                self.Settings.option_suggestion = 'After'
+                self.Settings.save(self.Settings, self.Settings.name)
+                done_button.grid_remove()
+                add_button.grid()
+                remove_button.grid()
+                cancel_button.grid()
+            else:
+                print('error')  
+
+        def add():
+            name.grid(row=0,column=1,sticky=tk.S)
+            add_button.grid_remove()
+            cancel_button.grid_remove()
+            remove_button.grid_remove()
+            done_button.grid(row=2,column=2)
+
         save_window = tk.Tk()
         save_window.grid()
-        save_window.title('Save As')
+        save_window.title('Edit Settings')
         save_window.bind('<Control-q>', quit)
-        name = tk.Entry(save_window, width=10).grid(row=1,column=1)
-        tk.Label(name, text='File name: ').grid(row=1,column=0)
-        tk.Button(save_window, text='Save',command=save).grid(row=2,column=1)
-        tk.Button(save_window, text='Cancel',command=lambda : save_window.destroy()).grid(row=2,column=0)
+        lb = tk.Listbox(save_window,width=30)
+        lb.grid(row=0,column=1,sticky=tk.N)
+        
+        for f in [f.replace('_s.p','') for f in os.listdir(self.Settings.path) if f.endswith('_s.p')]:
+            print(f)
+            lb.insert('end',f)
+        lb.config(height=lb.size()+1)
+        cancel_button = tk.Button(save_window, text='Cancel',command=lambda : save_window.destroy())
+        cancel_button.grid(row=2,column=0)
+        add_button = tk.Button(save_window, text='Add',command=add)
+        add_button.grid(row=2,column=1)
+        remove_button = tk.Button(save_window, text='Remove',command=remove)
+        remove_button.grid(row=2,column=2)
+        done_button = tk.Button(save_window, text='Done',command=save_file)
+        name = tk.Entry(save_window,width=30)
 
     def update_settings(self):
         self.Settings.load(self.Settings,self.Settings.name)
@@ -372,13 +419,13 @@ class MainWindow:
 
         # submit button
         self.revert = tk.Button(self.settings, text='Revert', command=self.update_settings)
-        self.revert.grid(row=14, column=0, padx=10, pady=10)
+        self.revert.grid(row=21, column=1, padx=10, pady=10)
 
         self.apply = tk.Button(self.settings, text='Apply', command=self.save_setttings)
-        self.apply.grid(row=14, column=1, padx=10, pady=10)
+        self.apply.grid(row=21, column=2, padx=10, pady=10)
 
         tk.Button(self.settings, text='Continue', command=self.instructions).grid \
-                 (row=14, column=2, padx=10, pady=10)
+                 (row=21, column=3, padx=10, pady=10)
         # set all of the defaults
         self.set_all_defaults()
 
@@ -391,7 +438,6 @@ class MainWindow:
         self.checkaccuracy.get(), self.displaytime.get(), self.displaybeyer.get(), 
         self.displayorder.get(), self.purse.get(), self.betting.get(), 
         self.horses.get(), self.time.get()]
-
         for element in elementlist:
             
             # check if any element is empty
