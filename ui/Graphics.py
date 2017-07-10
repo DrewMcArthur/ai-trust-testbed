@@ -515,8 +515,7 @@ class MainWindow:
                     .grid(row=1, column=1)
         else:
             tk.Label(self.instructions, text=welcomeTextChange\
-                     .format(self.Settings.betting_amount, 
-                     self.Settings.time_limit),\
+                     .format(self.Settings.time_limit),\
                      font=(None, int(screen_height*.02)))\
                     .grid(row=1, column=1)
 
@@ -629,18 +628,28 @@ class MainWindow:
         if self.Settings.displaybeyer:
             self.horse_beyer = ""
             if not self.Settings.displayorder:
-                self.horse_beyer += str(self.horses_racing[0]['P_BSF'])
+                self.horse_beyer += str(self.horses_racing[0]['L_BSF'])
             else:
                 for horse in self.horses_racing[:-1]:
-                    self.horse_beyer += (str(horse['P_BSF']) + "\n")
-                self.horse_beyer += str(self.horses_racing[-1]['P_BSF'])
+                    self.horse_beyer += (str(horse['L_BSF']) + "\n")
+                self.horse_beyer += str(self.horses_racing[-1]['L_BSF'])
 
-        # find odds for horses
+        # find odds and winnings for horses
         self.horses_odds = ""
+        self.horses_winnings = ""
         self.horses_racing.sort(key=lambda x:x['B_ProgNum'])
         for horse in self.horses_racing:
-            self.horses_odds += (horse['B_Horse'] + " : " + 
+            odds = horse['B_MLOdds'].split('-')
+            if horse == self.horses_racing[-1]:
+                self.horses_odds += (horse['B_Horse'] + " : " + horse['B_MLOdds'])
+                self.horses_winnings += (str((self.Settings.betting_amount * float(odds[0])) / 
+                                    float(odds[1])))
+            else:
+                self.horses_odds += (horse['B_Horse'] + " : " + 
                                  horse['B_MLOdds'] + "\n ")
+                self.horses_winnings += (str((self.Settings.betting_amount * float(odds[0])) / 
+                                    float(odds[1])) + "\n $")
+
         end = time.time()
 
     def scrolledcanvas(self):
@@ -649,7 +658,7 @@ class MainWindow:
 
         # create a canvas for the form
         self.canv = tk.Canvas(self.bet, relief='sunken')
-        self.canv.config(width=1500, height=1125)
+        self.canv.config(width=int(screen_width*(5/7)), height=screen_height)
         self.canv.config(highlightthickness=0)
 
         # create a scroll bar to view the form
@@ -662,8 +671,8 @@ class MainWindow:
         self.canv.grid(row=0, column=0, rowspan=10, 
                        sticky=tk.N + tk.S + tk.W + tk.E)
         self.im = Image.open("test.jpg")
-        self.im = self.im.resize((1500, 
-                                  int((1500/self.im.width)*self.im.height)),
+        self.im = self.im.resize((int(screen_width*(5/7)), 
+                                  int((int(screen_width*(5/7))/self.im.width)*self.im.height)),
                                  Image.ANTIALIAS)
         width, height = self.im.size
         self.canv.config(scrollregion=(0, 0, width, height))
@@ -692,14 +701,15 @@ class MainWindow:
         # betting screen
         self.bet = tk.Frame(self.window)
         self.bet.grid()
-        self.bet.grid_columnconfigure(0, minsize=1500)
-        self.bet.grid_columnconfigure(1, minsize=screen_width-1500)
+        self.bet.grid_columnconfigure(0, minsize=(screen_width*(5/7)))
+        self.bet.grid_columnconfigure(1, minsize=(screen_width*(1/7)))
+        self.bet.grid_columnconfigure(2, minsize=(screen_width*(1/7)))
 
         # set up for countdown timer
         self.t = self.Settings.time_limit * 60
         self.timer_label = tk.Label(self.bet, textvariable="", 
                                     font=(None, 25), justify='right')
-        self.timer_label.grid(row=0, column=1, padx=15, pady=10, 
+        self.timer_label.grid(row=0, column=2, padx=15, pady=10, 
                               sticky=tk.N + tk.E)
         self.countdown()
 
@@ -720,33 +730,37 @@ class MainWindow:
         # show race information on side
         tk.Label(self.bet, text="Purse Total: ${:.2f}".format(self.Settings.purse),\
                  font=(None,20))\
-                .grid(row=1, column=1, padx=10, pady=10, sticky= tk.W)
+                .grid(row=1, column=1, columnspan=2, padx=20, pady=10, sticky= tk.W)
         if self.Settings.betting_option == 'Fixed':
             tk.Label(self.bet, text="Betting Amount: ${:.2f}"\
                      .format(self.Settings.betting_amount), font=(None, 20))\
-                    .grid(row=2, column=1, padx=10, pady=10, sticky=tk.W)
+                    .grid(row=2, column=1, columnspan=2, padx=20, pady=10, sticky=tk.W)
         else:
             tk.Label(self.bet, text="Betting Amount: $", font=(None,20))\
-                     .grid(row=2, column=1, sticky=tk.W, padx=10, pady=10)
+                     .grid(row=2, column=1, columnspan=2, sticky=tk.W, padx=20, pady=10)
             self.new_bet = tk.Spinbox(self.bet, from_=2.00, to=self.Settings.purse, \
                                       width=5, format="%.2f", font=(None, 20),\
                                       state='readonly')
-            self.new_bet.grid(row=2, column=1, padx=(50,0))
+            self.new_bet.grid(row=2, column=2, columnspan=2, padx=20, sticky=tk.W)
         tk.Label(self.bet, text="Odds:\n {}".format(self.horses_odds),\
                  justify='left', font=(None, 20))\
-                .grid(row=3, column=1, padx=10, pady=10, sticky= tk.W)
-        tk.Label(self.bet, text="Aide's Suggestions: \n {}".format(self.horse_pwin),\
+                .grid(row=3, column=1, columnspan=2, padx=20, pady=10, sticky=tk.W)
+        tk.Label(self.bet, text="Possible Winnings:\n ${}".format(self.horses_winnings),\
+                 justify='left', font=(None,20))\
+                .grid(row=3, column=2, padx=20, sticky=tk.W)
+        tk.Label(self.bet, text="Aide's Suggestions: {}".format(self.horse_pwin),\
                  justify='left', font=(None, 20))\
-                .grid(row=4, column=1, padx=10, pady=10, sticky= tk.W)
+                .grid(row=4, column=1, columnspan=2, padx=20, pady=10, sticky= tk.W)
         tk.Label(self.bet, text="Horse you want to bet on:", font=(None, 20))\
-                .grid(row=5, column=1, padx=10, sticky= tk.W)
+                .grid(row=5, column=1, columnspan=2, padx=20, sticky= tk.W)
 
-        self.horse_select.grid(row=5, column=1, padx=15, pady=5, sticky=tk.W + tk.S)
+        self.horse_select.grid(row=5, column=1, columnspan=2, padx=35, pady=5, 
+                               sticky=tk.W + tk.S)
 
         # submit button
         tk.Button(self.bet, text='Submit', 
                   command=self.retrieving_data, font=(None, 20))\
-                 .grid(row=7, column=1, padx=10, pady=10)
+                 .grid(row=7, column=1, columnspan=2, padx=10, pady=10)
 
     def retrieving_data(self):
         # check how long the user took to submit
