@@ -13,6 +13,33 @@ def check():
     # quits if ctrl+q is pressed
     root.after(50, self.check)
 
+class HoverInfo(tk.Menu):
+    #creates a information box when hovering over a widget
+
+    def __init__(self, parent, text):
+        tk.Menu.__init__(self, parent, tearoff=0)
+        if not isinstance(text, str):
+            raise TypeError('Trying to initialise a Hover Menu with a non'
+                            ' string type: ' + text.__class__.__name__)
+        toktext = re.split('\n', text)
+        for t in toktext:
+            self.add_command(label=t, font=(None, 10))
+        self._displayed = False
+        self.master.bind("<Enter>",self.Display)
+        self.master.bind("<Leave>",self.Remove)
+
+    # shows information box
+    def Display(self, event):
+        if not self._displayed:
+            self._displayed = True
+            self.post(event.x_root, event.y_root)
+
+    # removes information box
+    def Remove(self, event):
+        if self._displayed:
+            self._displayed = False
+            self.unpost()
+
 class MainWindow:
     
     def __init__(self, master):
@@ -24,7 +51,8 @@ class MainWindow:
 
     class Settings:
         def save(self, filename):
-            pickle.dump({i: getattr(self,i) for i in self.__dict__ if not callable(getattr(self, i)) and not i.startswith('__')},\
+            pickle.dump({i: getattr(self,i) for i in self.__dict__ \
+                if not callable(getattr(self, i)) and not i.startswith('__')},\
                         open(os.path.join(self.path,filename + '_s.p'), 'wb'))
 
         def load(self, filename):
@@ -42,7 +70,8 @@ class MainWindow:
             self.apply.config(state='disabled')
         elif self.Settings.name == 'Edit Settings':
             self.edit_settings()
-        elif os.path.isfile(os.path.join(self.Settings.path, self.defaultmenu.get() + '_s.p')):
+        elif os.path.isfile(os.path.join(self.Settings.path, 
+                            self.defaultmenu.get() + '_s.p')):
             self.Settings.load(self.Settings,self.defaultmenu.get())
             self.set_all_defaults()
             self.Settings.name = self.defaultmenu.get()
@@ -83,7 +112,8 @@ class MainWindow:
         name = tk.Entry(save_window, width=10).grid(row=1,column=1)
         tk.Label(name, text='File name: ').grid(row=1,column=0)
         tk.Button(save_window, text='Save',command=save).grid(row=2,column=1)
-        tk.Button(save_window, text='Cancel',command=lambda : save_window.destroy()).grid(row=2,column=0)
+        tk.Button(save_window, text='Cancel',command=lambda : \
+                  save_window.destroy()).grid(row=2,column=0)
 
     def update_settings(self):
         self.Settings.load(self.Settings,self.Settings.name)
@@ -190,12 +220,15 @@ class MainWindow:
         self.settings.grid_columnconfigure(0, minsize=50)
         self.settings.grid_columnconfigure(5, minsize=50)
 
-        tk.Label(self.settings).grid(rowspan=22, columnspan=3, padx=20, pady=20, sticky=tk.N+tk.S+tk.W+tk.E)
+        tk.Label(self.settings).grid(rowspan=22, columnspan=3, padx=20, pady=20,
+                                     sticky=tk.N+tk.S+tk.W+tk.E)
 
         # drop-down of default settings
-        tk.Label(self.settings, text="Select settings: ").grid(row=0, column=1,
-                 padx=10, pady=5, sticky=tk.W)
-        defaults = [f.replace('_s.p', '') for f in os.listdir(self.Settings.path) if f.endswith('_s.p')]
+        select_settings = tk.Label(self.settings, text="Select settings: ")
+        select_settings.grid(row=0, column=1, padx=10, pady=5, sticky=tk.W)
+        HoverInfo(select_settings, "Select settings from previous stored saves")
+        defaults = [f.replace('_s.p', '') for f in os.listdir(self.Settings.path)\
+                    if f.endswith('_s.p')]
         defaults.append('None')
         defaults.append('Edit Settings')
         self.defaultmenu = tk.StringVar(self.settings)
@@ -204,17 +237,20 @@ class MainWindow:
                                           *defaults, command=self.load_settings)
         self.default_select.grid(row=0, column=2, pady=10, sticky = tk.W)
 
-        ttk.Separator(self.settings).grid(row=1, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
+        ttk.Separator(self.settings).grid(row=1, columnspan=6, sticky=tk.W + 
+                                          tk.E, pady=10, padx=10)
 
         # number of trials prompt
-        tk.Label(self.settings, text='Number of trials: ').grid(row=2,
-            column=1, padx=10, pady=5, sticky=tk.W)
+        num_trials = tk.Label(self.settings, text='Number of trials: ')
+        num_trials.grid(row=2, column=1, padx=10, pady=5, sticky=tk.W)
+        HoverInfo(num_trials, "Number of races a user will bet on")
 
         # number of trials text box
         self.trials = tk.Entry(self.settings, width=3)
         self.trials.grid(row=2, column=2, sticky=tk.W)
 
-        ttk.Separator(self.settings).grid(row=3, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
+        ttk.Separator(self.settings).grid(row=3, columnspan=6, sticky=tk.W + 
+                                          tk.E, pady=10, padx=10)
 
         # disabling and enabling accuracy bar
         def toggleslider():
@@ -239,8 +275,10 @@ class MainWindow:
         self.CA.grid(row=5, column=2, columnspan=2, sticky=tk.W)
 
         # accuracy prompt
-        tk.Label(self.settings, text='Accuracy: ').grid(row=4, column=1, 
-            padx=10, pady=5, sticky=tk.W)
+        accuracy = tk.Label(self.settings, text='Accuracy: ')
+        accuracy.grid(row=4, column=1, padx=10, pady=5, sticky=tk.W)
+        HoverInfo(accuracy, "Override classifer's accuracy - percentage \nof"\
+                  " when the system guesses correctly")
 
         # accuracy slider
         self.accuracy = tk.Scale(self.settings, orient=tk.HORIZONTAL, 
@@ -250,8 +288,9 @@ class MainWindow:
         ttk.Separator(self.settings).grid(row=6, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # what data to show prompt
-        tk.Label(self.settings, text='Display: ')\
-                .grid(row=7, column=1, padx=10, pady=5,sticky=tk.W)
+        display = tk.Label(self.settings, text='Display: ')
+        display.grid(row=7, column=1, padx=10, pady=5,sticky=tk.W)
+        HoverInfo(display, "Features to show on results screen")
         tk.Label(self.settings, text='Note: default is one horse', 
                  font=(None, 10))\
                 .grid(row=9, column=1, padx=10, pady=5, sticky=tk.S + tk.W)
@@ -286,8 +325,9 @@ class MainWindow:
         ttk.Separator(self.settings).grid(row=10, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # suggestion prompt
-        tk.Label(self.settings, text='Aide\'s suggestion: ')\
-                .grid(row=11, column=1, padx=10, pady=5, sticky=tk.W)
+        suggestion = tk.Label(self.settings, text='Aide\'s suggestion: ')
+        suggestion.grid(row=11, column=1, padx=10, pady=5, sticky=tk.W)
+        HoverInfo(suggestion, "When aide's suggestion \nis shown to user")
         self.option_suggestion=tk.StringVar()
 
         # change betting option
@@ -303,8 +343,9 @@ class MainWindow:
         ttk.Separator(self.settings).grid(row=12, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # betting amount prompt
-        tk.Label(self.settings, text='Betting Amount: ')\
-                .grid(row=13, column=1, padx=10, pady=5, sticky=tk.W)
+        betting = tk.Label(self.settings, text='Betting Amount: ')
+        betting.grid(row=13, column=1, padx=10, pady=5, sticky=tk.W)
+        HoverInfo(betting, "Amount a user can bet each race")
    
         # betting amount options
         # enabling and disenabling text box for fixed option
@@ -335,8 +376,9 @@ class MainWindow:
         ttk.Separator(self.settings).grid(row=14, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # purse size prompt
-        tk.Label(self.settings, text='Initial Purse Size: ')\
-                .grid(row=15, column=1, padx=10, pady=5, sticky=tk.W)
+        purse = tk.Label(self.settings, text='Initial Purse Size: ')
+        purse.grid(row=15, column=1, padx=10, pady=5, sticky=tk.W)
+        HoverInfo(purse, "Starting purse size for user")
 
         # purse size entry box
         tk.Label(self.settings, text='$')\
@@ -347,8 +389,9 @@ class MainWindow:
         ttk.Separator(self.settings).grid(row=16, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # number of horses prompt
-        tk.Label(self.settings, text='Number of Horses: ').grid(row=17, 
-            column=1, padx=10, pady=5, sticky=tk.W)
+        num_horses = tk.Label(self.settings, text='Number of Horses: ')
+        num_horses.grid(row=17, column=1, padx=10, pady=5, sticky=tk.W)
+        HoverInfo(num_horses, "Number of horses per race")
 
         # number of horses entry box
         self.horses = tk.Entry(self.settings, width=3)
@@ -359,8 +402,9 @@ class MainWindow:
         ttk.Separator(self.settings).grid(row=18, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # time limit per race prompt
-        tk.Label(self.settings, text='Time Limit per Race: ').grid(row=19,
-            column=1, padx=10, pady=5, sticky=tk.W)
+        time_limit = tk.Label(self.settings, text='Time Limit per Race: ')
+        time_limit.grid(row=19, column=1, padx=10, pady=5, sticky=tk.W)
+        HoverInfo(time_limit, "Time limit each each race")
 
         # time limit per race entry box
         self.time = tk.Entry(self.settings, width=3)
