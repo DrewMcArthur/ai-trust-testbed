@@ -165,11 +165,16 @@ def fixDate(row):
 
 def fixOdds(row):
     """ given the odds in the format "A-B", return a float equal to A/B. """
+
     if 'B_MLOdds' not in row:
         return row
+    if not isinstance(row['B_MLOdds'], str) or row['B_MLOdds'] == "":
+        return row
+
     o = row['B_MLOdds']
     a, b = [float(f) for f in o.split('-')]
     row['B_MLOdds'] = a / b
+
     return row
 
 def fixTime(row):

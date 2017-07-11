@@ -181,9 +181,9 @@ def generate_datadump(toFile=False):
     i = 0
     for ID, race in races.items():
         pairs = generate_pairs(race)
-        newlabels = [get_comparison(pair) for pair in pairs]
-        data += [format_pair(pair) for pair in pairs]
-        labels += newlabels
+        for pair in pairs:
+            data.append(format_pair(pair))
+            labels.append(get_comparison(pair))
 #       print("Parsed {0:.2f}% of races.".format(i / (len(races)/100)), 
 #             end='\r')
         i += 1
