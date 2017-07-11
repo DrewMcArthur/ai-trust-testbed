@@ -57,21 +57,23 @@ class MainWindow:
 
         def load(self, filename):
             if filename == 'None':
-                return
+                temp = pickle.load(open(os.path.join(self.path,os.listdir(self.path)[0])))
             temp = pickle.load(open(os.path.join(self.path,filename+'_s.p'), 'rb'))
             print(temp)
             for i in temp.keys():
                 setattr(self, i, temp[i]) 
 
     def load_settings(self, *event):
-        self.Settings.name = self.defaultmenu.get()
-        if self.Settings.name == 'None':
+        name = self.defaultmenu.get()
+        if name == 'None':
+            self.Settings.name = name
             self.revert.config(state='disabled')
             self.apply.config(state='disabled')
-        elif self.Settings.name == 'Edit Settings':
+        elif name == 'Edit Settings':
             self.edit_settings()
         elif os.path.isfile(os.path.join(self.Settings.path, 
-                            self.defaultmenu.get() + '_s.p')):
+                            name + '_s.p')):
+            self.Settings.name = name
             self.Settings.load(self.Settings,self.defaultmenu.get())
             self.set_all_defaults()
             self.Settings.name = self.defaultmenu.get()
@@ -95,7 +97,7 @@ class MainWindow:
         self.Settings.betting_amount = int(self.betting.get())
         self.Settings.num_of_horses = int(self.horses.get())
         self.Settings.time_limit = int(self.time.get())
-        self.option_suggestion = self.option_suggestion.get()
+        self.Settings.option_suggestion = self.option_suggestion.get()
         self.Settings.save(self.Settings, self.Settings.name)
 
 
@@ -103,12 +105,30 @@ class MainWindow:
         #make pop up window to enter name of settings
         def remove():
             f = lb.curselection()
-            os.remove(os.path.join(self.Settings.path, lb.get(int(f[0]))+'_s.p'))
+            filen= lb.get(int(f[0]))
+            os.remove(os.path.join(self.Settings.path, filen)+'_s.p')
             lb.delete(f[0])
-        
+            if self.Settings.name == filen:
+                if lb.size()>0:
+                    self.Settings.name = lb.get(0)
+                else:
+                    self.Settings.name = 'None'
+
+        def close():
+            self.Settings.load(self.Settings, self.Settings.name)
+            self.defaultmenu.set(self.Settings.name)       
+            self.defaultmenu.set(self.Settings.name)
+            self.default_select.destroy()
+            defaults = [f.replace('_s.p','') for f in os.listdir(self.Settings.path) if f.endswith('_s.p')]+['None', 'Edit Settings']
+            self.default_select = tk.OptionMenu(self.settings, self.defaultmenu, 
+                                          *defaults, command=self.load_settings)
+            self.default_select.grid(row=0, column=2, pady=10, sticky = tk.W)
+            save_window.destroy()
+
         def save_file():
             n = name.get()
             if n != '' and n not in os.listdir(self.Settings.path):
+                name.delete(0,'end')
                 name.grid_remove()
                 lb.insert('end', n)
                 lb.config(height=lb.size()+1)
@@ -135,30 +155,33 @@ class MainWindow:
                 print('error')  
 
         def add():
-            name.grid(row=0,column=1,sticky=tk.S)
+            name.grid(row=1,column=1,sticky=tk.S)
             add_button.grid_remove()
             cancel_button.grid_remove()
             remove_button.grid_remove()
-            done_button.grid(row=2,column=2)
+            done_button.grid(row=2,column=1,padx=(0,20),sticky=tk.E)
+
 
         save_window = tk.Tk()
+        save_window.wm_attributes("-topmost", 1)
+        save_window.geometry('315x290')
         save_window.grid()
         save_window.title('Edit Settings')
         save_window.bind('<Control-q>', quit)
         lb = tk.Listbox(save_window,width=30)
-        lb.grid(row=0,column=1,sticky=tk.N)
-        
+        lb.grid(row=1,column=1,sticky=tk.N,padx=20)
+        tk.Label(save_window,text='Files:').grid(row=0,column=1,sticky=tk.W,padx=20,pady=(10,0))
         for f in [f.replace('_s.p','') for f in os.listdir(self.Settings.path) if f.endswith('_s.p')]:
             print(f)
             lb.insert('end',f)
         lb.config(height=lb.size()+1)
-        cancel_button = tk.Button(save_window, text='Cancel',command=lambda : save_window.destroy())
-        cancel_button.grid(row=2,column=0)
+        cancel_button = tk.Button(save_window, text='Done',command=close)
+        cancel_button.grid(row=2,column=1,padx=(1,20),sticky=tk.E)
         add_button = tk.Button(save_window, text='Add',command=add)
-        add_button.grid(row=2,column=1)
+        add_button.grid(row=2,column=1,padx=(20,1),sticky=tk.W)
         remove_button = tk.Button(save_window, text='Remove',command=remove)
-        remove_button.grid(row=2,column=2)
-        done_button = tk.Button(save_window, text='Done',command=save_file)
+        remove_button.grid(row=2,column=1,padx=1)
+        done_button = tk.Button(save_window, text='Enter',command=save_file)
         name = tk.Entry(save_window,width=30)
 
     def update_settings(self):
@@ -216,7 +239,12 @@ class MainWindow:
         # time per race
         self.time.delete(0, 'end')
         self.time.insert(0, self.Settings.time_limit)
-
+        if self.Settings.betting_option == 'Fixed':
+            self.betting.configure(state='normal')
+            self.betting.update()
+        else:
+            self.betting.configure(state='disabled')
+            self.betting.update()
 
         if self.checkaccuracy.get() == '1':
             self.accuracy.config(state='disabled')
@@ -228,6 +256,7 @@ class MainWindow:
             
             #make the bar normal colored
             self.accuracy.config(foreground='black')
+        self.option_suggestion.set(self.Settings.option_suggestion)
 
     def s_welcome(self):
         self.welcome = tk.Frame(self.master)
@@ -247,12 +276,8 @@ class MainWindow:
                  .grid(row=1, column=1, padx=30, pady=10, sticky=tk.N + tk.W)
 
     def s_settings(self):
-        self.Settings.displaytime = 1
-        self.Settings.displaybeyer = 1
-        self.Settings.displayorder = 1
-        self.Settings.trials = 1
         self.Settings.path = os.path.join('ui','settings')
-        self.Settings.name = 'test'
+        self.Settings.name = 'test1'
         self.Settings.load(self.Settings,self.Settings.name)
         root.destroy()
         # create settings window
@@ -275,6 +300,7 @@ class MainWindow:
         defaults.append('None')
         defaults.append('Edit Settings')
         self.defaultmenu = tk.StringVar(self.settings)
+       
         self.defaultmenu.set(self.Settings.name)
         self.default_select = tk.OptionMenu(self.settings, self.defaultmenu, 
                                           *defaults, command=self.load_settings)
