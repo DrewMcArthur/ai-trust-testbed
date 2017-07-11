@@ -153,9 +153,6 @@ class MainWindow:
         else:
             self.C3.select()
 
-        # suggestion options
-        self.option_suggestion.set(self.Settings.betting_option)
-
         # betting options
         self.option_betting.set(self.Settings.betting_option)
         
@@ -414,7 +411,7 @@ class MainWindow:
         # time limit per race prompt
         time_limit = tk.Label(self.settings, text='Time Limit per Race: ')
         time_limit.grid(row=19, column=1, padx=10, pady=5, sticky=tk.W)
-        HoverInfo(time_limit, "Time limit each each race")
+        HoverInfo(time_limit, "Time limit for each race")
 
         # time limit per race entry box
         self.time = tk.Entry(self.settings, width=3)
@@ -498,8 +495,6 @@ class MainWindow:
                         error.destroy()).pack(padx = 10, pady = 10)
                 return True
         return False
-
-
 
     def instructions(self):
         # screen that displays the instructions
@@ -734,7 +729,10 @@ class MainWindow:
         self.t -= 1
         mins, secs = divmod(self.t, 60)
         self.timer_label['text'] = '{:02d}:{:02d}'.format(mins, secs)
-        self.bet.after(1000, self.countdown)
+        if hasattr(self, 'bet'):
+            self.bet.after(1000, self.countdown)
+        else:
+            self.s_suggest.after(1000, self.countdown)
         if self.t == -1:
             self.retrieving_data()
 
@@ -803,26 +801,105 @@ class MainWindow:
         tk.Label(self.bet, justify='left', font=(None,20),
                  text="Possible Winnings:\n ${}".format(self.horses_winnings))\
                 .grid(row=3, column=2, padx=20, sticky=tk.W)
-        tk.Label(self.bet, justify='left', font=(None, 20),
-                 text="Aide's Suggestions: {}".format(self.horse_pwin))\
-                .grid(row=4, column=1, columnspan=2, padx=20, pady=10, 
-                      sticky=tk.W)
-        tk.Label(self.bet, text="Horse you want to bet on:", font=(None, 20))\
-                .grid(row=5, column=1, columnspan=2, padx=20, sticky= tk.W)
 
-        self.horse_select.grid(row=5, column=1, columnspan=2, padx=35, pady=5, 
-                               sticky=tk.W + tk.S)
+        if self.option_suggestion.get() == "Bet":
+            tk.Label(self.bet, justify='left', font=(None, 20),
+                     text="Aide's Suggestion: {}".format(self.horse_pwin))\
+                    .grid(row=4, column=1, columnspan=2, padx=20, pady=10, 
+                          sticky=tk.W)
+            tk.Label(self.bet, text="Horse you want to bet on:", 
+                     font=(None, 20))\
+                    .grid(row=5, column=1, columnspan=2, padx=20, sticky=tk.W)
 
-        # submit button
-        tk.Button(self.bet, text='Submit', 
-                  command=self.retrieving_data, font=(None, 20))\
-                 .grid(row=7, column=1, columnspan=2, padx=10, pady=10)
+            self.horse_select.grid(row=5, column=1, columnspan=2, 
+                                   padx=35, pady=5, sticky=tk.W + tk.S)
+
+            # submit button
+            tk.Button(self.bet, text='Submit', 
+                      command=self.retrieving_data, font=(None, 20))\
+                     .grid(row=7, column=1, columnspan=2, padx=10, pady=10)
+        else:
+            tk.Label(self.bet, text="Horse you want to bet on:", 
+                     font=(None, 20))\
+                    .grid(row=4, column=1, columnspan=2, padx=20, sticky=tk.W)
+
+            self.horse_select.grid(row=4, column=1, columnspan=2, 
+                                   padx=35, pady=5, sticky=tk.W + tk.S)
+
+            # submit button
+            tk.Button(self.bet, text='Submit', 
+                      command=self.s_suggestion, font=(None, 20))\
+                     .grid(row=6, column=1, columnspan=2, padx=10, pady=10)
+
+    def s_suggestion(self):
+        # check if a horse is selected
+        if self.horsemenu.get() == "Select horse":
+            error = tk.Tk()
+            error.title("ERROR")
+            error.bind('<Control-q>', quit)
+            tk.Label(error, text="Please select a horse.", 
+                     font=(None, 20))\
+                    .pack(padx=10, pady=10)
+            tk.Button(error, text="OK", command=lambda: error.destroy())\
+                     .pack(padx=10, pady=10)
+
+        else:
+            # check how long the user took to submit
+            print(self.timer_label['text'])
+
+            if self.Settings.betting_option == 'Variable':
+                self.Settings.betting_amount = float(self.new_bet.get())
+
+            # delete old frame
+            self.bet.destroy()
+
+            # create new frame for suggestion
+            self.s_suggest = tk.Frame(self.window)
+            self.s_suggest.grid()
+            for i in range(4):
+                if i == 0 or i == 3:
+                    self.s_suggest.grid_columnconfigure(
+                        i, minsize=int(screen_width/3))
+                else:
+                    self.s_suggest.grid_columnconfigure(
+                         i, minsize=int(((1/3)*screen_width)/2))
+            for i in range(5):
+                if i == 0 or i == 4:
+                    self.s_suggest.grid_rowconfigure(
+                        i, minsize=int(screen_height/4))
+                else:
+                    self.s_suggest.grid_rowconfigure(
+                         i, minsize=int(((1/2)*screen_height)/3))
+
+            self.t = 120
+            self.timer_label = tk.Label(self.s_suggest, textvariable="", 
+                                        font=(None, 25), justify='right')
+            self.timer_label.grid(row=0, column=3, padx=15, pady=10, 
+                                  sticky=tk.N + tk.E)
+            self.countdown()
+
+            tk.Label(self.s_suggest, text="Aide's suggestion: {}\n\nYour choice: {}"
+                     "\nWould you like to change your choice?"\
+                     .format(self.horse_pwin, self.horsemenu.get()),\
+                     font=(None, 30)).grid(row=1, column=1, columnspan=2)
+            self.horse_select = tk.OptionMenu(self.s_suggest, self.horsemenu, 
+                                          *self.horse_names)
+            self.horse_select.config(font=(None, 20))
+            self.horse_select.grid(row=2, column=1, columnspan=2)
+            tk.Button(self.s_suggest, text="Submit", command=self.retrieving_data,
+                     font=(None, 30)).grid(row=3, column=1, columnspan=2)
 
     def retrieving_data(self):
-        # check how long the user took to submit
-        print(self.timer_label['text'])
 
-        if self.Settings.betting_option == 'Variable':
+        # check if suggestion screen needs to be deleted
+        if hasattr(self, 's_suggest'):
+            self.s_suggest.destroy()
+            self.t = self.Settings.time_limit * 60
+        else:
+            # check how long the user took to submit
+            print(self.timer_label['text'])
+
+            if self.Settings.betting_option == 'Variable':
                 self.Settings.betting_amount = float(self.new_bet.get())
 
         # check if a horse is selected
