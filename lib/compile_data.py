@@ -38,36 +38,41 @@ def writeLabelInfo(f, folder, LABELWRITER):
     raceIDInfo = {"R_RCTrack": track, "R_RCDate": date, "R_RCRace": race}
 
     # generate pathnames for the desired files
-    beyerpath = folder + track + date + "_" + race + "_lb.csv"
-    timepath = folder + track + date + "_" + race + "_lt.csv"
+    beyerpath = folder + track + date + "_" + race + "_LB.CSV"
+    timepath = folder + track + date + "_" + race + "_LT.CSV"
+
+    # removing beyer figures for now
+    #if not os.path.isfile(beyerpath) or not os.path.isfile(timepath):
+    if not os.path.isfile(timepath):
+        return
 
     # open files for reading and create respective csv.DictReader objects
-    with open(beyerpath, newline='') as beyerfile, \
-         open(timepath, newline='') as timefile:
-        beyerreader = csv.DictReader(beyerfile, dialect='unix')
+    with open(timepath, newline='') as timefile:
+    #    open(beyerpath, newline='') as beyerfile:
+    #   beyerreader = csv.DictReader(beyerfile, dialect='unix')
         timereader = csv.DictReader(timefile, dialect='unix')
 
         # add the data in the beyer label file to the list, 
         # and simultaneously add ID and rank info for the race to the row
         rank = 1
-        for b in beyerreader:
+        for t in timereader:
             # add race ID and horse's rank to entry
             entry = raceIDInfo.copy()
             entry.update({"L_Position": rank, 
-                          "B_Horse": b["Horse"],          
-                          "L_BSF": b["Chart"]
+                          "B_Horse": t["Horse"],          
+                          "L_Time": t["Fin"]
                          })
 
             # read one line from timereader and add time to entry
-            t = next(timereader)
-            if t['Horse'] != entry['B_Horse'] or not entry['B_Horse']:
-                print("Error! reading entries from two label files and ")
-                print("       the horse names don't match! You screwed up!")
-                print("Race: " + str(raceIDInfo))
-                print("time's horse: " + t['Horse'])
-                print("beyer's horse: " + entry['Horse'])
+            #t = next(timereader)
+            #if t['Horse'] != entry['B_Horse'] or not entry['B_Horse']:
+            #   print("Error! reading entries from two label files and ")
+            #   print("       the horse names don't match! You screwed up!")
+            #   print("Race: " + str(raceIDInfo))
+            #   print("time's horse: " + t['Horse'])
+            #   print("beyer's horse: " + entry['Horse'])
 
-            entry.update({"L_Time": t["Fin"]})
+            #entry.update({"L_Time": t["Fin"]})
 
             entry = formatData(entry)
 
@@ -116,7 +121,7 @@ def create_labels():
                         # if the file contains label information, write to file
                         # only looking for one of two label files, to avoid dups
                         # the other filename is generated in the function below.
-                        if f.endswith('lt.csv'):
+                        if f.endswith('LT.CSV'):
                             writeLabelInfo(f, folder, LABELWRITER)
                             if NDATA >= MAXFLAG:
                                 return
@@ -158,6 +163,15 @@ def fixDate(row):
         row['R_RCDate'] = r
     return row
 
+def fixOdds(row):
+    """ given the odds in the format "A-B", return a float equal to A/B. """
+    if 'B_MLOdds' not in row:
+        return row
+    o = row['B_MLOdds']
+    a, b = [float(f) for f in o.split('-')]
+    row['B_MLOdds'] = a / b
+    return row
+
 def fixTime(row):
     """ given a row, fix the time in the row """
     if row is None:
@@ -173,16 +187,16 @@ def fixTime(row):
         m = re.match("([0-9]*):([0-9]*).([0-9]*)", t)
         mins = int(m.group(1)) if m.group(1) != "" else 0
         secs = int(m.group(2))
-        huns = int(m.group(3))
+        ms = int(m.group(3)) * 10
 
         secs += mins * 60
-        huns += secs * 100
+        ms += secs * 1000
 
-        row['L_Time'] = huns
+        row['L_Time'] = ms
     # if t != 0 or None, but there are no colons, it's a single number 
-    #   representing minutes. so, we multiply by 6000 min/hundredths of a second
+    #   representing minutes. so, we multiply by 60000 min/ms
     elif t:
-        row['L_Time'] = int(t) * 6000
+        row['L_Time'] = int(t) * 60000
     return row
 
 def fixLabelName(row):
@@ -200,6 +214,9 @@ def fixLabelName(row):
         n = n[:n.index("-")]
     if '?' in n:
         n = n.replace('?', '')
+    for c in n:
+        if ord(c) > 127:
+            n = n.replace(c, "")
     row['B_Horse'] = n
     return row
 
@@ -225,7 +242,9 @@ def formatData(row):
     if "L_Time" in row:
         row = fixTime(row)
         row = fixLabelName(row)
-        row = checkBSF(row)
+        #row = checkBSF(row)
+    else:
+        row = fixOdds(row)
     return row
 
 def get_race_info(row):
