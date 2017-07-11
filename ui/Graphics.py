@@ -299,7 +299,9 @@ class MainWindow:
         self.Settings.path = os.path.join('ui','settings')
         self.Settings.name = 'test1'
         self.Settings.load(self.Settings,self.Settings.name)
-        root.destroy()
+
+        root.withdraw()
+
         # create settings window
         self.settings = tk.Tk()
         self.settings.title('Settings')
@@ -384,7 +386,8 @@ class MainWindow:
             resolution=10, showvalue=0, tickinterval=10, length=300)
         self.accuracy.grid(row=4, column=2, columnspan=2, padx=10, sticky = tk.W)
 
-        ttk.Separator(self.settings).grid(row=6, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
+        ttk.Separator(self.settings).grid(row=6, columnspan=6, sticky=tk.W + \
+                                          tk.E, pady=10, padx=10)
 
         # what data to show prompt
         display = tk.Label(self.settings, text='Display: ')
@@ -421,7 +424,8 @@ class MainWindow:
         #tk.Label(self.settings, bg='red').grid(row=4, column=1, sticky=tk.W+tk.E)
         #tk.Label(self.settings, bg='blue').grid(row=4, column=2, sticky=tk.W+tk.E)
 
-        ttk.Separator(self.settings).grid(row=10, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
+        ttk.Separator(self.settings).grid(row=10, columnspan=6, sticky=tk.W + \
+                                          tk.E, pady=10, padx=10)
 
         # suggestion prompt
         suggestion = tk.Label(self.settings, text='Aide\'s suggestion: ')
@@ -439,7 +443,8 @@ class MainWindow:
                        text='After bet screen', value='After')\
                       .grid(row=11, column=3, sticky=tk.W)
 
-        ttk.Separator(self.settings).grid(row=12, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
+        ttk.Separator(self.settings).grid(row=12, columnspan=6, sticky=tk.W + \
+                                          tk.E, pady=10, padx=10)
 
         # betting amount prompt
         betting = tk.Label(self.settings, text='Betting Amount: ')
@@ -460,7 +465,8 @@ class MainWindow:
         self.betting.grid(row=13, column=3, padx=(0,10), sticky=tk.E)
         self.option_betting=tk.StringVar()
         
-        ttk.Separator(self.settings).grid(row=16, columnspan=3, sticky=tk.W + tk.E, padx=15)
+        ttk.Separator(self.settings).grid(row=16, columnspan=3, sticky=tk.W + \
+                                          tk.E, padx=15)
 
         # variable betting option
         tk.Radiobutton(self.settings, variable=self.option_betting, 
@@ -472,7 +478,8 @@ class MainWindow:
                        text='Fixed', value='Fixed', command=enableEntry)\
                       .grid(row=13, column=3, sticky=tk.W)
 
-        ttk.Separator(self.settings).grid(row=14, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
+        ttk.Separator(self.settings).grid(row=14, columnspan=6, sticky=tk.W + \
+                                          tk.E, pady=10, padx=10)
 
         # purse size prompt
         purse = tk.Label(self.settings, text='Initial Purse Size: ')
@@ -485,7 +492,8 @@ class MainWindow:
         self.purse=tk.Entry(self.settings, width=5)
         self.purse.grid(row=15, column=2, sticky=tk.W, padx=15)
 
-        ttk.Separator(self.settings).grid(row=16, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
+        ttk.Separator(self.settings).grid(row=16, columnspan=6, sticky=tk.W + \
+                                          tk.E, pady=10, padx=10)
 
         # number of horses prompt
         num_horses = tk.Label(self.settings, text='Number of Horses: ')
@@ -498,7 +506,8 @@ class MainWindow:
         tk.Label(self.settings, text='horses').grid(row=17, column=2,
                  padx=40, sticky=tk.W)
 
-        ttk.Separator(self.settings).grid(row=18, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
+        ttk.Separator(self.settings).grid(row=18, columnspan=6, sticky=tk.W + \
+                                          tk.E, pady=10, padx=10)
 
         # time limit per race prompt
         time_limit = tk.Label(self.settings, text='Time Limit per Race: ')
@@ -511,7 +520,8 @@ class MainWindow:
         tk.Label(self.settings, text='minutes').grid(row=19, column=2, 
                 padx=40, sticky=tk.W)
 
-        ttk.Separator(self.settings).grid(row=20, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
+        ttk.Separator(self.settings).grid(row=20, columnspan=6, sticky=tk.W + \
+                                          tk.E, pady=10, padx=10)
 
         # submit button
         self.revert = tk.Button(self.settings, text='Revert', command=self.update_settings)
@@ -521,13 +531,12 @@ class MainWindow:
         self.apply = tk.Button(self.settings, text='Apply', command=self.save_setttings)
         self.apply.grid(row=21, column=2, padx=10, pady=10, sticky=tk.E)
 
-        tk.Button(self.settings, text='Continue', command=self.instructions).grid \
+        tk.Button(self.settings, text='Continue', command=lambda: \
+                  [root.deiconify(),self.settings.destroy()]).grid \
                  (row=21, column=3, padx=10, pady=10, sticky=tk.E)
 
         # set all of the defaults
         self.set_all_defaults()
-
-
 
     def errorcheck(self):
         # checks to make sure the settings were correct
@@ -546,7 +555,7 @@ class MainWindow:
                 error.bind('<Control-q>', quit)
                 tk.Label(error, text = "Fill in all settings.", 
                     font = (None, 20)).pack(padx = 10, pady = 10)
-                tk.Button(error, text='OK', command=lambda : 
+                tk.Button(error, text='OK', command=lambda: 
                     error.destroy()).pack(padx=10, pady=10)
                 return True
            
@@ -555,7 +564,6 @@ class MainWindow:
                 try:
                     float(element)
                 except:
-                    
                     #display the error message
                     error = tk.Tk()
                     error.title('ERROR')
@@ -572,7 +580,6 @@ class MainWindow:
                 try:
                     int(element)
                 except:
-
                     #display the error message
                     error = tk.Tk()
                     error.title('ERROR')
@@ -587,27 +594,10 @@ class MainWindow:
     def instructions(self):
         # screen that displays the instructions
         # clearing screen and making a new instructions window
-        if hasattr(self, 'settings'):
-            self.settings.destroy()
-        else:
-            self.Settings.path = os.path.join('ui','settings')
-            self.Settings.load(self.Settings,'test1')
-            root.destroy()
-
-        # checking values
-        print("Trials: ", self.Settings.trials, 
-            "\nAccuracy: ", self.Settings.accuracy,
-            "\nCheck Accuracy: ", self.Settings.checkaccuracy,
-            "\nTime: ", self.Settings.displaytime,
-            "\nBeyer: ", self.Settings.displaybeyer,
-            "\nOrder: ", self.Settings.displayorder,
-            "\nBetting Style: ", self.Settings.betting_option,
-            "\nBetting Amount: ", self.Settings.betting_amount,
-            "\nPurse: ", self.Settings.purse,
-            "\nNumber of Horses: ", self.Settings.num_of_horses,
-            "\nTime Limit per Race: ", self.Settings.time_limit)
-
-
+        self.Settings.path = os.path.join('ui','settings')
+        self.Settings.load(self.Settings,'test1')
+        
+        root.destroy()
 
         self.window = tk.Tk()
         self.window.title('Horse Racing')
