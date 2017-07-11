@@ -57,22 +57,26 @@ class MainWindow:
 
         def load(self, filename):
             if filename == 'None':
-                return
-            temp = pickle.load(open(os.path.join(self.path,filename+'_s.p'), 
-                                    'rb'))
+
+                files = [f for f in  os.listdir(self.path) if f.endswith('_s.p')]
+                filename = files[0].replace('_s.p','')
+            temp = pickle.load(open(os.path.join(self.path,filename+'_s.p'), 'rb'))
+
             print(temp)
             for i in temp.keys():
                 setattr(self, i, temp[i]) 
 
     def load_settings(self, *event):
-        self.Settings.name = self.defaultmenu.get()
-        if self.Settings.name == 'None':
+        name = self.defaultmenu.get()
+        if name == 'None':
+            self.Settings.name = name
             self.revert.config(state='disabled')
             self.apply.config(state='disabled')
-        elif self.Settings.name == 'Edit Settings':
+        elif name == 'Edit Settings':
             self.edit_settings()
         elif os.path.isfile(os.path.join(self.Settings.path, 
-                            self.defaultmenu.get() + '_s.p')):
+                            name + '_s.p')):
+            self.Settings.name = name
             self.Settings.load(self.Settings,self.defaultmenu.get())
             self.set_all_defaults()
             self.Settings.name = self.defaultmenu.get()
@@ -82,9 +86,8 @@ class MainWindow:
 
     def save_setttings(self):
         # saving data from settings
-        print('hi')
         #if not self.errorcheck():
-        print(self.Settings.__dict__)
+        print(self.Settings.name)
         self.Settings.trials = int(self.trials.get())
         self.Settings.accuracy = int(self.accuracy.get())
         self.Settings.checkaccuracy = int(self.checkaccuracy.get())
@@ -97,24 +100,112 @@ class MainWindow:
         self.Settings.betting_amount = int(self.betting.get())
         self.Settings.num_of_horses = int(self.horses.get())
         self.Settings.time_limit = int(self.time.get())
+        self.Settings.option_suggestion = self.option_suggestion.get()
         self.Settings.save(self.Settings, self.Settings.name)
 
+    def check_settings(self):
+        # check if settings have changed
+        print(self.Settings.name)
+        return self.Settings.trials == int(self.trials.get()) and \
+            self.Settings.accuracy == int(self.accuracy.get()) and \
+            self.Settings.checkaccuracy == int(self.checkaccuracy.get()) and \
+            self.Settings.displaytime == int(self.displaytime.get()) and \
+            self.Settings.displaybeyer == int(self.displaybeyer.get()) and \
+            self.Settings.displayorder == int(self.displayorder.get()) and \
+            self.Settings.purse == float(self.purse.get()) and \
+            self.Settings.purse == round(self.Settings.purse, 2) and \
+            self.Settings.betting_option == self.option_betting.get() and \
+            self.Settings.betting_amount == int(self.betting.get()) and \
+            self.Settings.num_of_horses == int(self.horses.get()) and \
+            self.Settings.time_limit == int(self.time.get()) and \
+            self.Settings.option_suggestion == self.option_suggestion.get()
 
     def edit_settings(self):
         #make pop up window to enter name of settings
-        def save():
-            self.Settings.name = name.get()
-            self.update_settings()
+        def remove():
+            f = lb.curselection()
+            filen= lb.get(int(f[0]))
+            os.remove(os.path.join(self.Settings.path, filen)+'_s.p')
+            lb.delete(f[0])
+            if self.Settings.name == filen:
+                if lb.size()>0:
+                    self.Settings.name = lb.get(0)
+                else:
+                    self.Settings.name = 'None'
+
+        def close():
+            self.Settings.load(self.Settings, self.Settings.name)
+            self.defaultmenu.set(self.Settings.name)       
+            self.defaultmenu.set(self.Settings.name)
+            self.default_select.destroy()
+            defaults = [f.replace('_s.p','') for f in os.listdir(self.Settings.path) \
+                if f.endswith('_s.p')]+['None', 'Edit Settings']
+            self.default_select = tk.OptionMenu(self.settings, self.defaultmenu, 
+                                          *defaults, command=self.load_settings)
+            self.default_select.grid(row=0, column=2, pady=10, sticky = tk.W)
             save_window.destroy()
+
+        def save_file():
+            n = name.get()
+            if n != '' and n not in os.listdir(self.Settings.path):
+                name.delete(0,'end')
+                name.grid_remove()
+                lb.insert('end', n)
+                lb.config(height=lb.size()+1)
+                self.Settings.name = n
+                self.Settings.trials = 3
+                self.Settings.accuracy = 50
+                self.Settings.checkaccuracy = 0
+                self.Settings.displaytime = 0
+                self.Settings.displaybeyer = 0
+                self.Settings.displayorder = 0
+                self.Settings.purse = 25
+                self.Settings.purse = round(self.Settings.purse, 2)
+                self.Settings.betting_option = 'Fixed'
+                self.Settings.betting_amount = 2
+                self.Settings.num_of_horses = 3
+                self.Settings.time_limit = 15
+                self.Settings.option_suggestion = 'After'
+                self.Settings.save(self.Settings, self.Settings.name)
+                done_button.grid_remove()
+                add_button.grid()
+                remove_button.grid()
+                cancel_button.grid()
+            else:
+                print('error')  
+
+        def add():
+            name.grid(row=1,column=1,sticky=tk.S)
+            add_button.grid_remove()
+            cancel_button.grid_remove()
+            remove_button.grid_remove()
+            done_button.grid(row=2,column=1,padx=(0,20),sticky=tk.E)
+
+
         save_window = tk.Tk()
+        save_window.wm_attributes("-topmost", 1)
+        save_window.geometry('315x290')
         save_window.grid()
-        save_window.title('Save As')
+        save_window.title('Edit Settings')
         save_window.bind('<Control-q>', quit)
-        name = tk.Entry(save_window, width=10).grid(row=1,column=1)
-        tk.Label(name, text='File name: ').grid(row=1,column=0)
-        tk.Button(save_window, text='Save',command=save).grid(row=2,column=1)
-        tk.Button(save_window, text='Cancel',
-                  command=lambda : save_window.destroy()).grid(row=2,column=0)
+
+        lb = tk.Listbox(save_window,width=30)
+        lb.grid(row=1,column=1,sticky=tk.N,padx=20)
+        tk.Label(save_window,text='Files:').grid(
+                                row=0,column=1,sticky=tk.W,padx=20,pady=(10,0))
+        for f in [f.replace('_s.p','') for f in os.listdir(self.Settings.path) \
+                                                if f.endswith('_s.p')]:
+            print(f)
+            lb.insert('end',f)
+        lb.config(height=lb.size()+1)
+        cancel_button = tk.Button(save_window, text='Done',command=close)
+        cancel_button.grid(row=2,column=1,padx=(1,20),sticky=tk.E)
+        add_button = tk.Button(save_window, text='Add',command=add)
+        add_button.grid(row=2,column=1,padx=(20,1),sticky=tk.W)
+        remove_button = tk.Button(save_window, text='Remove',command=remove)
+        remove_button.grid(row=2,column=1,padx=1)
+        done_button = tk.Button(save_window, text='Enter',command=save_file)
+        name = tk.Entry(save_window,width=30)
 
     def update_settings(self):
         self.Settings.load(self.Settings,self.Settings.name)
@@ -171,7 +262,12 @@ class MainWindow:
         # time per race
         self.time.delete(0, 'end')
         self.time.insert(0, self.Settings.time_limit)
-
+        if self.Settings.betting_option == 'Fixed':
+            self.betting.configure(state='normal')
+            self.betting.update()
+        else:
+            self.betting.configure(state='disabled')
+            self.betting.update()
 
         if self.checkaccuracy.get() == '1':
             self.accuracy.config(state='disabled')
@@ -183,6 +279,7 @@ class MainWindow:
             
             #make the bar normal colored
             self.accuracy.config(foreground='black')
+        self.option_suggestion.set(self.Settings.option_suggestion)
 
     def s_welcome(self):
         self.welcome = tk.Frame(self.master)
@@ -203,12 +300,8 @@ class MainWindow:
                  .grid(row=1, column=1, padx=30, pady=10, sticky=tk.N + tk.W)
 
     def s_settings(self):
-        self.Settings.displaytime = 1
-        self.Settings.displaybeyer = 1
-        self.Settings.displayorder = 1
-        self.Settings.trials = 1
         self.Settings.path = os.path.join('ui','settings')
-        self.Settings.name = 'test'
+        self.Settings.name = 'test1'
         self.Settings.load(self.Settings,self.Settings.name)
         root.destroy()
         # create settings window
@@ -223,6 +316,14 @@ class MainWindow:
                                      sticky=tk.N+tk.S+tk.W+tk.E)
 
         # drop-down of default settings
+        def toggleapplyrevert():
+            if self.check_settings():
+                self.revert.config(state='disabled')
+                self.apply.config(state='disabled')
+            else:
+                self.revert.config(state='normal')
+                self.apply.config(state='normal')
+
         select_settings = tk.Label(self.settings, text="Select settings: ")
         select_settings.grid(row=0, column=1, padx=10, pady=5, sticky=tk.W)
         HoverInfo(select_settings, "Select settings from previous stored saves")
@@ -231,6 +332,7 @@ class MainWindow:
         defaults.append('None')
         defaults.append('Edit Settings')
         self.defaultmenu = tk.StringVar(self.settings)
+       
         self.defaultmenu.set(self.Settings.name)
         self.default_select = tk.OptionMenu(self.settings, self.defaultmenu, 
                                           *defaults, command=self.load_settings)
@@ -245,11 +347,13 @@ class MainWindow:
         HoverInfo(num_trials, "Number of races a user will bet on")
 
         # number of trials text box
-        self.trials = tk.Entry(self.settings, width=3)
+        self.trials = tk.Entry(self.settings, width=3, validate="focusout",
+                                            validatecommand=self.check_settings)
         self.trials.grid(row=2, column=2, sticky=tk.W)
 
         ttk.Separator(self.settings).grid(row=3, columnspan=6, 
                                           sticky=tk.W + tk.E, pady=10, padx=10)
+
 
         # disabling and enabling accuracy bar
         def toggleslider():
@@ -423,8 +527,10 @@ class MainWindow:
            .grid(row=20, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # submit button
+
         self.revert = tk.Button(self.settings, text='Revert', 
                                 command=self.update_settings)
+
         self.revert.grid(row=21, column=1, padx=10, pady=10, sticky=tk.E)
 
         self.apply = tk.Button(self.settings, text='Apply', 
@@ -443,6 +549,7 @@ class MainWindow:
         # checks to make sure the settings were correct
         
         elementlist = [self.trials.get(), self.accuracy.get(), 
+
                        self.checkaccuracy.get(), self.displaytime.get(), 
                        self.displaybeyer.get(), self.displayorder.get(), 
                        self.purse.get(), self.betting.get(), self.horses.get(), 
@@ -503,10 +610,9 @@ class MainWindow:
             self.settings.destroy()
         else:
             self.Settings.path = os.path.join('ui','settings')
-            f = open(os.path.join(self.Settings.path, 'start_load.p'),'rb')
-            self.Settings.name = pickle.load(f)
-            f.close()
-            self.Settings.load(self.Settings,self.Settings.name)
+
+            self.Settings.load(self.Settings,'test1')
+
             root.destroy()
 
         # checking values
@@ -802,13 +908,11 @@ class MainWindow:
                  text="Possible Winnings:\n ${}".format(self.horses_winnings))\
                 .grid(row=3, column=2, padx=20, sticky=tk.W)
 
-        if self.option_suggestion.get() == "Bet":
-            tk.Label(self.bet, justify='left', font=(None, 20),
-                     text="Aide's Suggestion: {}".format(self.horse_pwin))\
-                    .grid(row=4, column=1, columnspan=2, padx=20, pady=10, 
-                          sticky=tk.W)
-            tk.Label(self.bet, text="Horse you want to bet on:", 
-                     font=(None, 20))\
+        if self.Settings.option_suggestion == "Bet":
+            tk.Label(self.bet, text="Aide's Suggestion: {}".format(self.horse_pwin),\
+                     justify='left', font=(None, 20))\
+                    .grid(row=4, column=1, columnspan=2, padx=20, pady=10, sticky= tk.W)
+            tk.Label(self.bet, text="Horse you want to bet on:", font=(None, 20))\
                     .grid(row=5, column=1, columnspan=2, padx=20, sticky=tk.W)
 
             self.horse_select.grid(row=5, column=1, columnspan=2, 
