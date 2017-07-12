@@ -47,6 +47,10 @@ def get_comparison(horses):
         boolean value == (horseA['position'] < horseB['position'])
         i.e. true if horseA finished before horseB                  """
     horseA, horseB = horses
+    if 'L_Position' not in horseA:
+        return 0
+    if 'L_Position' not in horseB:
+        return 1
     return 1 if horseA['L_Position'] < horseB['L_Position'] else 0
 
 def get_label(horse):
@@ -164,12 +168,13 @@ def test_model(model, x_test, y_test):
 def generate_datadump(toFile=False):
     """ loads data from file, formats it, and if toFile is set to true, 
         dumps the data itself to file.  The data is then returned. """
+    print("  Generating data...")
     # read the data and labels from file
     config = yaml.safe_load(open("./config.yml"))
     races = read_data(config['final_data_filename'])
     races = read_output("LABELS." + config['final_data_filename'], races)
 
-    #print("Read data from file.")
+    print("x Read data from file.")
 
     # races now equals a dictionary, where each item is a race, 
     #       with key equal to the race's ID (given by get_raceID).  
@@ -182,13 +187,16 @@ def generate_datadump(toFile=False):
     for ID, race in races.items():
         pairs = generate_pairs(race)
         for pair in pairs:
-            data.append(format_pair(pair))
+            a, b = pair
             labels.append(get_comparison(pair))
+            data.append(format_pair(pair))
 #       print("Parsed {0:.2f}% of races.".format(i / (len(races)/100)), 
 #             end='\r')
         i += 1
 
     data = [format_data(d) for d in data]
+    
+    print("x Formatted Data.")
 
     # columns indices that will be removed, based on relevance to output
     todelete = [0, 1, 2, 3, 4, 6, 7, 13, 26, 28, 29, 34, 38, 
@@ -219,26 +227,36 @@ def generate_datadump(toFile=False):
     np.delete(a, todelete)
 
     data = a.tolist()
+
+    print("x Deleted extraneous columns.")
+
     if toFile:
         dump((data, labels), 'classifier_data.pickle')
     return (data, labels)
 
 def main():
     # load the data from file if it exists, or re-generate it. 
-    data, labels = (load("classifier_data.pickle") 
-                    if os.path.isfile('classifier_data.pickle')
-                    else generate_datadump(True))
+#   data, labels = (load("classifier_data.pickle") 
+#                   if os.path.isfile('classifier_data.pickle')
+#                   else generate_datadump(True))
+    data, labels = generate_datadump()
+
+    print("x Loaded data. ")
 
     # split the data
     training, test = split_data(data, labels, .9)
     x_train, y_train = training
     x_test, y_test = test
 
+    print("x Split the data.")
+
     # train the model
     model = get_model(x_train, y_train)
+    print("x Trained the model.")
 
     # test the model
     test_model(model, x_test, y_test)
+    print("x Tested the model.")
 
 if __name__ == "__main__":
     main()
