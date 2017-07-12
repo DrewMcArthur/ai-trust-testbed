@@ -640,13 +640,11 @@ class MainWindow:
         if self.Settings.betting_option == "Fixed":
             tk.Label(self.instructions, text=welcomeTextFixed\
                      .format(self.Settings.betting_amount, 
-                     self.Settings.time_limit),\
-                     font=(None, int(screen_height*.02)))\
+                     self.Settings.time_limit), font=(None, 30))\
                     .grid(row=1, column=1)
         else:
             tk.Label(self.instructions, text=welcomeTextChange\
-                     .format(self.Settings.time_limit),\
-                     font=(None, int(screen_height*.02)))\
+                     .format(self.Settings.time_limit), font=(None, 30))\
                     .grid(row=1, column=1)
 
         tk.Button(self.instructions, text='Start', 
@@ -819,6 +817,15 @@ class MainWindow:
         else:
             self.s_suggest.after(1000, self.countdown)
         if self.t == -1:
+            if self.horsemenu.get() == "Select horse":
+                error = tk.Tk()
+                error.title("ERROR")
+                error.bind('<Control-q>', quit)
+                tk.Label(error, text="No horse was selected.\n Betting amount is"
+                         " still deducted", font=(None, 20))\
+                        .pack(padx=10, pady=10)
+                tk.Button(error, text="OK", command=lambda: error.destroy())\
+                         .pack(padx=10, pady=10)
             self.retrieving_data()
 
     def betting_screen(self):
@@ -979,7 +986,7 @@ class MainWindow:
                 self.Settings.betting_amount = float(self.new_bet.get())
 
         # check if a horse is selected
-        if self.horsemenu.get() == "Select horse":
+        if self.horsemenu.get() == "Select horse" and self.t != -1:
             error = tk.Tk()
             error.title("ERROR")
             error.bind('<Control-q>', quit)
@@ -1199,7 +1206,7 @@ class MainWindow:
         tk.Button(self.exit, text='Save', font=(None, 15), 
                   command=self.checksave)\
                  .grid(row=4, column=1, columnspan=2, 
-                       padx=((screen_width/3), 50), pady=10)
+                       padx=((screen_width/3), 100), pady=10)
 
     def checksave(self):
         # check the ID number
