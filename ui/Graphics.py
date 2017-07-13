@@ -984,11 +984,11 @@ class MainWindow:
             if self.Settings.displayorder: 
                 lines.insert(1, "Predicted placing:")
 
-                header = " "*18 # 18 spaces
+                header = " "*25 # 18 spaces
                 if self.Settings.displaytime:
                     header += "(T)"
                 if self.Settings.displaybeyer:
-                    header += "(B)"
+                    header += "          (B)"
                 lines.insert(2, header)
 
                 pRank = len(self.horses_racing)
@@ -996,9 +996,9 @@ class MainWindow:
                                     key=lambda h:h['P_Time'], reverse=True):
                     hStr = "{}: {:>18}".format(pRank, horse['B_Horse'])
                     if self.Settings.displaytime:
-                       hStr += " {}".format(horse['P_Time'])
+                       hStr += "      {}".format(horse['P_Time'])
                     if self.Settings.displaybeyer:
-                       hStr += " {:.2f}".format(horse['P_BSF'])
+                       hStr += "      {:.2f}".format(horse['P_BSF'])
                     lines.insert(3, hStr)
                     pRank -= 1
             else:
