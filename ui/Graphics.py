@@ -307,6 +307,7 @@ class MainWindow:
         self.settings = tk.Tk()
         self.settings.title('Settings')
         self.settings.bind('<Control-q>', sys.exit)
+        self.settings.resizable(width=False, height=False)
         self.settings.grid()
         self.settings.grid_columnconfigure(0, minsize=50)
         self.settings.grid_columnconfigure(5, minsize=50)
@@ -641,16 +642,15 @@ class MainWindow:
         if self.Settings.betting_option == "Fixed":
             tk.Label(self.instructions, text=welcomeTextFixed\
                      .format(self.Settings.betting_amount, 
-                     self.Settings.time_limit))\
-                    .grid(row=1, column=1)
+                     self.Settings.time_limit), font=(None, 20))\
+                    .grid(row=1, column=0, columnspan=3)
         else:
             tk.Label(self.instructions, text=welcomeTextChange\
-                     .format(self.Settings.time_limit))\
-                    .grid(row=1, column=1)
+                     .format(self.Settings.time_limit), font=(None, 20))\
+                    .grid(row=1, column=0, columnspan=3)
 
         tk.Button(self.instructions, text='Start', 
-                  font=(None, int(screen_width*.01)),
-                  command=self.betting_screen)\
+                  font=(None, 20), command=self.betting_screen)\
                  .grid(row=1, column=1, sticky=tk.S)
 
     def generateforms(self):
@@ -849,7 +849,7 @@ class MainWindow:
         # set up for countdown timer
         self.t = self.Settings.time_limit * 60
         self.timer_label = tk.Label(self.bet, textvariable="", 
-                                    font=(None, 25), justify='right')
+                                    font=(None, 20), justify='right')
         self.timer_label.grid(row=0, column=2, padx=15, pady=10, 
                               sticky=tk.N + tk.E)
         self.countdown()
@@ -866,53 +866,53 @@ class MainWindow:
         self.horsemenu.set("Select horse")
         self.horse_select = tk.OptionMenu(self.bet, self.horsemenu, 
                                           *self.horse_names)
-        self.horse_select.config(font=(None, 20))
+        self.horse_select.config(font=(None, 15))
 
         # show race information on side
         tk.Label(self.bet, text="Purse Total: ${:.2f}".format(self.Settings.purse),\
-                 font=(None,20))\
+                 font=(None, 15))\
                 .grid(row=1, column=1, columnspan=2, padx=20, pady=10, sticky= tk.W)
         if self.Settings.betting_option == 'Fixed':
             tk.Label(self.bet, text="Betting Amount: ${:.2f}"\
-                     .format(self.Settings.betting_amount), font=(None, 20))\
+                     .format(self.Settings.betting_amount), font=(None, 15))\
                     .grid(row=2, column=1, columnspan=2, padx=20, pady=10, sticky=tk.W)
         else:
-            tk.Label(self.bet, text="Betting Amount: $", font=(None,20))\
+            tk.Label(self.bet, text="Betting Amount: $", font=(None, 15))\
                      .grid(row=2, column=1, columnspan=2, sticky=tk.W, padx=20, pady=10)
             self.new_bet = tk.Spinbox(self.bet, from_=2.00, to=self.Settings.purse, \
-                                      width=5, format="%.2f", font=(None, 20),\
+                                      width=5, format="%.2f", font=(None, 15),\
                                       state='readonly')
             self.new_bet.grid(row=2, column=2, columnspan=2, padx=20, sticky=tk.W)
         tk.Label(self.bet, text="Odds:\n {}".format(self.horses_odds),\
-                 justify='left', font=(None, 20))\
+                 justify='left', font=(None, 15))\
                 .grid(row=3, column=1, columnspan=2, padx=20, pady=10, sticky=tk.W)
         tk.Label(self.bet, text="Possible Winnings:\n ${}".format(self.horses_winnings),\
-                 justify='left', font=(None,20))\
+                 justify='left', font=(None,15))\
                 .grid(row=3, column=2, padx=20, sticky=tk.W)
         if self.Settings.option_suggestion == "Bet":
             tk.Label(self.bet, text="AIde's Suggestion: {}".format(self.horse_pwin),\
-                     justify='left', font=(None, 20))\
+                     justify='left', font=(None, 15))\
                     .grid(row=4, column=1, columnspan=2, padx=20, pady=10, sticky= tk.W)
-            tk.Label(self.bet, text="Horse you want to bet on:", font=(None, 20))\
-                    .grid(row=5, column=1, columnspan=2, padx=20, sticky=tk.W)
+            tk.Label(self.bet, text="Horse you want to bet on:", font=(None, 15))\
+                    .grid(row=5, column=1, columnspan=2, padx=20, pady=10, sticky=tk.W)
 
-            self.horse_select.grid(row=5, column=1, columnspan=2, padx=35, pady=5, 
-                                   sticky=tk.W + tk.S)
+            self.horse_select.grid(row=6, column=1, columnspan=2, padx=35, pady=5, 
+                                   sticky=tk.W + tk.N)
 
             # submit button
             tk.Button(self.bet, text='Submit', 
-                      command=self.retrieving_data, font=(None, 20))\
+                      command=self.retrieving_data, font=(None, 15))\
                      .grid(row=7, column=1, columnspan=2, padx=10, pady=10)
         else:
-            tk.Label(self.bet, text="Horse you want to bet on:", font=(None, 20))\
+            tk.Label(self.bet, text="Horse you want to bet on:", font=(None, 15))\
                     .grid(row=4, column=1, columnspan=2, padx=20, sticky=tk.W)
 
-            self.horse_select.grid(row=4, column=1, columnspan=2, padx=35, pady=5, 
-                                   sticky=tk.W + tk.S)
+            self.horse_select.grid(row=5, column=1, columnspan=2, padx=35, pady=5, 
+                                   sticky=tk.W + tk.N)
 
             # submit button
             tk.Button(self.bet, text='Submit', 
-                      command=self.s_suggestion, font=(None, 20))\
+                      command=self.s_suggestion, font=(None, 15))\
                      .grid(row=6, column=1, columnspan=2, padx=10, pady=10)
 
     def s_suggestion(self):
@@ -957,7 +957,7 @@ class MainWindow:
 
             self.t = 120
             self.timer_label = tk.Label(self.s_suggest, textvariable="", 
-                                        font=(None, 25), justify='right')
+                                        font=(None, 20), justify='right')
             self.timer_label.grid(row=0, column=3, padx=15, pady=10, 
                                   sticky=tk.N + tk.E)
             self.countdown()
@@ -965,13 +965,13 @@ class MainWindow:
             tk.Label(self.s_suggest, text="AIde's suggestion: {}\n\nYour choice: {}"
                      "\nWould you like to change your choice?"\
                      .format(self.horse_pwin, self.horsemenu.get()),\
-                     font=(None, 30)).grid(row=1, column=1, columnspan=2)
+                     font=(None, 20)).grid(row=1, column=1, columnspan=2)
             self.horse_select = tk.OptionMenu(self.s_suggest, self.horsemenu, 
                                           *self.horse_names)
             self.horse_select.config(font=(None, 20))
             self.horse_select.grid(row=2, column=1, columnspan=2)
             tk.Button(self.s_suggest, text="Submit", command=self.retrieving_data,
-                     font=(None, 30)).grid(row=3, column=1, columnspan=2)
+                     font=(None, 20)).grid(row=3, column=1, columnspan=2)
 
     def retrieving_data(self):
 
@@ -1085,66 +1085,66 @@ class MainWindow:
         # different spacing for different settings
         if self.Settings.displaytime and not self.Settings.displaybeyer or\
            not self.Settings.displaytime and self.Settings.displaybeyer:
-            tk.Label(self.result, text='Results', font=(None, 35))\
-                    .grid(row=1, column=2, pady=(50,20))
+            tk.Label(self.result, text='Results', font=(None, 25))\
+                    .grid(row=1, column=2, pady=(50, 20))
             if self.Settings.displaytime == 1:
-                tk.Label(self.result, text='Time', font=(None, 30))\
+                tk.Label(self.result, text='Time', font=(None, 20))\
                         .grid(row=2, column=3, sticky=tk.W)
             else:
-                tk.Label(self.result, text='Beyer', font=(None, 30))\
+                tk.Label(self.result, text='Beyer', font=(None, 20))\
                         .grid(row=2, column=3, sticky=tk.W)
         elif self.Settings.displaytime and self.Settings.displaybeyer:
-            tk.Label(self.result, text='Results', font=(None, 35))\
+            tk.Label(self.result, text='Results', font=(None, 25))\
                     .grid(row=1, column=2, columnspan=2, sticky=tk.W + tk.E)
-            tk.Label(self.result, text='Time', font=(None, 30))\
+            tk.Label(self.result, text='Time', font=(None, 20))\
                     .grid(row=2, column=3, sticky=tk.W)
-            tk.Label(self.result, text='Beyer', font=(None, 30))\
+            tk.Label(self.result, text='Beyer', font=(None, 20))\
                     .grid(row=2, column=4, sticky=tk.W)
         else:
-            tk.Label(self.result, text='Results', font=(None, 35))\
-                    .grid(row=1, column=1, columnspan=2, pady=(50,20))
+            tk.Label(self.result, text='Results', font=(None, 25))\
+                    .grid(row=1, column=1, columnspan=2, pady=(50, 20))
 
-        tk.Label(self.result, text='Actual result:', font=(None, 25), justify='left')\
+        tk.Label(self.result, text='Actual result:', font=(None, 20), justify='left')\
                 .grid(row=3, column=1, pady=10, 
                       sticky=tk.N + tk.W)
         # if show order is checked, show times
         if self.Settings.displayorder:
-            tk.Label(self.result, text='{}'.format(self.horse_winl), font=(None,25),
+            tk.Label(self.result, text='{}'.format(self.horse_winl), font=(None,20),
                 fg='red', justify='left').grid(row=3, column=2, pady=10, sticky=tk.N + tk.W)
         else:
-            tk.Label(self.result, text='{}'.format(self.horse_win), font=(None,25),
+            tk.Label(self.result, text='{}'.format(self.horse_win), font=(None,20),
                     fg='red', justify='left').grid(row=3, column=2, pady=10, sticky=tk.N + tk.W)
         if self.Settings.displaytime:
-            tk.Label(self.result, text='{}'.format(self.horse_time), font=(None,25),
+            tk.Label(self.result, text='{}'.format(self.horse_time), font=(None,20),
                     fg='red', justify='left').grid(row=3, column=3, pady=10, sticky=tk.N + tk.W)
         # if show beyer is checked, show beyer figures
         if self.Settings.displaybeyer:
             if not self.Settings.displaytime:
-                tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
+                tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,20),
                         fg='red', justify='left').grid(row=3, column=3, pady=10, sticky=tk.N + tk.W)
             else:
-                tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
+                tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,20),
                     fg='red', justify='left').grid(row=3, column=4, pady=10, sticky=tk.N + tk.W)
-        tk.Label(self.result, text="AIde's suggestion: ", font=(None, 25))\
+        tk.Label(self.result, text="AIde's suggestion: ", font=(None, 20))\
                 .grid(row=4, column=1, pady=10, sticky=tk.N + tk.W)
-        tk.Label(self.result, text='{}'.format(self.horse_pwin), font=(None,25), fg='red')\
+        tk.Label(self.result, text='{}'.format(self.horse_pwin), font=(None,20), fg='red')\
                 .grid(row=4, column=2, pady=10, sticky=tk.N + tk.W)
         tk.Label(self.result, 
-                 text='Your choice: ', font=(None, 25))\
+                 text='Your choice: ', font=(None, 20))\
                 .grid(row=5, column=1, pady=10, sticky = tk.N + tk.W)
         if self.horsemenu.get() == 'Select horse':
-            tk.Label(self.result, text='None', font=(None, 25), fg='red')\
+            tk.Label(self.result, text='None', font=(None, 20), fg='red')\
                 .grid(row=5, column=2, pady=10, sticky=tk.N + tk.W)
         else:
-            tk.Label(self.result, text='{}'.format(self.horsemenu.get()), font=(None, 25), fg='red')\
+            tk.Label(self.result, text='{}'.format(self.horsemenu.get()), font=(None, 20), fg='red')\
                     .grid(row=5, column=2, pady=10, sticky=tk.N + tk.W)
 
         # update the users purse
         self.update_purse()
-        tk.Label(self.result, text='Current Purse: ', font=(None, 25))\
+        tk.Label(self.result, text='Current Purse: ', font=(None, 20))\
                 .grid(row=6, column=1, pady=10, sticky=tk.N + tk.W)
         tk.Label(self.result, text='${:.2f}'.format(self.Settings.purse),
-                 font=(None, 25), fg='red').grid(row=6, column=2, pady=10, sticky=tk.N + tk.W)
+                 font=(None, 20), fg='red').grid(row=6, column=2, pady=10, sticky=tk.N + tk.W)
 
         # check if there are more races to display 'next race' or 'exit'
         # different spacing for different settings
@@ -1189,29 +1189,23 @@ class MainWindow:
             self.result.destroy()
         self.exit = tk.Frame(self.window)
         self.exit.grid()
-        self.exit.grid_rowconfigure(0, weight=1)
-        self.exit.grid_columnconfigure(0, weight=1)
-
-        # instructions for what to do next
-        tk.Label(self.exit, text='Thank you!\nPlease notify the researcher.',
-                 font=(None, 50))\
-                .grid(row=0, column=1, columnspan=2, 
-                      padx=((screen_width/3), 100), 
-                      pady=((screen_height/3), 10))
+        for i in range(3):
+            self.exit.grid_rowconfigure(i, minsize=int(screen_height/3))
+            self.exit.grid_columnconfigure(i, minsize=int(screen_width/3))
 
         # instructions for inserting ID number
-        tk.Label(self.exit, text='Please enter ID number in order to save.')\
-                .grid(row=2, column=1, columnspan=2, 
-                      padx=((screen_width/3), 100))
+        tk.Label(self.exit, text='Thank you!\nPlease notify the researcher.'
+                 '\nPlease enter the ID number in order to save.',
+                 font=(None, 30))\
+                .grid(row=1, column=0, columnspan=3)
+
         self.save=tk.Entry(self.exit, width=30)
-        self.save.grid(row=3, column=1, columnspan=2, 
-                       padx=((screen_width/3), 100))
+        self.save.grid(row=1, column=0, columnspan=3, sticky=tk.S)
 
         # save button
         tk.Button(self.exit, text='Save', font=(None, 15), 
                   command=self.checksave)\
-                 .grid(row=4, column=1, columnspan=2, 
-                       padx=((screen_width/3), 100), pady=10)
+                 .grid(row=2, column=0, columnspan=3, pady=15, sticky=tk.N)
 
     def checksave(self):
         # check the ID number
