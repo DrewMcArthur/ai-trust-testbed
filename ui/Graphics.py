@@ -537,7 +537,7 @@ class MainWindow:
         self.apply.grid(row=21, column=2, padx=10, pady=10, sticky=tk.E)
 
         tk.Button(self.settings, text='Continue', 
-                  command=lambda: [root.deiconify(), self.settings.destroy()])
+                  command=lambda: [root.deiconify(), self.settings.destroy()])\
                  .grid(row=21, column=3, padx=10, pady=10, sticky=tk.E)
 
         # set all of the defaults
@@ -969,10 +969,49 @@ class MainWindow:
                                   sticky=tk.N + tk.E)
             self.countdown()
 
-            tk.Label(self.s_suggest, text="AIde's suggestion: {}\n\nYour choice: {}"
-                     "\nWould you like to change your choice?"\
-                     .format(self.horse_pwin, self.horsemenu.get()),\
-                     font=(None, 30)).grid(row=1, column=1, columnspan=2)
+            suggestion_text = "AIde's suggestion: {}\n\nYour choice: {}\
+                              \nWould you like to change your choice?"\
+                             .format(self.horse_pwin, self.horsemenu.get())
+            lines = suggestion_text.split("\n")
+
+            # manipulating the suggestion text as a list of lines, 
+            # depending on what the settings say to display. 
+            # having a list was easier to manage, afterwards 
+            # the list is joined back into a big string
+
+            # Time
+            if self.Settings.displaytime: 
+                lines.insert(1, "With a time of {}.".format("Time of horse"))
+                if self.Settings.displaybeyer:
+                    # change last character of previous line to a comma
+                    lines[1][-1] = ","
+                    lines.insert(2, "and a BSF of {}.".format("Beyer of horse"))
+            else:
+                # Beyer
+                if self.Settings.displaybeyer: 
+                    lines.insert(1, "With a BSF of {}.".format("Beyer of horse"))
+            # Complete Order
+            if self.Settings.displayorder: 
+                lines.insert(1, "Predicted placing:")
+                header = " "*max([len(h) for h in self.horses_racing])
+                if self.Settings.displaytime:
+                    header += "(T)"
+                if self.Settings.displaybeyer:
+                    header += "(B)"
+                lines.insert(2, header)
+                for horse in sorted(self.horses_racing, 
+                                    key=lambda h:h['P_Time'], reverse=True):
+                    hStr = "{}: {}".format(h['P_Rank'], h['B_Horse'])
+                    if self.Settings.displaytime:
+                       hStr += " {}".format(h['P_Time'])
+                    if self.Settings.displaybeyer:
+                       hStr += " {}".format(h['P_BSF'])
+                    lines.insert(3, hStr)
+
+            suggestion_text = "\n".join(lines)
+
+            tk.Label(self.s_suggest, font=(None, 30), text=suggestion_text)\
+                    .grid(row=1, column=1, columnspan=2)
             self.horse_select = tk.OptionMenu(self.s_suggest, self.horsemenu, 
                                           *self.horse_names)
             self.horse_select.config(font=(None, 20))
