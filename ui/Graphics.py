@@ -969,9 +969,10 @@ class MainWindow:
                                   sticky=tk.N + tk.E)
             self.countdown()
 
-            suggestion_text = "AIde's suggestion: {}\n\nYour choice: {}\
-                              \nWould you like to change your choice?"\
-                             .format(self.horse_pwin, self.horsemenu.get())
+            suggestion_text = "AIde's suggestion: {}\n\nYour choice: {}" +\
+                              "\nWould you like to change your choice?"
+            suggestion_text = suggestion_text.format(self.horse_pwin, 
+                                                     self.horsemenu.get())
             lines = suggestion_text.split("\n")
 
             # manipulating the suggestion text as a list of lines, 
@@ -979,34 +980,43 @@ class MainWindow:
             # having a list was easier to manage, afterwards 
             # the list is joined back into a big string
 
-            # Time
-            if self.Settings.displaytime: 
-                lines.insert(1, "With a time of {}.".format("Time of horse"))
-                if self.Settings.displaybeyer:
-                    # change last character of previous line to a comma
-                    lines[1][-1] = ","
-                    lines.insert(2, "and a BSF of {}.".format("Beyer of horse"))
-            else:
-                # Beyer
-                if self.Settings.displaybeyer: 
-                    lines.insert(1, "With a BSF of {}.".format("Beyer of horse"))
             # Complete Order
             if self.Settings.displayorder: 
                 lines.insert(1, "Predicted placing:")
-                header = " "*max([len(h) for h in self.horses_racing])
+
+                header = " "*18 # 18 spaces
                 if self.Settings.displaytime:
                     header += "(T)"
                 if self.Settings.displaybeyer:
                     header += "(B)"
                 lines.insert(2, header)
+
+                pRank = len(self.horses_racing)
                 for horse in sorted(self.horses_racing, 
                                     key=lambda h:h['P_Time'], reverse=True):
-                    hStr = "{}: {}".format(h['P_Rank'], h['B_Horse'])
+                    hStr = "{}: {:>18}".format(pRank, horse['B_Horse'])
                     if self.Settings.displaytime:
-                       hStr += " {}".format(h['P_Time'])
+                       hStr += " {}".format(horse['P_Time'])
                     if self.Settings.displaybeyer:
-                       hStr += " {}".format(h['P_BSF'])
+                       hStr += " {:.2f}".format(horse['P_BSF'])
                     lines.insert(3, hStr)
+                    pRank -= 1
+            else:
+                self.horses_racing.sort(key=lambda h:h['P_Time'])
+                # Time
+                if self.Settings.displaytime: 
+                    lines.insert(1, "With a time of {}."
+                                   .format(self.horses_racing[0]['P_Time']))
+                    if self.Settings.displaybeyer:
+                        # change last character of previous line to a comma
+                        lines[1] = lines[1][:-1] + ","
+                        lines.insert(2, "and a BSF of {}."
+                                   .format(self.horses_racing[0]['P_BSF']))
+                else:
+                    # Beyer
+                    if self.Settings.displaybeyer: 
+                        lines.insert(1, "With a BSF of {}."
+                                   .format(self.horses_racing[0]['P_BSF']))
 
             suggestion_text = "\n".join(lines)
 
