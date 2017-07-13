@@ -9,8 +9,8 @@ from itertools import permutations
 from collections import OrderedDict
 from joblib import dump, load
 from sklearn.metrics import accuracy_score, explained_variance_score, r2_score
-from sklearn.preprocessing import (LabelEncoder, OneHotEncoder, Imputer, 
-                                   MinMaxScaler)
+from sklearn.preprocessing import (LabelEncoder, OneHotEncoder, Imputer, MinMaxScaler)
+from sklearn.feature_extraction import FeatureHasher
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import make_pipeline
 
@@ -137,13 +137,14 @@ def get_model(Xs, Ys):
     # create necessary sklearn objects
     cat_feats = []
     #enc = OneHotEncoder(categorical_features=cat_feats)
+    fh = FeatureHasher()
     enc = OneHotEncoder()
     imp = Imputer(missing_values='', strategy='mean', axis=0)
     scaler = MinMaxScaler()
     nn = MLPClassifier()
 
     # construct a pipe from previous objects
-    model = make_pipeline(enc, imp, scaler, nn)
+    model = make_pipeline(fh, enc, imp, scaler, nn)
 
     # train the model
     model.fit(Xs, Ys)
@@ -164,6 +165,32 @@ def test_model(model, x_test, y_test):
     print("=== pickle dump of model ===")
     print(pickle.dumps(model))
     print("=== end pickle dump ===")
+
+def write_compiled(data, labels):
+    """ given a dictionary and a list, write each to file.
+        dictionary -> csv, list to file in rows. """
+    f = open("compiled_labels.txt", 'w')
+    for l in labels:
+        f.write(l)
+    w = csv.DictWriter(open("compiled_data.csv", 'w'), dialect='unix', fieldnames=data.keys())
+    w.writeheader()
+    for d in data:
+        w.writerow(d)
+
+def load_compiled():
+    """ read formatted data from file.  UNTESTED"""
+    f = open("compiled_labels.txt")
+    labels = []
+    for line in f:
+        labels.append(int(line))
+
+    r = csv.DictReader(open("compiled_data.csv"), dialect='unix')
+    data = []
+    for row in r:
+        data.append(row)
+
+    return (data, labels)
+    
 
 def generate_datadump(toFile=False):
     """ loads data from file, formats it, and if toFile is set to true, 
@@ -223,23 +250,31 @@ def generate_datadump(toFile=False):
                 1363, 1364, 8, 9, 20, 23, 29, 55, 143, 147, 168, 183, 262, 263, 264, 265, 266, 267, 273, 363, 453, 543, 633, 723, 813, 903, 993, 995, 999, 1003, 1007, 1083, 
                 1173, 1290, 1378, 1382, 1403, 1418, 1497, 1498, 1499, 1500, 1501, 1502, 1508, 1598, 1688, 1778, 1868, 1958, 2048, 2138, 2228, 2230, 2234, 2238, 2242, 2318, 2408]
 
-    a = np.array(data)
-    np.delete(a, todelete)
+#   a = np.array(data)
+#   np.delete(a, todelete)
 
-    data = a.tolist()
+#   data = a.tolist()
+    newdata = []
+    for d in data:
+        newd = []
+        for i in range(len(d)):
+            if i not in todelete:
+                newd.append(d[i])
+        newdata.append(newd)
+    data = newdata
 
     print("x Deleted extraneous columns.")
 
     if toFile:
-        dump((data, labels), 'classifier_data.pickle')
+        write_compiled(data, labels)
+        #dump((data, labels), 'classifier_data.pickle')
     return (data, labels)
 
 def main():
     # load the data from file if it exists, or re-generate it. 
-#   data, labels = (load("classifier_data.pickle") 
-#                   if os.path.isfile('classifier_data.pickle')
-#                   else generate_datadump(True))
-    data, labels = generate_datadump()
+    data, labels = (load_compiled()
+                    if os.path.isfile('compiled_data.csv')
+                    else generate_datadump(True))
 
     print("x Loaded data. ")
 
