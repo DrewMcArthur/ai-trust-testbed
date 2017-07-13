@@ -4,6 +4,7 @@ import time
 import re
 import random
 import os
+import sys
 from PIL import Image, ImageTk
 from lib.load_ai import get_positions
 import pickle
@@ -185,7 +186,7 @@ class MainWindow:
         save_window.geometry('315x290')
         save_window.grid()
         save_window.title('Edit Settings')
-        save_window.bind('<Control-q>', quit)
+        save_window.bind('<Control-q>', sys.exit)
         lb = tk.Listbox(save_window,width=30)
         lb.grid(row=1,column=1,sticky=tk.N,padx=20)
         tk.Label(save_window,text='Files:').grid(
@@ -305,7 +306,7 @@ class MainWindow:
         # create settings window
         self.settings = tk.Tk()
         self.settings.title('Settings')
-        self.settings.bind('<Control-q>', quit)
+        self.settings.bind('<Control-q>', sys.exit)
         self.settings.grid()
         self.settings.grid_columnconfigure(0, minsize=50)
         self.settings.grid_columnconfigure(5, minsize=50)
@@ -428,9 +429,9 @@ class MainWindow:
                                           tk.E, pady=10, padx=10)
 
         # suggestion prompt
-        suggestion = tk.Label(self.settings, text='Aide\'s suggestion: ')
+        suggestion = tk.Label(self.settings, text='AIde\'s suggestion: ')
         suggestion.grid(row=11, column=1, padx=10, pady=5, sticky=tk.W)
-        HoverInfo(suggestion, "When aide's suggestion \nis shown to user")
+        HoverInfo(suggestion, "When AIde's suggestion \nis shown to user")
         self.option_suggestion=tk.StringVar()
 
         # change betting option
@@ -552,7 +553,7 @@ class MainWindow:
                 #display the error essage
                 error = tk.Tk()
                 error.title('ERROR')
-                error.bind('<Control-q>', quit)
+                error.bind('<Control-q>', sys.exit)
                 tk.Label(error, text = "Fill in all settings.", 
                     font = (None, 20)).pack(padx = 10, pady = 10)
                 tk.Button(error, text='OK', command=lambda: 
@@ -567,7 +568,7 @@ class MainWindow:
                     #display the error message
                     error = tk.Tk()
                     error.title('ERROR')
-                    error.bind('<Control-q>', quit)
+                    error.bind('<Control-q>', sys.exit)
                     tk.Label(error, text="Please correct format for purse.", 
                         font = (None, 20)).pack(padx = 10, pady = 10)
                     tk.Button(error, text='OK', command=lambda : 
@@ -583,7 +584,7 @@ class MainWindow:
                     #display the error message
                     error = tk.Tk()
                     error.title('ERROR')
-                    error.bind('<Control-q>', quit)
+                    error.bind('<Control-q>', sys.exit)
                     tk.Label(error, text="Please enter integers.", 
                         font = (None, 20)).pack(padx = 10, pady = 10)
                     tk.Button(error, text='OK', command=lambda : 
@@ -601,7 +602,7 @@ class MainWindow:
 
         self.window = tk.Tk()
         self.window.title('Horse Racing')
-        self.window.bind('<Control-q>', quit)
+        self.window.bind('<Control-q>', sys.exit)
 
         # fit to screen
         global screen_width
@@ -640,11 +641,11 @@ class MainWindow:
         if self.Settings.betting_option == "Fixed":
             tk.Label(self.instructions, text=welcomeTextFixed\
                      .format(self.Settings.betting_amount, 
-                     self.Settings.time_limit), font=(None, 30))\
+                     self.Settings.time_limit))\
                     .grid(row=1, column=1)
         else:
             tk.Label(self.instructions, text=welcomeTextChange\
-                     .format(self.Settings.time_limit), font=(None, 30))\
+                     .format(self.Settings.time_limit))\
                     .grid(row=1, column=1)
 
         tk.Button(self.instructions, text='Start', 
@@ -820,7 +821,7 @@ class MainWindow:
             if self.horsemenu.get() == "Select horse":
                 error = tk.Tk()
                 error.title("ERROR")
-                error.bind('<Control-q>', quit)
+                error.bind('<Control-q>', sys.exit)
                 tk.Label(error, text="No horse was selected.\n Betting amount is"
                          " still deducted", font=(None, 20))\
                         .pack(padx=10, pady=10)
@@ -889,7 +890,7 @@ class MainWindow:
                  justify='left', font=(None,20))\
                 .grid(row=3, column=2, padx=20, sticky=tk.W)
         if self.Settings.option_suggestion == "Bet":
-            tk.Label(self.bet, text="Aide's Suggestion: {}".format(self.horse_pwin),\
+            tk.Label(self.bet, text="AIde's Suggestion: {}".format(self.horse_pwin),\
                      justify='left', font=(None, 20))\
                     .grid(row=4, column=1, columnspan=2, padx=20, pady=10, sticky= tk.W)
             tk.Label(self.bet, text="Horse you want to bet on:", font=(None, 20))\
@@ -919,7 +920,7 @@ class MainWindow:
         if self.horsemenu.get() == "Select horse":
             error = tk.Tk()
             error.title("ERROR")
-            error.bind('<Control-q>', quit)
+            error.bind('<Control-q>', sys.exit)
             tk.Label(error, text="Please select a horse.", 
                      font=(None, 20))\
                     .pack(padx=10, pady=10)
@@ -961,7 +962,7 @@ class MainWindow:
                                   sticky=tk.N + tk.E)
             self.countdown()
 
-            tk.Label(self.s_suggest, text="Aide's suggestion: {}\n\nYour choice: {}"
+            tk.Label(self.s_suggest, text="AIde's suggestion: {}\n\nYour choice: {}"
                      "\nWould you like to change your choice?"\
                      .format(self.horse_pwin, self.horsemenu.get()),\
                      font=(None, 30)).grid(row=1, column=1, columnspan=2)
@@ -989,7 +990,7 @@ class MainWindow:
         if self.horsemenu.get() == "Select horse" and self.t != -1:
             error = tk.Tk()
             error.title("ERROR")
-            error.bind('<Control-q>', quit)
+            error.bind('<Control-q>', sys.exit)
             tk.Label(error, text="Please select a horse.", 
                      font=(None, 20))\
                     .pack(padx=10, pady=10)
@@ -1005,7 +1006,7 @@ class MainWindow:
             # create a new window for retrieving data
             self.retrieve = tk.Tk()
             self.retrieve.title("Retrieving Data")
-            self.retrieve.bind('<Control-q>', quit)
+            self.retrieve.bind('<Control-q>', sys.exit)
 
             tk.Label(self.retrieve, text="Retrieving Data...", 
                      font=(None, 50))\
@@ -1032,7 +1033,7 @@ class MainWindow:
         if self.Settings.purse == 0:
             no_money = tk.Tk()
             no_money.title('No Money')
-            no_money.bind('<Control-q>', quit)
+            no_money.bind('<Control-q>', sys.exit)
             tk.Label(no_money, text="You ran out of money! Game over.", 
                     font = (None, 20)).pack(padx = 10, pady = 10)
             tk.Button(no_money, text='OK', command=lambda : 
@@ -1124,15 +1125,19 @@ class MainWindow:
             else:
                 tk.Label(self.result, text='{}'.format(self.horse_beyer), font=(None,25),
                     fg='red', justify='left').grid(row=3, column=4, pady=10, sticky=tk.N + tk.W)
-        tk.Label(self.result, text="Aide's suggestion: ", font=(None, 25))\
+        tk.Label(self.result, text="AIde's suggestion: ", font=(None, 25))\
                 .grid(row=4, column=1, pady=10, sticky=tk.N + tk.W)
         tk.Label(self.result, text='{}'.format(self.horse_pwin), font=(None,25), fg='red')\
                 .grid(row=4, column=2, pady=10, sticky=tk.N + tk.W)
         tk.Label(self.result, 
                  text='Your choice: ', font=(None, 25))\
                 .grid(row=5, column=1, pady=10, sticky = tk.N + tk.W)
-        tk.Label(self.result, text='{}'.format(self.horsemenu.get()), font=(None, 25), fg='red')\
+        if self.horsemenu.get() == 'Select horse':
+            tk.Label(self.result, text='None', font=(None, 25), fg='red')\
                 .grid(row=5, column=2, pady=10, sticky=tk.N + tk.W)
+        else:
+            tk.Label(self.result, text='{}'.format(self.horsemenu.get()), font=(None, 25), fg='red')\
+                    .grid(row=5, column=2, pady=10, sticky=tk.N + tk.W)
 
         # update the users purse
         self.update_purse()
@@ -1222,7 +1227,7 @@ class MainWindow:
         elif self.save.get() == "":
             error = tk.Tk()
             error.title("ERROR")
-            error.bind('<Control-q>', quit)
+            error.bind('<Control-q>', sys.exit)
             tk.Label(error, text="Please insert ID number.", font=(None, 20))\
                     .pack(padx=10, pady=10)
             tk.Button(error, text="OK", command=lambda: error.destroy())\
@@ -1239,7 +1244,7 @@ class MainWindow:
             except ValueError:
                 error = tk.Tk()
                 error.title("ERROR")
-                error.bind('<Control-q>', quit)
+                error.bind('<Control-q>', sys.exit)
                 tk.Label(error, text="Please insert numbers.", font=(None, 20))\
                         .pack(padx=10, pady=10)
                 tk.Button(error, text="OK", command=lambda: error.destroy())\
@@ -1251,11 +1256,12 @@ root = tk.Tk()
 screen_height = root.winfo_screenheight()
 screen_width = root.winfo_screenwidth()
 
+
 def run():
     root.title("Horse Racing")
     # full screen window
     root.geometry("%dx%d+0+0" % (screen_width, screen_height))
-    root.bind('<Control-q>', quit)
+    root.bind('<Control-q>', sys.exit)
     app = MainWindow(root)
     root.mainloop()
 
