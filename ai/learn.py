@@ -80,7 +80,7 @@ def test_n_features(n, Xs, Ys):
     pipe = make_pipeline(fh, kBest, estimator)
 
     pipe.fit(x_train, y_train)
-    #dump(pipe, 'ai_recent.pickle')
+    dump(pipe, 'ai.pickle')
 
     y_pred = pipe.predict(x_test)
 
@@ -108,5 +108,6 @@ if __name__ == "__main__":
     data = read_data(config['final_data_filename'])
     targets = read_output("LABELS." + config['final_data_filename'], data)
 
-    Ns = range(1700, 1810, 10)
-    Parallel(n_jobs=8)(delayed(test_n_features)(n, data, targets) for n in Ns)
+    #Ns = range(1700, 1810, 10)
+    #Parallel(n_jobs=8)(delayed(test_n_features)(n, data, targets) for n in Ns)
+    test_n_features(1750, data, targets)
