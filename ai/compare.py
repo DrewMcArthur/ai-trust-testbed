@@ -171,8 +171,9 @@ def write_compiled(data, labels):
         dictionary -> csv, list to file in rows. """
     f = open("compiled_labels.txt", 'w')
     for l in labels:
-        f.write(l)
-    w = csv.DictWriter(open("compiled_data.csv", 'w'), dialect='unix', fieldnames=data.keys())
+        f.write(str(l))
+    w = csv.DictWriter(open("compiled_data.csv", 'w'), dialect='unix', 
+                       fieldnames=data.keys())
     w.writeheader()
     for d in data:
         w.writerow(d)
