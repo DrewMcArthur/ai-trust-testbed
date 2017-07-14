@@ -6,6 +6,7 @@ import random
 import os
 from PIL import Image, ImageTk
 from lib.load_ai import get_positions
+from pydoc import locate
 import pickle
 
 def check():
@@ -57,19 +58,20 @@ class MainWindow:
 
         def load(self, filename):
             if filename == 'None':
-                files = [f for f in  os.listdir(self.path) if f.endswith('_s.p')]
-                filename = files[0].replace('_s.p','')
-            temp = pickle.load(open(os.path.join(self.path,filename+'_s.p'), 'rb'))
-            print(temp)
-            for i in temp.keys():
-                setattr(self, i, temp[i]) 
+                self.name = 'None'
+                MainWindow.load_defaults
+            else: 
+                temp = pickle.load(open(os.path.join(self.path,filename+'_s.p'), 'rb'))
+                print(temp)
+                for i in temp.keys():
+                    setattr(self, i, temp[i]) 
 
     def load_settings(self, *event):
         name = self.defaultmenu.get()
+        self.revert.config(state='disabled')
+        self.apply.config(state='disabled')
         if name == 'None':
             self.Settings.name = name
-            self.revert.config(state='disabled')
-            self.apply.config(state='disabled')
         elif name == 'Edit Settings':
             self.edit_settings()
         elif os.path.isfile(os.path.join(self.Settings.path, 
@@ -78,8 +80,6 @@ class MainWindow:
             self.Settings.load(self.Settings,self.defaultmenu.get())
             self.set_all_defaults()
             self.Settings.name = self.defaultmenu.get()
-            self.revert.config(state='normal')
-            self.apply.config(state='normal')
 
 
     def save_setttings(self):
@@ -92,31 +92,47 @@ class MainWindow:
         self.Settings.displaytime = int(self.displaytime.get())
         self.Settings.displaybeyer = int(self.displaybeyer.get())
         self.Settings.displayorder = int(self.displayorder.get())
-        self.Settings.purse = float(self.purse.get())
-        self.Settings.purse = round(self.Settings.purse, 2)
+        self.Settings.purse = round(float(self.purse.get()), 2)
         self.Settings.betting_option = self.option_betting.get()
         self.Settings.betting_amount = int(self.betting.get())
         self.Settings.num_of_horses = int(self.horses.get())
         self.Settings.time_limit = int(self.time.get())
         self.Settings.option_suggestion = self.option_suggestion.get()
-        self.Settings.save(self.Settings, self.Settings.name)
+        if self.Settings.name != 'None':
+            self.Settings.save(self.Settings, self.Settings.name)
+        self.revert.config(state='disabled')
+        self.apply.config(state='disabled')
 
     def check_settings(self):
         # check if settings have changed
         print(self.Settings.name)
-        return self.Settings.trials == int(self.trials.get()) and \
-            self.Settings.accuracy == int(self.accuracy.get()) and \
-            self.Settings.checkaccuracy == int(self.checkaccuracy.get()) and \
-            self.Settings.displaytime == int(self.displaytime.get()) and \
-            self.Settings.displaybeyer == int(self.displaybeyer.get()) and \
-            self.Settings.displayorder == int(self.displayorder.get()) and \
-            self.Settings.purse == float(self.purse.get()) and \
-            self.Settings.purse == round(self.Settings.purse, 2) and \
-            self.Settings.betting_option == self.option_betting.get() and \
-            self.Settings.betting_amount == int(self.betting.get()) and \
-            self.Settings.num_of_horses == int(self.horses.get()) and \
-            self.Settings.time_limit == int(self.time.get()) and \
-            self.Settings.option_suggestion == self.option_suggestion.get()
+        return (self.Settings.trials == int(self.trials.get()) \
+           and self.Settings.betting_amount == int(self.betting.get()) \
+           and self.Settings.purse == float(self.purse.get()) \
+           and self.Settings.time_limit == int(self.time.get()) \
+           and self.Settings.num_of_horses == int(self.horses.get()) \
+           and self.Settings.checkaccuracy == int(self.checkaccuracy.get()) \
+           and self.Settings.accuracy == int(self.accuracy.get()) \
+           and self.Settings.displaytime == int(self.displaytime.get()) \
+           and self.Settings.displaybeyer == int(self.displaybeyer.get()) \
+           and self.Settings.displayorder == int(self.displayorder.get()) \
+           and self.Settings.betting_option == self.option_betting.get() \
+           and self.Settings.option_suggestion == self.option_suggestion.get())
+
+    def load_defaults(self):
+        self.Settings.trials = 3
+        self.Settings.accuracy = 50
+        self.Settings.checkaccuracy = 0
+        self.Settings.displaytime = 0
+        self.Settings.displaybeyer = 0
+        self.Settings.displayorder = 0
+        self.Settings.purse = 25
+        self.Settings.purse = round(self.Settings.purse, 2)
+        self.Settings.betting_option = 'Fixed'
+        self.Settings.betting_amount = 2
+        self.Settings.num_of_horses = 3
+        self.Settings.time_limit = 15
+        self.Settings.option_suggestion = 'After'
 
     def edit_settings(self):
         #make pop up window to enter name of settings
@@ -126,7 +142,7 @@ class MainWindow:
             os.remove(os.path.join(self.Settings.path, filen)+'_s.p')
             lb.delete(f[0])
             if self.Settings.name == filen:
-                if lb.size()>0:
+                if lb.size() > 0:
                     self.Settings.name = lb.get(0)
                 else:
                     self.Settings.name = 'None'
@@ -145,32 +161,23 @@ class MainWindow:
 
         def save_file():
             n = name.get()
-            if n != '' and n not in os.listdir(self.Settings.path):
+            if n == '':
+                self.error_window("Enter a file name")
+            elif n + '_s.p' in os.listdir(self.Settings.path):
+                self.error_window("File already exixts")
+            else:
                 name.delete(0,'end')
                 name.grid_remove()
                 lb.insert('end', n)
                 lb.config(height=lb.size()+1)
                 self.Settings.name = n
-                self.Settings.trials = 3
-                self.Settings.accuracy = 50
-                self.Settings.checkaccuracy = 0
-                self.Settings.displaytime = 0
-                self.Settings.displaybeyer = 0
-                self.Settings.displayorder = 0
-                self.Settings.purse = 25
-                self.Settings.purse = round(self.Settings.purse, 2)
-                self.Settings.betting_option = 'Fixed'
-                self.Settings.betting_amount = 2
-                self.Settings.num_of_horses = 3
-                self.Settings.time_limit = 15
-                self.Settings.option_suggestion = 'After'
+                self.load_defaults()
                 self.Settings.save(self.Settings, self.Settings.name)
                 done_button.grid_remove()
                 add_button.grid()
                 remove_button.grid()
                 cancel_button.grid()
-            else:
-                print('error')  
+                
 
         def add():
             name.grid(row=1,column=1,sticky=tk.S)
@@ -208,12 +215,37 @@ class MainWindow:
         self.Settings.load(self.Settings,self.Settings.name)
         self.set_all_defaults()
 
+    def enable_checking(self):
+         self.trials.trace_id = self.trials.trace('w',self.toggleapplyrevert)
+         self.betting.trace_id = self.betting.trace('w',self.toggleapplyrevert)
+         self.purse.trace_id = self.purse.trace('w',self.toggleapplyrevert)
+         self.time.trace_id = self.time.trace('w',self.toggleapplyrevert)
+         self.horses.trace_id = self.horses.trace('w',self.toggleapplyrevert)
+         self.checkaccuracy.trace_id = self.checkaccuracy.trace('w',self.toggleapplyrevert)
+         self.displaytime.trace_id = self.displaytime.trace('w',self.toggleapplyrevert)
+         self.displaybeyer.trace_id = self.displaybeyer.trace('w',self.toggleapplyrevert)
+         self.displayorder.trace_id = self.displayorder.trace('w',self.toggleapplyrevert)
+         self.option_betting.trace_id = self.option_betting.trace('w',self.toggleapplyrevert)
+         self.option_suggestion.trace_id = self.option_suggestion.trace('w',self.toggleapplyrevert)
+
+    def disable_checking(self):
+        self.trials.trace_vdelete("w", self.trials.trace_id)
+        self.betting.trace_vdelete('w', self.betting.trace_id)
+        self.purse.trace_vdelete('w', self.purse.trace_id)
+        self.time.trace_vdelete('w', self.time.trace_id)
+        self.horses.trace_vdelete('w', self.horses.trace_id)
+        self.checkaccuracy.trace_vdelete('w', self.checkaccuracy.trace_id)
+        self.displayorder.trace_vdelete('w', self.displayorder.trace_id)
+        self.displaytime.trace_vdelete('w', self.displaytime.trace_id)
+        self.displaybeyer.trace_vdelete('w', self.displaybeyer.trace_id)
+        self.option_betting.trace_vdelete('w', self.option_betting.trace_id)
+        self.option_suggestion.trace_vdelete('w', self.option_suggestion.trace_id)
 
     def set_all_defaults(self):
+        print('setting defaults')
+        self.disable_checking()
         # trials entry box
-        self.trials.delete(0, 'end')
-        self.trials.insert(0, self.Settings.trials)
-
+        self.trials.set(self.Settings.trials)
         # accuracy slider
         self.accuracy.set(self.Settings.accuracy)
 
@@ -241,30 +273,27 @@ class MainWindow:
         else:
             self.C3.select()
 
+        self.accuracy.set(self.Settings.accuracy)
         # betting options
         self.option_betting.set(self.Settings.betting_option)
         
         # fixed bet entry box
-        self.betting.delete(0, 'end')
-        self.betting.insert(0, self.Settings.betting_amount)
+        self.betting.set(self.Settings.betting_amount)
 
         # purse size
-        self.purse.delete(0, 'end')
-        self.purse.insert(0, "{0:.02f}".format(self.Settings.purse))
+        self.purse.set("{0:.02f}".format(self.Settings.purse))
 
         # number of horses
-        self.horses.delete(0, 'end')
-        self.horses.insert(0, self.Settings.num_of_horses)
+        self.horses.set(self.Settings.num_of_horses)
 
         # time per race
-        self.time.delete(0, 'end')
-        self.time.insert(0, self.Settings.time_limit)
+        self.time.set(self.Settings.time_limit)
         if self.Settings.betting_option == 'Fixed':
-            self.betting.configure(state='normal')
-            self.betting.update()
+            self.betting_box.configure(state='normal')
+            self.betting_box.update()
         else:
-            self.betting.configure(state='disabled')
-            self.betting.update()
+            self.betting_box.configure(state='disabled')
+            self.betting_box.update()
 
         if self.checkaccuracy.get() == '1':
             self.accuracy.config(state='disabled')
@@ -277,6 +306,20 @@ class MainWindow:
             #make the bar normal colored
             self.accuracy.config(foreground='black')
         self.option_suggestion.set(self.Settings.option_suggestion)
+        self.revert.config(state='disabled')
+        self.apply.config(state='disabled')
+        self.enable_checking()
+
+    def toggleapplyrevert(self,*a):
+        if (self.errorcheck() is None and self.check_settings()) or self.Settings.name == 'None':
+            self.revert.config(state='disabled')
+            self.apply.config(state='disabled')
+        else:
+            self.revert.config(state='normal')
+            if self.errorcheck() is None:
+                self.apply.config(state='normal')
+            else:
+                self.apply.config(state='disabled')
 
     def s_welcome(self):
         self.welcome = tk.Frame(self.master)
@@ -295,10 +338,23 @@ class MainWindow:
                   command=self.instructions)\
                  .grid(row=1, column=1, padx=30, pady=10, sticky=tk.N + tk.W)
 
+    def load_instructions(self):
+        error = self.errorcheck()
+        if error != None:
+            self.error_window(error)
+        elif self.Settings.name == 'None':
+            self.save_setttings()
+            self.instructions()
+        elif not self.check_settings():
+            self.error_window("Apply or revert your changes before continuing")
+        else:
+            self.instructions()
+
+
     def s_settings(self):
         self.Settings.path = os.path.join('ui','settings')
-        self.Settings.name = 'test1'
-        self.Settings.load(self.Settings,self.Settings.name)
+        self.Settings.name = 'None'
+        self.load_defaults()
         root.destroy()
         # create settings window
         self.settings = tk.Tk()
@@ -312,13 +368,7 @@ class MainWindow:
                                      sticky=tk.N+tk.S+tk.W+tk.E)
 
         # drop-down of default settings
-        def toggleapplyrevert():
-            if self.check_settings():
-                self.revert.config(state='disabled')
-                self.apply.config(state='disabled')
-            else:
-                self.revert.config(state='normal')
-                self.apply.config(state='normal')
+        
 
         select_settings = tk.Label(self.settings, text="Select settings: ")
         select_settings.grid(row=0, column=1, padx=10, pady=5, sticky=tk.W)
@@ -343,9 +393,10 @@ class MainWindow:
         HoverInfo(num_trials, "Number of races a user will bet on")
 
         # number of trials text box
-        self.trials = tk.Entry(self.settings, width=3, validate="focusout",
-                                            validatecommand=self.check_settings)
-        self.trials.grid(row=2, column=2, sticky=tk.W)
+        self.trials = tk.StringVar()
+        trials = tk.Entry(self.settings, textvariable=self.trials, width=3)
+        
+        trials.grid(row=2, column=2, sticky=tk.W)
 
         ttk.Separator(self.settings).grid(row=3, columnspan=6, sticky=tk.W + 
                                           tk.E, pady=10, padx=10)
@@ -353,6 +404,7 @@ class MainWindow:
 
         # disabling and enabling accuracy bar
         def toggleslider():
+            self.toggleapplyrevert()
             if self.checkaccuracy.get() == '1':
                 self.accuracy.config(state='disabled')
                 
@@ -381,7 +433,7 @@ class MainWindow:
 
         # accuracy slider
         self.accuracy = tk.Scale(self.settings, orient=tk.HORIZONTAL, 
-            resolution=10, showvalue=0, tickinterval=10, length=300)
+            resolution=10, showvalue=0, tickinterval=10, length=300, command=self.toggleapplyrevert)
         self.accuracy.grid(row=4, column=2, columnspan=2, padx=10, sticky = tk.W)
 
         ttk.Separator(self.settings).grid(row=6, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
@@ -449,15 +501,16 @@ class MainWindow:
         # betting amount options
         # enabling and disenabling text box for fixed option
         def enableEntry():
-            self.betting.configure(state='normal')
-            self.betting.update()
+            self.betting_box.configure(state='normal')
+            self.betting_box.update()
         def disableEntry():
-            self.betting.configure(state='disabled')
-            self.betting.update()
+            self.betting_box.configure(state='disabled')
+            self.betting_box.update()
 
         tk.Label(self.settings, text='$').grid(row=13, column=3, padx=(70,0))
-        self.betting = tk.Entry(self.settings, width=3)
-        self.betting.grid(row=13, column=3, padx=(0,10), sticky=tk.E)
+        self.betting = tk.StringVar()
+        self.betting_box = tk.Entry(self.settings, text=self.betting, width=3)
+        self.betting_box.grid(row=13, column=3, padx=(0,10), sticky=tk.E)
         self.option_betting=tk.StringVar()
         
         ttk.Separator(self.settings).grid(row=16, columnspan=3, sticky=tk.W + tk.E, padx=15)
@@ -482,8 +535,9 @@ class MainWindow:
         # purse size entry box
         tk.Label(self.settings, text='$')\
                 .grid(row=15, column=2, sticky=tk.W)
-        self.purse=tk.Entry(self.settings, width=5)
-        self.purse.grid(row=15, column=2, sticky=tk.W, padx=15)
+        self.purse = tk.StringVar()
+        purse_box = tk.Entry(self.settings, text=self.purse, width=5)
+        purse_box.grid(row=15, column=2, sticky=tk.W, padx=15)
 
         ttk.Separator(self.settings).grid(row=16, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
@@ -493,8 +547,9 @@ class MainWindow:
         HoverInfo(num_horses, "Number of horses per race")
 
         # number of horses entry box
-        self.horses = tk.Entry(self.settings, width=3)
-        self.horses.grid(row=17, column=2, sticky=tk.W)
+        self.horses = tk.StringVar() 
+        horse_box = tk.Entry(self.settings, text=self.horses, width=3)
+        horse_box.grid(row=17, column=2, sticky=tk.W)
         tk.Label(self.settings, text='horses').grid(row=17, column=2,
                  padx=40, sticky=tk.W)
 
@@ -506,8 +561,9 @@ class MainWindow:
         HoverInfo(time_limit, "Time limit for each race")
 
         # time limit per race entry box
-        self.time = tk.Entry(self.settings, width=3)
-        self.time.grid(row=19, column=2, sticky=tk.W)
+        self.time = tk.StringVar()
+        time = tk.Entry(self.settings, text=self.time, width=3)
+        time.grid(row=19, column=2, sticky=tk.W)
         tk.Label(self.settings, text='minutes').grid(row=19, column=2, 
                 padx=40, sticky=tk.W)
 
@@ -521,68 +577,56 @@ class MainWindow:
         self.apply = tk.Button(self.settings, text='Apply', command=self.save_setttings)
         self.apply.grid(row=21, column=2, padx=10, pady=10, sticky=tk.E)
 
-        tk.Button(self.settings, text='Continue', command=self.instructions).grid \
+        tk.Button(self.settings, text='Continue', command=self.load_instructions).grid \
                  (row=21, column=3, padx=10, pady=10, sticky=tk.E)
 
         # set all of the defaults
+        self.enable_checking()
         self.set_all_defaults()
+       
 
+
+    def error_window(self, message):
+        error = tk.Tk()
+        error.title('ERROR')
+        error.bind('<Control-q>', quit)
+        tk.Label(error, text = message, 
+            font = (None, 20)).pack(padx = 10, pady = 10)
+        tk.Button(error, text='OK', command=lambda : 
+            error.destroy()).pack(padx=10, pady=10)
 
 
     def errorcheck(self):
         # checks to make sure the settings were correct
-        
-        elementlist = [self.trials.get(), self.accuracy.get(), 
-        self.checkaccuracy.get(), self.displaytime.get(), self.displaybeyer.get(), 
-        self.displayorder.get(), self.purse.get(), self.betting.get(), 
-        self.horses.get(), self.time.get()]
+        elementlist = [(self.trials.get(),'number of trials',int,1,50), 
+                       (self.purse.get(),'purse',float,2), 
+                       (self.horses.get(),'number of horses',int,2), 
+                       (self.time.get(),'time limit',int,1,60)]
+        if self.checkaccuracy.get() == '0':
+            elementlist.append((self.accuracy.get(),'accuracy of the classifier',int,0,100))
+        if self.option_betting.get() == 'Fixed':
+            elementlist.append((self.betting.get(),'betting amount',int,2,self.purse.get()))
         for element in elementlist:
-            
+            print(element)
+            e = element[0]
+            name = element[1]
+            t = element[2]
             # check if any element is empty
-            if not element:
+            if not e:
                 #display the error essage
-                error = tk.Tk()
-                error.title('ERROR')
-                error.bind('<Control-q>', quit)
-                tk.Label(error, text = "Fill in all settings.", 
-                    font = (None, 20)).pack(padx = 10, pady = 10)
-                tk.Button(error, text='OK', command=lambda : 
-                    error.destroy()).pack(padx=10, pady=10)
-                return True
-           
-            # check if purse is a float number
-            elif element == self.purse.get():
+                return "Enter a value for {}".format(name)
+            else:
+                # make sure elements are the right type and value.
                 try:
-                    float(element)
+                    e = t(e)
+                    print(e)
+                    if len(element) > 3 and e < element[3]:
+                        return 'The ' + name + ' must be greater than or equal to ' + str(element[3])
+                    elif len(element) > 4 and float(e) > float(element[4]):
+                        return 'The ' + name + ' must be less than or equal to ' + str(element[4])
                 except:
-                    
-                    #display the error message
-                    error = tk.Tk()
-                    error.title('ERROR')
-                    error.bind('<Control-q>', quit)
-                    tk.Label(error, text="Please correct format for purse.", 
-                        font = (None, 20)).pack(padx = 10, pady = 10)
-                    tk.Button(error, text='OK', command=lambda : 
-                        error.destroy()).pack(padx=10, pady=10)
-                return True
-
-            # check if other elements are integers (not letters)
-            elif element != self.displaytime.get() and element != \
-                self.displaybeyer.get() and element != self.displayorder.get():
-                try:
-                    int(element)
-                except:
-
-                    #display the error message
-                    error = tk.Tk()
-                    error.title('ERROR')
-                    error.bind('<Control-q>', quit)
-                    tk.Label(error, text="Please enter integers.", 
-                        font = (None, 20)).pack(padx = 10, pady = 10)
-                    tk.Button(error, text='OK', command=lambda : 
-                        error.destroy()).pack(padx = 10, pady = 10)
-                return True
-        return False
+                    return 'The ' + name + ' must be '+ str(t)
+        return None
 
     def instructions(self):
         # screen that displays the instructions
@@ -591,7 +635,7 @@ class MainWindow:
             self.settings.destroy()
         else:
             self.Settings.path = os.path.join('ui','settings')
-            self.Settings.load(self.Settings,'test1')
+            self.load_defaults()
             root.destroy()
 
         # checking values
