@@ -363,12 +363,12 @@ class MainWindow:
             root.deiconify()
             self.settings.destroy()
 
-
     def s_settings(self):
         self.Settings.path = os.path.join('ui','settings')
         self.Settings.name = 'None'
         self.load_defaults()
-        root.destroy()
+        root.withdraw()
+
         # create settings window
         self.settings = tk.Tk()
         self.settings.title('Settings')
@@ -616,7 +616,6 @@ class MainWindow:
         # set all of the defaults
         self.enable_checking()
         self.set_all_defaults()
-       
 
     def error_window(self, message):
         error = tk.Tk()
@@ -804,10 +803,6 @@ class MainWindow:
         for horse in self.superhorses:
             if (horse['B_ProgNum'] in nums):
                 self.horses_racing.append(horse)
-        
-        # find predicted winning horse
-        self.horses_racing.sort(key=lambda x:x['P_Time'])
-        self.horse_pwin = self.horses_racing[0]['B_Horse']
 
         # find actual winning horse
         self.horses_racing.sort(key=lambda x:x['L_Rank'])
@@ -824,21 +819,35 @@ class MainWindow:
         if self.Settings.displaytime:
             self.horse_time = ""
             if not self.Settings.displayorder:
-                self.horse_time += self.horses_racing[0]['L_Time']
+                self.horse_time += self.horses_racing[0]['P_Time']
             else:
                 for horse in self.horses_racing[:-1]:
                     self.horse_time += (horse['L_Time'] + "\n")
-                self.horse_time += self.horses_racing[-1]['L_Time']
+                self.horse_time += self.horses_racing[-1]['P_Time']
 
         # if show beyer, find beyer figures
         if self.Settings.displaybeyer:
             self.horse_beyer = ""
             if not self.Settings.displayorder:
-                self.horse_beyer += str(self.horses_racing[0]['L_BSF'])
+                self.horse_beyer += str(self.horses_racing[0]['P_BSF'])
             else:
                 for horse in self.horses_racing[:-1]:
-                    self.horse_beyer += (str(horse['L_BSF']) + "\n")
-                self.horse_beyer += str(self.horses_racing[-1]['L_BSF'])
+                    self.horse_beyer += (str(horse['P_BSF']) + "\n")
+                self.horse_beyer += str(self.horses_racing[-1]['P_BSF'])
+
+        # find predicted winning horse
+        if self.Settings.checkaccuracy:
+            self.horses_racing.sort(key=lambda x:x['P_Time'])
+            self.horse_pwin = self.horses_racing[0]['B_Horse']
+        else:
+            horse_list = []
+            probablity= int((100-self.Settings.accuracy)/(len(self.horses_racing)-1))
+            for horse in self.horses_racing:
+                if horse == self.horse_win:
+                    horse_list += ([self.horse_win]*self.Settings.accuracy)
+                else:
+                    horse_list += ([horse['B_Horse']]*probablity)
+            self.horse_pwin = random.choice(horse_list)
 
         # find odds and winnings for horses
         self.horses_odds = ""
