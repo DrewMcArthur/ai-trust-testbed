@@ -367,7 +367,6 @@ class MainWindow:
         self.Settings.path = os.path.join('ui','settings')
         self.Settings.name = 'None'
         self.load_defaults()
-        root.destroy()
         # create settings window
         self.settings = tk.Tk()
         self.settings.title('Settings')
@@ -804,8 +803,18 @@ class MainWindow:
                 self.horses_racing.append(horse)
         
         # find predicted winning horse
-        self.horses_racing.sort(key=lambda x:x['P_Time'])
-        self.horse_pwin = self.horses_racing[0]['B_Horse']
+        if self.Settings.checkaccuracy:
+            self.horses_racing.sort(key=lambda x:x['P_Time'])
+            self.horse_pwin = self.horses_racing[0]['B_Horse']
+        else:
+            horse_list = []
+            probablity= int((100-self.Settings.accuracy)/(len(self.horses_racing)-1))
+            for horse in self.horses_racing:
+                if horse == self.horse_win:
+                    horse_list += ([self.horse_win]*self.Settings.accuracy)
+                else:
+                    horse_list += ([horse['B_Horse']]*probablity)
+            self.horse_pwin = random.choice(horse_list)
 
         # find actual winning horse
         self.horses_racing.sort(key=lambda x:x['L_Rank'])
