@@ -3,6 +3,9 @@
 *.swp
 *.swo
 *.out
+*.jpg
+*.pdf
+ui/settings/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
