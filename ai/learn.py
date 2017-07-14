@@ -52,6 +52,7 @@ def split_data(d, l, r):
     """ d=data, l=labels, r=ratio
         returns a tuple, of two lists, x and y where x is r% of d, 
         randomly chosen """
+    assert(len(d) == len(l))
     len_test = round(len(d) * (1 - r))
     test = []
     testlabels = []
@@ -68,6 +69,8 @@ def test_n_features(n, Xs, Ys):
     x_train, y_train = training
     x_test, y_test = test
 
+    print("x Split data.")
+
     # TODO: get array of indices that represents the categorical columns
     #       this would go second, after feature hashing
     #cat_feats = []
@@ -77,10 +80,19 @@ def test_n_features(n, Xs, Ys):
     kBest = SelectKBest(k=n)
     estimator = SVR(kernel="rbf")
 
+    print("x Created sklearn objects.")
+
     pipe = make_pipeline(fh, kBest, estimator)
 
+    print("x Created pipeline.")
+
     pipe.fit(x_train, y_train)
+
+    print("x Trained model.")
+
     dump(pipe, 'ai.pickle')
+
+    print("x Dumped model to file.")
 
     y_pred = pipe.predict(x_test)
 
@@ -107,6 +119,8 @@ if __name__ == "__main__":
 
     data = read_data(config['final_data_filename'])
     targets = read_output("LABELS." + config['final_data_filename'], data)
+
+    print("x read data and labels.")
 
     #Ns = range(1700, 1810, 10)
     #Parallel(n_jobs=8)(delayed(test_n_features)(n, data, targets) for n in Ns)
