@@ -348,8 +348,8 @@ class MainWindow:
         HoverInfo(system_name, "Name of system")
 
         # name of system entry box
-        self.name = tk.Entry(self.settings, width=20)
-        self.name.grid(row=2, column=2, sticky=tk.W)
+        self.sys_name = tk.Entry(self.settings, width=20)
+        self.sys_name.grid(row=2, column=2, sticky=tk.W)
 
         ttk.Separator(self.settings).grid(row=3, columnspan=6, 
                                           sticky=tk.W + tk.E, pady=10, padx=10)
