@@ -362,12 +362,12 @@ class MainWindow:
             root.deiconify()
             self.settings.destroy()
 
-
     def s_settings(self):
         self.Settings.path = os.path.join('ui','settings')
         self.Settings.name = 'None'
         self.load_defaults()
-        root.destroy()
+        root.withdraw()
+
         # create settings window
         self.settings = tk.Tk()
         self.settings.title('Settings')
@@ -615,7 +615,6 @@ class MainWindow:
         # set all of the defaults
         self.enable_checking()
         self.set_all_defaults()
-       
 
     def error_window(self, message):
         error = tk.Tk()
