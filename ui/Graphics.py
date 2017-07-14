@@ -82,8 +82,7 @@ class MainWindow:
             self.set_all_defaults()
             self.Settings.name = self.defaultmenu.get()
 
-
-    def save_setttings(self):
+    def save_settings(self):
         # saving data from settings
         #if not self.errorcheck():
         print(self.Settings.name)
@@ -351,22 +350,19 @@ class MainWindow:
         if error != None:
             self.error_window(error)
         elif self.Settings.name == 'None':
-            self.save_setttings()
-            self.instructions()
+            self.save_settings()
             root.deiconify()
-            self.settings.destroy()
         elif not self.check_settings():
             self.error_window("Apply or revert your changes before continuing")
         else:
-            self.instructions()
             root.deiconify()
-            self.settings.destroy()
 
     def s_settings(self):
+        root.withdraw()
+
         self.Settings.path = os.path.join('ui','settings')
         self.Settings.name = 'None'
         self.load_defaults()
-        root.withdraw()
 
         # create settings window
         self.settings = tk.Tk()
@@ -606,7 +602,7 @@ class MainWindow:
         self.revert.grid(row=23, column=1, padx=10, pady=10, sticky=tk.E)
 
         self.apply = tk.Button(self.settings, text='Apply', 
-                               command=self.save_setttings)
+                               command=self.save_settings)
         self.apply.grid(row=23, column=2, padx=10, pady=10, sticky=tk.E)
 
         tk.Button(self.settings, text='Continue', command=self.load_instructions).grid \
@@ -712,7 +708,7 @@ class MainWindow:
         betValue = ("fixed at ${:.2f}".format(self.Settings.betting_amount)
                     if self.Settings.betting_option == "Fixed" else
                     "up to you")
-        welcomeText = "Welcome!\nAs a reminder, your bets are {}." + \
+        welcomeText = "As a reminder, your bets are {}." + \
                       "\nYour task is to pick, as best you can, the " + \
                       "winner of the race.\nYou will have up to {} " + \
                       "minute(s) to look at all the data and make your " + \
