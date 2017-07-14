@@ -1192,7 +1192,7 @@ class MainWindow:
         for i in range(3):
             self.exit.grid_rowconfigure(i, minsize=int(screen_height/3))
             self.exit.grid_columnconfigure(i, minsize=int(screen_width/3))
-
+            
         # instructions for inserting ID number
         tk.Label(self.exit, text='Thank you!\nPlease notify the researcher.'
                  '\nPlease enter the ID number in order to save.',
