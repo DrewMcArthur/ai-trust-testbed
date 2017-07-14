@@ -110,7 +110,8 @@ class MainWindow:
         print(self.Settings.name)
         return (self.Settings.trials == int(self.trials.get()) \
            and self.Settings.system_name == self.system_name.get() \
-           and self.Settings.betting_amount == int(self.betting.get()) \
+           and self.Settings.betting_option == self.option_betting.get() \
+           and (self.Settings.betting_option == '0' or self.Settings.betting_amount == int(self.betting.get())) \
            and self.Settings.purse == float(self.purse.get()) \
            and self.Settings.time_limit == int(self.time.get()) \
            and self.Settings.num_of_horses == int(self.horses.get()) \
@@ -119,7 +120,7 @@ class MainWindow:
            and self.Settings.displaytime == int(self.displaytime.get()) \
            and self.Settings.displaybeyer == int(self.displaybeyer.get()) \
            and self.Settings.displayorder == int(self.displayorder.get()) \
-           and self.Settings.betting_option == self.option_betting.get() \
+           
            and self.Settings.option_suggestion == self.option_suggestion.get())
 
     def load_defaults(self):
@@ -629,7 +630,8 @@ class MainWindow:
 
     def errorcheck(self):
         # checks to make sure the settings were correct
-        elementlist = [(self.trials.get(),'number of trials',int,1,50), 
+        elementlist = [(self.system_name.get(),'system name',str),
+                       (self.trials.get(),'number of trials',int,1,50), 
                        (self.purse.get(),'purse',float,2), 
                        (self.horses.get(),'number of horses',int,2), 
                        (self.time.get(),'time limit',int,1,60)]
