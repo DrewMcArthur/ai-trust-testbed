@@ -41,15 +41,13 @@ def writeLabelInfo(f, folder, LABELWRITER):
     beyerpath = folder + track + date + "_" + race + "_LB.CSV"
     timepath = folder + track + date + "_" + race + "_LT.CSV"
 
-    # removing beyer figures for now
-    #if not os.path.isfile(beyerpath) or not os.path.isfile(timepath):
-    if not os.path.isfile(timepath):
+    if not os.path.isfile(beyerpath) or not os.path.isfile(timepath):
         return
 
     # open files for reading and create respective csv.DictReader objects
-    with open(timepath, newline='') as timefile:
-    #    open(beyerpath, newline='') as beyerfile:
-    #   beyerreader = csv.DictReader(beyerfile, dialect='unix')
+    with open(timepath, newline='') as timefile,\
+         open(beyerpath, newline='') as beyerfile:
+        beyerreader = csv.DictReader(beyerfile, dialect='unix')
         timereader = csv.DictReader(timefile, dialect='unix')
 
         # add the data in the beyer label file to the list, 
@@ -64,15 +62,15 @@ def writeLabelInfo(f, folder, LABELWRITER):
                          })
 
             # read one line from timereader and add time to entry
-            #t = next(timereader)
-            #if t['Horse'] != entry['B_Horse'] or not entry['B_Horse']:
-            #   print("Error! reading entries from two label files and ")
-            #   print("       the horse names don't match! You screwed up!")
-            #   print("Race: " + str(raceIDInfo))
-            #   print("time's horse: " + t['Horse'])
-            #   print("beyer's horse: " + entry['Horse'])
-
-            #entry.update({"L_Time": t["Fin"]})
+            b = next(beyerreader)
+            if fixLabelName(b['Horse']) != fixLabelName(entry['B_Horse']):
+               print("Error! reading entries from two label files and ")
+               print("       the horse names don't match! You screwed up!")
+               print("Race: " + str(raceIDInfo))
+               print("beyer's horse: " + fixLabelName(b['Horse'])['B_Horse'])
+               print("time's horse: " + fixLabelName(entry['B_Horse'])['B_Horse'])
+            else:
+                entry.update({"L_BSF": b["Chart"]})
 
             entry = formatData(entry)
 
@@ -210,6 +208,9 @@ def fixLabelName(row):
     if row is None:
         return row
 
+    if isinstance(row, str):
+        row = {'B_Horse': row}
+
     n = row['B_Horse']
     if len(n) > 30:
         if VVFLAG:
@@ -227,13 +228,13 @@ def fixLabelName(row):
 
 def checkBSF(row):
     """ returns None if a label is bad (i.e. 0 or None or "") """
-    if row is None:
+    if row is None or 'L_BSF' not in row:
         return row
 
     # double check rowfor missing data before writing
     if (row['L_BSF'] == "-" or
         row['L_BSF'] == "-0" or
-        row['L_BSF'] == '' or
+        row['L_BSF'] == "" or
         row['L_BSF'] == None ):
         if VVFLAG: 
             print("Bad Beyer Figure: ", row)
@@ -247,7 +248,7 @@ def formatData(row):
     if "L_Time" in row:
         row = fixTime(row)
         row = fixLabelName(row)
-        #row = checkBSF(row)
+        row = checkBSF(row)
     else:
         row = fixOdds(row)
     return row
