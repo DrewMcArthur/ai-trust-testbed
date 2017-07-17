@@ -85,8 +85,9 @@ def get_ai():
             joblib.load("lib/ai_time.pickle"))
 
 def formatTime(t):
-    huns = int((t % 100) * 10)
-    secs = int(t // 100)
+    t /= 1000
+    huns = (int(t) % 100) * 10
+    secs = int(t) // 100
     mins = int(secs // 60)
     secs = secs % 60
 
