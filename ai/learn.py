@@ -27,9 +27,9 @@ def read_data(filename):
 
 def get_label(horse):
     """ returns the time and beyer figure for the given horse. """
-    # Beyer Figure
-    return int(round(float(horse['L_Time'])*1000))
     # time
+    return float(horse['L_Time'])
+    # Beyer Figure
     #return int(horse['L_BSF'])
 
 def read_output(filename, data):
@@ -53,6 +53,7 @@ def split_data(d, l, r):
         returns a tuple, of two lists, x and y where x is r% of d, 
         randomly chosen """
     assert(len(d) == len(l))
+
     len_test = round(len(d) * (1 - r))
     test = []
     testlabels = []
@@ -62,7 +63,7 @@ def split_data(d, l, r):
         testlabels.append(l.pop(i))
     return ((d,l), (test,testlabels))
 
-def test_n_features(n, Xs, Ys):
+def test_n_features(Xs, Ys, c, e):
     beg = time.time()
 
     training, test = split_data(Xs, Ys, .90)
@@ -74,11 +75,12 @@ def test_n_features(n, Xs, Ys):
     # TODO: get array of indices that represents the categorical columns
     #       this would go second, after feature hashing
     #cat_feats = []
-    #enc = OneHotEncoder(categorical_features=cat_feats)
+
+    enc = OneHotEncoder()
 
     fh = FeatureHasher(input_type='string')
-    kBest = SelectKBest(k=n)
-    estimator = SVR(kernel="rbf")
+    kBest = SelectKBest(k=1750)
+    estimator = SVR(kernel="linear", C=c, epsilon=e)
 
     print("x Created sklearn objects.")
 
@@ -90,7 +92,7 @@ def test_n_features(n, Xs, Ys):
 
     print("x Trained model.")
 
-    dump(pipe, 'ai.pickle')
+    #dump(pipe, 'ai_time_linear.pickle')
 
     print("x Dumped model to file.")
 
@@ -105,15 +107,19 @@ def test_n_features(n, Xs, Ys):
     # the explained variance, and r^2
 
     print("Writing data for round", n)
-
-    with open("results.csv", 'a', newline='') as oFile:
-        oWriter = csv.writer(oFile, dialect='unix',
-                             quoting=csv.QUOTE_MINIMAL)
-        oWriter.writerow([n, end - beg,
-               sum(deltas)/len(deltas),
-               explained_variance_score(y_test, y_pred),
-               r2_score(y_test, y_pred)])
-
+    print('time')
+    print(end-beg)
+    print('avg delta')
+    print(sum(deltas)/len(deltas))
+    print('variance score')
+    print(explained_variance_score(y_test, y_pred))
+    print('r squared')
+    print(r2_score(y_test, y_pred))
+    print()
+    print()
+    #print('prediction - actual = deltas')
+    #[print(p,"-",a,"=",d) for p,a,d in zip(y_pred, y_test, deltas)]
+    
 if __name__ == "__main__":
     config = yaml.safe_load(open("./config.yml"))
 
@@ -122,6 +128,9 @@ if __name__ == "__main__":
 
     print("x read data and labels.")
 
-    #Ns = range(1700, 1810, 10)
-    #Parallel(n_jobs=8)(delayed(test_n_features)(n, data, targets) for n in Ns)
-    test_n_features(1750, data, targets)
+    Ns = range(1700, 1810, 10)
+    Cs = [1.0, 10.0, 100.0, 1000.0, 10000.0]
+    Es = [.1, .01, .001, .0001, .00001]
+    Parallel(n_jobs=8)((delayed(test_n_features)(data, targets, c, e) 
+                            for c in Cs) for e in Es)
+    #test_n_features(1750, data, targets)
