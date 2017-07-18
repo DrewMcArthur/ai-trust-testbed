@@ -81,8 +81,7 @@ class MainWindow:
             self.set_all_defaults()
             self.Settings.name = self.defaultmenu.get()
 
-
-    def save_setttings(self):
+    def save_settings(self):
         # saving data from settings
         #if not self.errorcheck():
         print(self.Settings.name)
@@ -328,6 +327,14 @@ class MainWindow:
                 self.apply.config(state='disabled')
 
     def s_welcome(self):
+        if hasattr(self, 'settings'):
+            self.settings.destroy()
+
+        global screen_width
+        global screen_height
+
+        self.master.geometry("{}x{}".format(screen_width, screen_height))
+
         self.welcome = tk.Frame(self.master)
         self.welcome.grid()
         for i in range(2):
@@ -350,28 +357,24 @@ class MainWindow:
         if error != None:
             self.error_window(error)
         elif self.Settings.name == 'None':
-            self.save_setttings()
-            self.instructions()
-            root.deiconify()
-            self.settings.destroy()
+            self.save_settings()
+            self.s_welcome()
         elif not self.check_settings():
             self.error_window("Apply or revert your changes before continuing")
         else:
-            self.instructions()
-            root.deiconify()
-            self.settings.destroy()
-
+            self.s_welcome()
 
     def s_settings(self):
+        if hasattr(self, 'welcome'):
+            self.welcome.destroy()
+
         self.Settings.path = os.path.join('ui','settings')
         self.Settings.name = 'None'
         self.load_defaults()
-        root.destroy()
+
         # create settings window
-        self.settings = tk.Tk()
-        self.settings.title('Settings')
-        self.settings.bind('<Control-q>', sys.exit)
-        self.settings.resizable(width=False, height=False)
+        self.master.geometry("635x700")
+        self.settings = tk.Frame(self.master)
         self.settings.grid()
         self.settings.grid_columnconfigure(0, minsize=50)
         self.settings.grid_columnconfigure(5, minsize=50)
@@ -380,8 +383,6 @@ class MainWindow:
                                      sticky=tk.N+tk.S+tk.W+tk.E)
 
         # drop-down of default settings
-        
-
         select_settings = tk.Label(self.settings, text="Select settings: ")
         select_settings.grid(row=0, column=1, padx=10, pady=5, sticky=tk.W)
         HoverInfo(select_settings, "Select settings from previous stored saves")
@@ -534,7 +535,7 @@ class MainWindow:
             self.betting_box.configure(state='disabled')
             self.betting_box.update()
 
-        tk.Label(self.settings, text='$').grid(row=15, column=3, padx=(70,0))
+        tk.Label(self.settings, text='$').grid(row=15, column=3, padx=(55,0))
         self.betting = tk.StringVar()
         self.betting_box = tk.Entry(self.settings, text=self.betting, width=3)
         self.betting_box.grid(row=15, column=3, padx=(0,10), sticky=tk.E)
@@ -604,7 +605,7 @@ class MainWindow:
         self.revert.grid(row=23, column=1, padx=10, pady=10, sticky=tk.E)
 
         self.apply = tk.Button(self.settings, text='Apply', 
-                               command=self.save_setttings)
+                               command=self.save_settings)
         self.apply.grid(row=23, column=2, padx=10, pady=10, sticky=tk.E)
 
         tk.Button(self.settings, text='Continue', command=self.load_instructions).grid \
@@ -613,7 +614,6 @@ class MainWindow:
         # set all of the defaults
         self.enable_checking()
         self.set_all_defaults()
-       
 
     def error_window(self, message):
         error = tk.Tk()
@@ -667,7 +667,8 @@ class MainWindow:
             self.Settings.path = os.path.join('ui','settings')
 
             self.load_defaults()
-            root.destroy()
+
+        self.welcome.destroy()
 
         # checking values
         print("Trials: ", self.Settings.trials, 
@@ -689,17 +690,12 @@ class MainWindow:
         # fit to screen
         global screen_width
         global screen_height
-        self.window.geometry("{}x{}".format(screen_width, 
-                                            screen_height))
 
         print(screen_width, screen_height)
         print(self.Settings.__dict__)
-        # get screen dimensions
-        screen_width = int(self.window.winfo_screenwidth())
-        screen_height = int(self.window.winfo_screenheight())- 100
 
         # configure instructions frame
-        self.instructions = tk.Frame(self.window)
+        self.instructions = tk.Frame(self.master)
         self.instructions.grid()
         for i in range(3):
             self.instructions.grid_rowconfigure(
@@ -711,7 +707,7 @@ class MainWindow:
         betValue = ("fixed at ${:.2f}".format(self.Settings.betting_amount)
                     if self.Settings.betting_option == "Fixed" else
                     "up to you")
-        welcomeText = "Welcome!\nAs a reminder, your bets are {}." + \
+        welcomeText = "As a reminder, your bets are {}." + \
                       "\nYour task is to pick, as best you can, the " + \
                       "winner of the race.\nYou will have up to {} " + \
                       "minute(s) to look at all the data and make your " + \
@@ -800,10 +796,6 @@ class MainWindow:
         for horse in self.superhorses:
             if (horse['B_ProgNum'] in nums):
                 self.horses_racing.append(horse)
-        
-        # find predicted winning horse
-        self.horses_racing.sort(key=lambda x:x['P_Time'])
-        self.horse_pwin = self.horses_racing[0]['B_Horse']
 
         # find actual winning horse
         self.horses_racing.sort(key=lambda x:x['L_Rank'])
@@ -820,21 +812,35 @@ class MainWindow:
         if self.Settings.displaytime:
             self.horse_time = ""
             if not self.Settings.displayorder:
-                self.horse_time += self.horses_racing[0]['L_Time']
+                self.horse_time += self.horses_racing[0]['P_Time']
             else:
                 for horse in self.horses_racing[:-1]:
                     self.horse_time += (horse['L_Time'] + "\n")
-                self.horse_time += self.horses_racing[-1]['L_Time']
+                self.horse_time += self.horses_racing[-1]['P_Time']
 
         # if show beyer, find beyer figures
         if self.Settings.displaybeyer:
             self.horse_beyer = ""
             if not self.Settings.displayorder:
-                self.horse_beyer += str(self.horses_racing[0]['L_BSF'])
+                self.horse_beyer += str(self.horses_racing[0]['P_BSF'])
             else:
                 for horse in self.horses_racing[:-1]:
-                    self.horse_beyer += (str(horse['L_BSF']) + "\n")
-                self.horse_beyer += str(self.horses_racing[-1]['L_BSF'])
+                    self.horse_beyer += (str(horse['P_BSF']) + "\n")
+                self.horse_beyer += str(self.horses_racing[-1]['P_BSF'])
+
+        # find predicted winning horse
+        if self.Settings.checkaccuracy:
+            self.horses_racing.sort(key=lambda x:x['P_Time'])
+            self.horse_pwin = self.horses_racing[0]['B_Horse']
+        else:
+            horse_list = []
+            probablity= int((100-self.Settings.accuracy)/(len(self.horses_racing)-1))
+            for horse in self.horses_racing:
+                if horse == self.horse_win:
+                    horse_list += ([self.horse_win]*self.Settings.accuracy)
+                else:
+                    horse_list += ([horse['B_Horse']]*probablity)
+            self.horse_pwin = random.choice(horse_list)
 
         # find odds and winnings for horses
         self.horses_odds = ""
@@ -913,7 +919,7 @@ class MainWindow:
             self.instructions.destroy()
 
         # betting screen
-        self.bet = tk.Frame(self.window)
+        self.bet = tk.Frame(self.master)
         self.bet.grid()
         self.bet.grid_columnconfigure(0, minsize=(screen_width*(5/7)))
         self.bet.grid_columnconfigure(1, minsize=(screen_width*(1/7)))
@@ -1021,7 +1027,7 @@ class MainWindow:
             self.bet.destroy()
 
             # create new frame for suggestion
-            self.s_suggest = tk.Frame(self.window)
+            self.s_suggest = tk.Frame(self.master)
             self.s_suggest.grid()
             for i in range(4):
                 if i == 0 or i == 3:
@@ -1181,7 +1187,7 @@ class MainWindow:
         """ displays the results of the race """
         # destroy the retrieving screen and create a new screen for results
         self.retrieve.destroy()
-        self.result = tk.Frame(self.window)
+        self.result = tk.Frame(self.master)
         self.result.grid()
         # nine rows
         for i in range(8):
@@ -1257,7 +1263,7 @@ class MainWindow:
         # destroy result screen and make a new exit screen
         if hasattr(self, 'result'):
             self.result.destroy()
-        self.exit = tk.Frame(self.window)
+        self.exit = tk.Frame(self.master)
         self.exit.grid()
         for i in range(3):
             self.exit.grid_rowconfigure(i, minsize=int(screen_height/3))
@@ -1285,7 +1291,6 @@ class MainWindow:
         if self.save.get() == "-0":
             print("NO SAVE")
             self.exit.destroy()
-            self.window.destroy()
 
         # check if no entry
         elif self.save.get() == "":
@@ -1305,7 +1310,6 @@ class MainWindow:
                 int(self.save.get())
                 print("SAVE")
                 self.exit.destroy()
-                self.window.destroy()
             except ValueError:
                 error = tk.Tk()
                 error.title("ERROR")
