@@ -1249,7 +1249,7 @@ class MainWindow:
             self.Settings.trials -= 1
             self.output['trial_number'] = str(self.Settings.trials)
             self.betting_screen()
-        data.append(self.output)
+        data.append(self.output.copy())
 
     def exit(self):
         # destroy result screen and make a new exit screen
