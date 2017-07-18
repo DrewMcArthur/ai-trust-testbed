@@ -110,16 +110,17 @@ class MainWindow:
         return (self.Settings.trials == int(self.trials.get()) \
            and self.Settings.system_name == self.system_name.get() \
            and self.Settings.betting_option == self.option_betting.get() \
-           and (self.Settings.betting_option == '0' or self.Settings.betting_amount == int(self.betting.get())) \
+           and (self.Settings.betting_option == '0' \
+            or self.Settings.betting_amount == int(self.betting.get())) \
            and self.Settings.purse == float(self.purse.get()) \
            and self.Settings.time_limit == int(self.time.get()) \
            and self.Settings.num_of_horses == int(self.horses.get()) \
            and self.Settings.checkaccuracy == int(self.checkaccuracy.get()) \
-           and self.Settings.accuracy == int(self.accuracy.get()) \
+           and (self.Settings.checkaccuracy == '1' \
+            or self.Settings.accuracy == int(self.accuracy.get())) \
            and self.Settings.displaytime == int(self.displaytime.get()) \
            and self.Settings.displaybeyer == int(self.displaybeyer.get()) \
            and self.Settings.displayorder == int(self.displayorder.get()) \
-           
            and self.Settings.option_suggestion == self.option_suggestion.get())
 
     def load_defaults(self):
@@ -462,7 +463,7 @@ class MainWindow:
                   " when the system guesses correctly")
 
         # accuracy slider
-        self.accuracy = tk.Scale(self.settings, orient=tk.HORIZONTAL, 
+        self.accuracy = tk.Scale(self.settings, orient=tk.HORIZONTAL, command=self.toggleapplyrevert,
                                  resolution=10, showvalue=0, tickinterval=10, 
                                  length=300)
         self.accuracy.grid(row=6, column=2, columnspan=2, padx=10, sticky=tk.W)
@@ -646,7 +647,7 @@ class MainWindow:
             name = element[1]
             t = element[2]
             # check if any element is empty
-            if not e:
+            if e != 0 and not e:
                 #display the error essage
                 return "Enter a value for {}".format(name)
             else:
