@@ -674,26 +674,6 @@ class MainWindow:
 
         self.welcome.destroy()
 
-        # checking values
-        print("Trials: ", self.Settings.trials, 
-            "\nAccuracy: ", self.Settings.accuracy,
-            "\nCheck Accuracy: ", self.Settings.checkaccuracy,
-            "\nTime: ", self.Settings.displaytime,
-            "\nBeyer: ", self.Settings.displaybeyer,
-            "\nOrder: ", self.Settings.displayorder,
-            "\nBetting Style: ", self.Settings.betting_option,
-            "\nBetting Amount: ", self.Settings.betting_amount,
-            "\nPurse: ", self.Settings.purse,
-            "\nNumber of Horses: ", self.Settings.num_of_horses,
-            "\nTime Limit per Race: ", self.Settings.time_limit)
-
-        # fit to screen
-        global screen_width
-        global screen_height
-
-        print(screen_width, screen_height)
-        print(self.Settings.__dict__)
-
         # configure instructions frame
         self.instructions = tk.Frame(self.master)
         self.instructions.grid()
@@ -835,11 +815,10 @@ class MainWindow:
         elif self.Settings.accuracy == 100:
             self.horse_pwin = self.horse_win
         else:
-            print(self.Settings.accuracy)
             horse_list = []
             probablity= int((100-self.Settings.accuracy)/(len(self.horses_racing)-1))
             for horse in self.horses_racing:
-                if horse == self.horse_win:
+                if horse['B_Horse'] == self.horse_win:
                     horse_list += ([self.horse_win]*self.Settings.accuracy)
                 else:
                     horse_list += ([horse['B_Horse']]*probablity)
@@ -998,12 +977,12 @@ class MainWindow:
                      font=(None,font_body))\
                     .grid(row=4, column=1, columnspan=2, padx=20, sticky=tk.W)
 
-            self.horse_select.grid(row=4, column=1, columnspan=2, 
-                                   padx=35, pady=5, sticky=tk.W + tk.S)
+            self.horse_select.grid(row=5, column=1, columnspan=2, 
+                                   padx=35, sticky=tk.W + tk.N)
 
             # submit button
             tk.Button(self.bet, text='Submit', 
-                      command=self.s_suggestion, font=(None,font_body-5))\
+                      command=self.s_suggestion, font=(None,font_body))\
                      .grid(row=6, column=1, columnspan=2, padx=10, pady=10)
 
     def s_suggestion(self):
@@ -1032,30 +1011,23 @@ class MainWindow:
             # create new frame for suggestion
             self.s_suggest = tk.Frame(self.master)
             self.s_suggest.grid()
+            for i in range(3):
+                self.s_suggest.grid_columnconfigure(
+                        i, minsize=int(screen_width/3))
             for i in range(4):
                 if i == 0 or i == 3:
-                    self.s_suggest.grid_columnconfigure(
-                        i, minsize=int(screen_width/3))
-                else:
-                    self.s_suggest.grid_columnconfigure(
-                         i, minsize=int(((1/3)*screen_width)/2))
-            for i in range(5):
-                if i == 0 or i == 4:
                     self.s_suggest.grid_rowconfigure(
                         i, minsize=int(screen_height/4))
-                else:
-                    self.s_suggest.grid_rowconfigure(
-                         i, minsize=int(((1/2)*screen_height)/3))
 
             self.t = 120
             self.timer_label = tk.Label(self.s_suggest, textvariable="", 
                                         font=(None,font_body), justify='right')
-            self.timer_label.grid(row=0, column=3, padx=15, pady=10, 
+            self.timer_label.grid(row=0, column=2, 
                                   sticky=tk.N + tk.E)
             self.countdown()
 
             suggestion_text = "AIde's suggestion: {}\n\nYour choice: {}" +\
-                              "\nWould you like to change your choice?"
+                              "\n\nWould you like to change your choice?"
             suggestion_text = suggestion_text.format(self.horse_pwin, 
                                                      self.horsemenu.get())
             lines = suggestion_text.split("\n")
@@ -1106,13 +1078,13 @@ class MainWindow:
             suggestion_text = "\n".join(lines)
 
             tk.Label(self.s_suggest, font=(None,font_title), text=suggestion_text)\
-                    .grid(row=1, column=1, columnspan=2)
+                    .grid(row=1, column=1)
             self.horse_select = tk.OptionMenu(self.s_suggest, self.horsemenu, 
                                           *self.horse_names)
             self.horse_select.config(font=(None,font_body))
-            self.horse_select.grid(row=2, column=1, columnspan=2)
+            self.horse_select.grid(row=2, column=1)
             tk.Button(self.s_suggest, text="Submit", command=self.retrieving_data,
-                     font=(None,font_body)).grid(row=3, column=1, columnspan=2)
+                     font=(None,font_body)).grid(row=3, column=1)
 
     def retrieving_data(self):
 
@@ -1333,6 +1305,8 @@ if screen_height <= 800:
 elif screen_height >= 801:
     font_body=22
     font_title=30
+print(screen_width)
+print(screen_height)
 
 
 def run():
