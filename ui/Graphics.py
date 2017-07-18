@@ -1103,8 +1103,9 @@ class MainWindow:
 
         # check if suggestion screen needs to be deleted
         if hasattr(self, 's_suggest'):
-            self.s_suggest.destroy()
+            # check how long the user took to submit
             print(self.timer_label['text'])
+            self.s_suggest.destroy()
             self.t = self.Settings.time_limit * 60
         else:
             # check how long the user took to submit
@@ -1279,7 +1280,7 @@ class MainWindow:
         # check if -0 
         if self.save.get() == "-0":
             print("NO SAVE")
-            self.exit.destroy()
+            self.master.destroy()
 
         # check if no entry
         elif self.save.get() == "":
@@ -1306,7 +1307,7 @@ class MainWindow:
                 error.resizable(width=False, height=False)
                 tk.Label(error, text="Please insert numbers.", font=(None,font_body))\
                         .pack(padx=10, pady=10)
-                tk.Button(error, text="OK", command=lambda: self.master.destroy())\
+                tk.Button(error, text="OK", command=lambda: error.destroy())\
                          .pack(padx=10, pady=10)
 
 
