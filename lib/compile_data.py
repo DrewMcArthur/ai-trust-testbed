@@ -41,21 +41,26 @@ def writeLabelInfo(f, folder, LABELWRITER):
     beyerpath = folder + track + date + "_" + race + "_LB.CSV"
     timepath = folder + track + date + "_" + race + "_LT.CSV"
 
-    # removing beyer figures for now
-    #if not os.path.isfile(beyerpath) or not os.path.isfile(timepath):
-    if not os.path.isfile(timepath):
+    if not os.path.isfile(beyerpath) or not os.path.isfile(timepath):
+        if VVFLAG: 
+            print("File Not Found: ", beyerpath)
         return
 
     # open files for reading and create respective csv.DictReader objects
-    with open(timepath, newline='') as timefile:
-    #    open(beyerpath, newline='') as beyerfile:
-    #   beyerreader = csv.DictReader(beyerfile, dialect='unix')
+    with open(timepath, newline='') as timefile,\
+         open(beyerpath, newline='') as beyerfile:
+        beyerreader = csv.DictReader(beyerfile, dialect='unix')
         timereader = csv.DictReader(timefile, dialect='unix')
 
         # add the data in the beyer label file to the list, 
         # and simultaneously add ID and rank info for the race to the row
         rank = 1
-        for t in timereader:
+        for b in beyerreader:
+            # TODO figure out why this shit isn't working
+            if ord(b['Horse'][0]) > 127:
+                print("AHH THE dreaded QUESTION MARK")
+                continue
+
             # add race ID and horse's rank to entry
             entry = raceIDInfo.copy()
             entry.update({"L_Position": rank, 
@@ -64,17 +69,23 @@ def writeLabelInfo(f, folder, LABELWRITER):
                          })
 
             # read one line from timereader and add time to entry
-            #t = next(timereader)
-            #if t['Horse'] != entry['B_Horse'] or not entry['B_Horse']:
-            #   print("Error! reading entries from two label files and ")
-            #   print("       the horse names don't match! You screwed up!")
-            #   print("Race: " + str(raceIDInfo))
-            #   print("time's horse: " + t['Horse'])
-            #   print("beyer's horse: " + entry['Horse'])
+            try:
+                t = next(timereader)
+            except StopIteration:
+                t = None
+                entry = None
 
-            #entry.update({"L_Time": t["Fin"]})
-
-            entry = formatData(entry)
+            if entry is None:
+                print("Timefile ended early. ", timepath)
+            elif (t['Horse'] != entry['B_Horse'] or not entry['B_Horse']):
+                print("Error! reading entries from two label files and ")
+                print("       the horse names don't match! You screwed up!")
+                print("Race: " + str(raceIDInfo))
+                print("beyer's horse: " + b['Horse'])
+                print("time's horse: " + t['Horse'])
+            else:
+                entry.update({"L_Time": t["Fin"]})
+                entry = formatData(entry)
 
             # add entry to list and update rank
             if entry is not None:
@@ -165,11 +176,16 @@ def fixDate(row):
 
 def fixOdds(row):
     """ given the odds in the format "A-B", return a float equal to A/B. """
+
     if 'B_MLOdds' not in row:
         return row
+    if not isinstance(row['B_MLOdds'], str) or row['B_MLOdds'] == "":
+        return row
+
     o = row['B_MLOdds']
     a, b = [float(f) for f in o.split('-')]
     row['B_MLOdds'] = a / b
+
     return row
 
 def fixTime(row):
@@ -205,6 +221,9 @@ def fixLabelName(row):
     if row is None:
         return row
 
+    if isinstance(row, str):
+        row = {'B_Horse': row}
+
     n = row['B_Horse']
     if len(n) > 30:
         if VVFLAG:
@@ -222,13 +241,13 @@ def fixLabelName(row):
 
 def checkBSF(row):
     """ returns None if a label is bad (i.e. 0 or None or "") """
-    if row is None:
+    if row is None or 'L_BSF' not in row:
         return row
 
     # double check rowfor missing data before writing
     if (row['L_BSF'] == "-" or
         row['L_BSF'] == "-0" or
-        row['L_BSF'] == '' or
+        row['L_BSF'] == "" or
         row['L_BSF'] == None ):
         if VVFLAG: 
             print("Bad Beyer Figure: ", row)
@@ -242,7 +261,7 @@ def formatData(row):
     if "L_Time" in row:
         row = fixTime(row)
         row = fixLabelName(row)
-        #row = checkBSF(row)
+        row = checkBSF(row)
     else:
         row = fixOdds(row)
     return row

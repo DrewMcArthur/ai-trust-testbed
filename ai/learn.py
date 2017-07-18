@@ -27,8 +27,10 @@ def read_data(filename):
 
 def get_label(horse):
     """ returns the time and beyer figure for the given horse. """
-    # (Time, Beyer Figure)
-    return (int(round(float(horse['L_Time'])*100)), int(horse['L_BSF']))
+    # Beyer Figure
+    return int(round(float(horse['L_Time'])*1000))
+    # time
+    #return int(horse['L_BSF'])
 
 def read_output(filename, data):
     """ returns an array of outputs """
@@ -50,6 +52,7 @@ def split_data(d, l, r):
     """ d=data, l=labels, r=ratio
         returns a tuple, of two lists, x and y where x is r% of d, 
         randomly chosen """
+    assert(len(d) == len(l))
     len_test = round(len(d) * (1 - r))
     test = []
     testlabels = []
@@ -59,12 +62,14 @@ def split_data(d, l, r):
         testlabels.append(l.pop(i))
     return ((d,l), (test,testlabels))
 
-def test_n_features(Xs, Ys):
+def test_n_features(n, Xs, Ys):
     beg = time.time()
 
     training, test = split_data(Xs, Ys, .90)
     x_train, y_train = training
     x_test, y_test = test
+
+    print("x Split data.")
 
     # TODO: get array of indices that represents the categorical columns
     #       this would go second, after feature hashing
@@ -72,13 +77,22 @@ def test_n_features(Xs, Ys):
     #enc = OneHotEncoder(categorical_features=cat_feats)
 
     fh = FeatureHasher(input_type='string')
-    kBest = SelectKBest(k=1750)
-    estimator = SVR(kernel="linear")
+    kBest = SelectKBest(k=n)
+    estimator = SVR(kernel="rbf")
+
+    print("x Created sklearn objects.")
 
     pipe = make_pipeline(fh, kBest, estimator)
 
+    print("x Created pipeline.")
+
     pipe.fit(x_train, y_train)
+
+    print("x Trained model.")
+
     dump(pipe, 'ai.pickle')
+
+    print("x Dumped model to file.")
 
     y_pred = pipe.predict(x_test)
 
@@ -86,18 +100,19 @@ def test_n_features(Xs, Ys):
 
     end = time.time()
 
-    #for d in deltas:
-        #print(d)
     # open output.csv and append a row to it consisting of 
     # the number of features, the avg. error, 
     # the explained variance, and r^2
-    with open("output.csv", 'a', newline='') as oFile:
+
+    print("Writing data for round", n)
+
+    with open("results.csv", 'a', newline='') as oFile:
         oWriter = csv.writer(oFile, dialect='unix',
                              quoting=csv.QUOTE_MINIMAL)
-        oWriter.writerow([end - beg,
-                          sum(deltas)/len(deltas),
-                          explained_variance_score(y_test, y_pred),
-                          r2_score(y_test, y_pred)])
+        oWriter.writerow([n, end - beg,
+               sum(deltas)/len(deltas),
+               explained_variance_score(y_test, y_pred),
+               r2_score(y_test, y_pred)])
 
 if __name__ == "__main__":
     config = yaml.safe_load(open("./config.yml"))
@@ -105,22 +120,8 @@ if __name__ == "__main__":
     data = read_data(config['final_data_filename'])
     targets = read_output("LABELS." + config['final_data_filename'], data)
 
-    #Ns = range(1,51)
-    #Parallel(n_jobs=2)(delayed(test_n_features)(n, data, targets) for n in Ns)
-    #[test_n_features(.1, data, targets) for _ in range(5)]
+    print("x read data and labels.")
 
-    # time = targets[0], beyer = targets[1]
-    times = [t[0] for t in targets]
-    beyers = [t[1] for t in targets]
-
-    fh = FeatureHasher(input_type='string')
-    kBest = SelectKBest(k=1700)
-    estimator = SVR(kernel="linear")
-
-    #time_pipe = make_pipeline(fh, kBest, estimator)
-    #time_pipe.fit(data, times)
-    #dump(time_pipe, 'ai_time.pickle')
-
-    beyer_pipe = make_pipeline(fh, kBest, estimator)
-    beyer_pipe.fit(data, beyers)
-    dump(beyer_pipe, 'ai_beyer.pickle')
+    #Ns = range(1700, 1810, 10)
+    #Parallel(n_jobs=8)(delayed(test_n_features)(n, data, targets) for n in Ns)
+    test_n_features(1750, data, targets)

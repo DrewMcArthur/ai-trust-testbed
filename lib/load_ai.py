@@ -81,13 +81,13 @@ def get_list_data(horses):
 
 def get_ai():
     """ returns the ai object used to predict horse's ranks """
-    return (joblib.load("lib/ai_beyer.pickle"), 
+    return (joblib.load("lib/ai_beyer.pickle.bak"), 
             joblib.load("lib/ai_time.pickle"))
 
 def formatTime(t):
-    huns = int((t % 100) * 10)
-    secs = int(t // 100)
-    mins = int(secs // 60)
+    huns = (int(t) % 1000)
+    secs = int(t) // 1000
+    mins = int(secs) // 60
     secs = secs % 60
 
     return "{}:{}.{}".format(mins, secs, huns)
@@ -143,7 +143,9 @@ def main():
     horses = get_positions("PRX", "170528", 2)
     print("                     Actual           Predicted")
     print("Name           Rank  Time      BSF    Time        BSF")
-    [print("{:15}   {}  {:8}  {:3}    {:8}    {:3.2f}".format(horse['B_Horse'], horse['L_Rank'], horse['L_Time'], horse['L_BSF'], horse['P_Time'], horse['P_BSF']))
+    [print("{:15}   {}  {:8}  {:3}    {:8}    {:3.2f}".format(horse['B_Horse'], 
+                horse['L_Rank'], horse['L_Time'], horse['L_BSF'], 
+                horse['P_Time'], horse['P_BSF']))
             for horse in sorted(horses, key=lambda h: h['L_Rank'])]
 
 if __name__ == "__main__":
