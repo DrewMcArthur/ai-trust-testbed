@@ -84,8 +84,6 @@ class MainWindow:
 
     def save_settings(self):
         # saving data from settings
-        #if not self.errorcheck():
-        print(self.Settings.name)
         self.Settings.system_name = self.system_name.get()
         self.Settings.trials = int(self.trials.get())
         self.Settings.accuracy = int(self.accuracy.get())
@@ -958,7 +956,8 @@ class MainWindow:
 
         if self.Settings.option_suggestion == "Bet":
             tk.Label(self.bet, justify='left', font=(None,font_body),
-                     text="AIde's Suggestion: {}".format(self.horse_pwin))\
+                     text="{}'s' Suggestion: {}".format \
+                     (self.Settings.system_name, self.horse_pwin))\
                     .grid(row=4, column=1, columnspan=2, padx=20, pady=10, 
                           sticky=tk.W)
             tk.Label(self.bet, text="Horse you want to bet on:", 
@@ -1026,9 +1025,10 @@ class MainWindow:
                                   sticky=tk.N + tk.W)
             self.countdown()
 
-            suggestion_text = "AIde's suggestion: {}\n\nYour choice: {}" +\
+            suggestion_text = "{}'s suggestion: {}\n\nYour choice: {}" +\
                               "\n\nWould you like to change your choice?"
-            suggestion_text = suggestion_text.format(self.horse_pwin, 
+            suggestion_text = suggestion_text.format(self.Settings.system_name,
+                                                     self.horse_pwin, 
                                                      self.horsemenu.get())
             lines = suggestion_text.split("\n")
 
@@ -1192,7 +1192,8 @@ class MainWindow:
                  font=(None,font_body), fg='red', justify='left')\
                 .grid(row=2, column=2, pady=10, sticky=tk.N + tk.W)
 
-        tk.Label(self.result, text="AIde's suggestion: ", font=(None,font_body))\
+        tk.Label(self.result, text="{}'s suggestion: ".format\
+                (self.Settings.system_name), font=(None,font_body))\
                 .grid(row=3, column=1, pady=10, sticky=tk.N + tk.W)
         tk.Label(self.result, text='{}'.format(self.horse_pwin), 
                  font=(None,font_body), fg='red')\
