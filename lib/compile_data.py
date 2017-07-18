@@ -42,6 +42,8 @@ def writeLabelInfo(f, folder, LABELWRITER):
     timepath = folder + track + date + "_" + race + "_LT.CSV"
 
     if not os.path.isfile(beyerpath) or not os.path.isfile(timepath):
+        if VVFLAG: 
+            print("File Not Found: ", beyerpath)
         return
 
     # open files for reading and create respective csv.DictReader objects
@@ -53,7 +55,12 @@ def writeLabelInfo(f, folder, LABELWRITER):
         # add the data in the beyer label file to the list, 
         # and simultaneously add ID and rank info for the race to the row
         rank = 1
-        for t in timereader:
+        for b in beyerreader:
+            # TODO figure out why this shit isn't working
+            if ord(b['Horse'][0]) > 127:
+                print("AHH THE dreaded QUESTION MARK")
+                continue
+
             # add race ID and horse's rank to entry
             entry = raceIDInfo.copy()
             entry.update({"L_Position": rank, 
@@ -62,17 +69,23 @@ def writeLabelInfo(f, folder, LABELWRITER):
                          })
 
             # read one line from timereader and add time to entry
-            b = next(beyerreader)
-            if fixLabelName(b['Horse']) != fixLabelName(entry['B_Horse']):
-               print("Error! reading entries from two label files and ")
-               print("       the horse names don't match! You screwed up!")
-               print("Race: " + str(raceIDInfo))
-               print("beyer's horse: " + fixLabelName(b['Horse'])['B_Horse'])
-               print("time's horse: " + fixLabelName(entry['B_Horse'])['B_Horse'])
-            else:
-                entry.update({"L_BSF": b["Chart"]})
+            try:
+                t = next(timereader)
+            except StopIteration:
+                t = None
+                entry = None
 
-            entry = formatData(entry)
+            if entry is None:
+                print("Timefile ended early. ", timepath)
+            elif (t['Horse'] != entry['B_Horse'] or not entry['B_Horse']):
+                print("Error! reading entries from two label files and ")
+                print("       the horse names don't match! You screwed up!")
+                print("Race: " + str(raceIDInfo))
+                print("beyer's horse: " + b['Horse'])
+                print("time's horse: " + t['Horse'])
+            else:
+                entry.update({"L_Time": t["Fin"]})
+                entry = formatData(entry)
 
             # add entry to list and update rank
             if entry is not None:
