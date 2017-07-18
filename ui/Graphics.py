@@ -792,7 +792,11 @@ class MainWindow:
         for horse in self.superhorses:
             if (horse['B_ProgNum'] in nums):
                 self.horses_racing.append(horse)
-        self.output['horses_racing'] = self.horses_racing
+
+        horse_names = []
+        for horse in self.horses_racing:
+            horse_names.append(horse['B_Horse'])
+        self.output['horse_names'] = horse_names
 
         # find actual winning horse
         self.horses_racing.sort(key=lambda x:x['L_Rank'])
@@ -1239,14 +1243,17 @@ class MainWindow:
                       font=(None,font_body), command=self.races)\
                      .grid(row=6, column=1, columnspan=2, pady=10, sticky=tk.N)
 
-    def races(self):
         global data 
+        self.output['trial_number'] = str(self.Settings.trials)
+        data.append(self.output)
+        print(self.output)
+        print(data)
+
+    def races(self):
         # if there are more races, decrement trials and load another race
         if self.Settings.trials > 0:
             self.Settings.trials -= 1
-            self.output['trial_number'] = str(self.Settings.trials)
             self.betting_screen()
-        data.append(self.output)
 
     def exit(self):
         # destroy result screen and make a new exit screen
@@ -1299,8 +1306,6 @@ class MainWindow:
                 int(self.save.get())
                 self.output['ID_number'] = str(self.save.get())
                 print("SAVE")
-                for trial in data:
-                    print(trial, "\n\n")
                 self.master.destroy()
             except ValueError:
                 error = tk.Tk()
