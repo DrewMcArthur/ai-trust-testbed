@@ -47,7 +47,7 @@ class MainWindow:
     def __init__(self, master):
         # setting up first windows (welcome and settings)
         self.master = master
-
+        self.output = {}
         # go to settings screen
         self.s_welcome()
 
@@ -65,7 +65,11 @@ class MainWindow:
                 temp = pickle.load(open(os.path.join(self.path,filename+'_s.p'), 'rb'))
                 print(temp)
                 for i in temp.keys():
-                    setattr(self, i, temp[i]) 
+                    setattr(self, i, temp[i])
+
+        def output(self):
+            return {i: getattr(self,i) for i in self.__dict__ \
+                if not callable(getattr(self, i)) and not i.startswith('__') and 'path' not in i}
 
     def load_settings(self, *event):
         name = self.defaultmenu.get()
@@ -677,6 +681,7 @@ class MainWindow:
     def instructions(self):
         # screen that displays the instructions
         # clearing screen and making a new instructions window
+        self.output_settings = self.Settings.output(self.Settings)
         if hasattr(self, 'settings'):
             self.settings.destroy()
         else:
@@ -1013,10 +1018,12 @@ class MainWindow:
         else:
             # check how long the user took to submit
             print(self.timer_label['text'])
-
+            print(self.t)
+            self.output['time_taken'] = str(self.Settings.time_limit*60 - self.t)
+            self.output['initial_choice'] = self.horsemenu.get()
             if self.Settings.betting_option == 'Variable':
                 self.Settings.betting_amount = float(self.new_bet.get())
-
+                self.output['betting_amount'] = self.Settings.betting_amount
             # delete old frame
             self.bet.destroy()
 
@@ -1110,9 +1117,10 @@ class MainWindow:
         else:
             # check how long the user took to submit
             print(self.timer_label['text'])
-
+            self.output['time_taken'] = str(self.Settings.time_limit*60 - self.t)
             if self.Settings.betting_option == 'Variable':
                 self.Settings.betting_amount = float(self.new_bet.get())
+                self.output['betting_amount'] = self.Settings.betting_amount
 
         # check if a horse is selected
         if self.horsemenu.get() == "Select horse" and self.t != -1:
@@ -1131,7 +1139,7 @@ class MainWindow:
 
             # variable to keep track if there are more races
             self.next_race = True
-
+            self.output['final_choice'] = self.horsemenu.get()
             # create a new window for retrieving data
             self.retrieve = tk.Tk()
             self.retrieve.title("Retrieving Data")
@@ -1172,6 +1180,7 @@ class MainWindow:
             tk.Button(no_money, text='OK', command=lambda : 
                     no_money.destroy()).pack(padx=10, pady=10)
             self.Settings.trials = 1
+        self.output['final_purse'] = self.Settings.purse
 
     def results(self):
         """ displays the results of the race """
@@ -1299,6 +1308,8 @@ class MainWindow:
             try:
                 int(self.save.get())
                 print("SAVE")
+                print(self.output_settings)
+                print(self.output)
                 self.master.destroy()
             except ValueError:
                 error = tk.Tk()
