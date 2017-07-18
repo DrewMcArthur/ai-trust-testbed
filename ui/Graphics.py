@@ -68,8 +68,10 @@ class MainWindow:
                     setattr(self, i, temp[i])
 
         def output(self):
+            print( {i: getattr(self,i) for i in self.__dict__ \
+                if not callable(getattr(self, i)) and not i.startswith('__')and not 'path' in i} )
             return {i: getattr(self,i) for i in self.__dict__ \
-                if not callable(getattr(self, i)) and not i.startswith('__') and 'path' not in i}
+                if not callable(getattr(self, i)) and not i.startswith('__') and not 'path' in i}
 
     def load_settings(self, *event):
         name = self.defaultmenu.get()
@@ -681,13 +683,13 @@ class MainWindow:
     def instructions(self):
         # screen that displays the instructions
         # clearing screen and making a new instructions window
-        self.output_settings = self.Settings.output(self.Settings)
+       
         if hasattr(self, 'settings'):
             self.settings.destroy()
         else:
             self.Settings.path = os.path.join('ui','settings')
             self.load_defaults()
-
+        self.output_settings = self.Settings.output(self.Settings)
         self.welcome.destroy()
 
         # configure instructions frame
@@ -1310,6 +1312,24 @@ class MainWindow:
                 print("SAVE")
                 print(self.output_settings)
                 print(self.output)
+                if not os.path.isfile('sample_output.csv'):
+                    header = True
+                with open('sample_output.csv','w') as csvfile:
+                    fieldnames = ['ID number']
+                    fieldnames += self.output_settings.keys()
+                    self.output_settings['ID number'] = self.save.get()
+                    fieldnames.append('trial number')
+                    
+                    fieldnames+= data[0].keys()
+                    writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
+                    if header:
+                        writer.writeheader()
+                    for i in range(len(data)):
+                        lineDict = self.output_settings
+                        lineDict.update(data[i])
+                        lineDict['trial number'] = i + 1
+
+
                 self.master.destroy()
             except ValueError:
                 error = tk.Tk()
