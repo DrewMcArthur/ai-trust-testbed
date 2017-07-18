@@ -1021,7 +1021,7 @@ class MainWindow:
 
             self.t = 120
             self.timer_label = tk.Label(self.s_suggest, textvariable="", 
-                                        font=(None,font_body), justify='right')
+                                        font=(None,font_title), justify='right')
             self.timer_label.grid(row=0, column=0, 
                                   sticky=tk.N + tk.W)
             self.countdown()
