@@ -829,7 +829,10 @@ class MainWindow:
         if self.Settings.checkaccuracy:
             self.horses_racing.sort(key=lambda x:x['P_Time'])
             self.horse_pwin = self.horses_racing[0]['B_Horse']
+        elif self.Settings.accuracy == 100:
+            self.horse_pwin = self.horse_win
         else:
+            print(self.Settings.accuracy)
             horse_list = []
             probablity= int((100-self.Settings.accuracy)/(len(self.horses_racing)-1))
             for horse in self.horses_racing:
@@ -1305,7 +1308,7 @@ class MainWindow:
             try:
                 int(self.save.get())
                 print("SAVE")
-                self.exit.destroy()
+                sys.exit()
             except ValueError:
                 error = tk.Tk()
                 error.title("ERROR")
@@ -1313,7 +1316,7 @@ class MainWindow:
                 error.resizable(width=False, height=False)
                 tk.Label(error, text="Please insert numbers.", font=(None,font_body))\
                         .pack(padx=10, pady=10)
-                tk.Button(error, text="OK", command=lambda: error.destroy())\
+                tk.Button(error, text="OK", command=lambda: sys.exit())\
                          .pack(padx=10, pady=10)
 
 
@@ -1322,7 +1325,7 @@ root = tk.Tk()
 screen_height = root.winfo_screenheight()
 screen_width = root.winfo_screenwidth()
 if screen_height <= 800:
-    font_body=20
+    font_body=15
     font_title=25
 elif screen_height >= 801:
     font_body=22
