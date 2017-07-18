@@ -9,6 +9,7 @@ from PIL import Image, ImageTk
 from lib.load_ai import get_positions
 from pydoc import locate
 import pickle
+import csv
 
 def check():
     # checks every 50 milliseconds for keyboard interrupts (ctrl+q)
@@ -68,8 +69,10 @@ class MainWindow:
                     setattr(self, i, temp[i])
 
         def output(self):
+            print( {i: getattr(self,i) for i in self.__dict__ \
+                if not callable(getattr(self, i)) and not i.startswith('__')and not 'path' in i} )
             return {i: getattr(self,i) for i in self.__dict__ \
-                if not callable(getattr(self, i)) and not i.startswith('__') and 'path' not in i}
+                if not callable(getattr(self, i)) and not i.startswith('__') and not 'path' in i}
 
     def load_settings(self, *event):
         name = self.defaultmenu.get()
@@ -681,13 +684,13 @@ class MainWindow:
     def instructions(self):
         # screen that displays the instructions
         # clearing screen and making a new instructions window
-        self.output_settings = self.Settings.output(self.Settings)
+       
         if hasattr(self, 'settings'):
             self.settings.destroy()
         else:
             self.Settings.path = os.path.join('ui','settings')
             self.load_defaults()
-
+        self.output_settings = self.Settings.output(self.Settings)
         self.welcome.destroy()
 
         # configure instructions frame
@@ -1304,8 +1307,33 @@ class MainWindow:
             # check if entry is numbers
             try:
                 int(self.save.get())
+
+                for trial in data:
+                    print(trial, "\n\n")
                 self.output['ID_number'] = str(self.save.get())
                 print("SAVE")
+                print(self.output_settings)
+                print(self.output)
+                header = True
+                if not os.path.isfile('sample_output.csv'):
+                    header = True
+                with open('sample_output.csv','w') as csvfile:
+                    fieldnames = ['ID number']
+                    fieldnames += self.output_settings.keys()
+                    self.output_settings['ID number'] = self.save.get()
+                    fieldnames.append('trial number')
+                    
+                    fieldnames+= data[0].keys()
+                    print(fieldnames)
+                    writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
+                    if header:
+                        writer.writeheader()
+                    for i in range(len(data)):
+                        lineDict = self.output_settings
+                        lineDict.update(data[i])
+                        lineDict['trial number'] = i + 1
+                        writer.writerow(lineDict)
+
                 self.master.destroy()
             except ValueError:
                 error = tk.Tk()
