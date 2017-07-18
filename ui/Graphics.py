@@ -695,11 +695,11 @@ class MainWindow:
 
         tk.Label(self.instructions, 
                  text=welcomeText.format(betValue, self.Settings.time_limit),
-                 font=(None,font_title))\
+                 font=(None,font_body))\
                 .grid(row=1, column=0, columnspan=3)
 
         tk.Button(self.instructions, text='Start', 
-                  font=(None,font_body), command=self.betting_screen)\
+                  font=(None,font_body-5), command=self.betting_screen)\
                  .grid(row=1, column=0, columnspan=3, sticky=tk.S)
 
     def generateforms(self):
@@ -1021,7 +1021,7 @@ class MainWindow:
 
             self.t = 120
             self.timer_label = tk.Label(self.s_suggest, textvariable="", 
-                                        font=(None,font_title), justify='right')
+                                        font=(None,font_body), justify='right')
             self.timer_label.grid(row=0, column=0, 
                                   sticky=tk.N + tk.W)
             self.countdown()
@@ -1081,7 +1081,7 @@ class MainWindow:
                     .grid(row=1, column=1)
             self.horse_select = tk.OptionMenu(self.s_suggest, self.horsemenu, 
                                           *self.horse_names)
-            self.horse_select.config(font=(None,font_body))
+            self.horse_select.config(font=(None,font_body+5))
             self.horse_select.grid(row=2, column=1)
             tk.Button(self.s_suggest, text="Submit", command=self.retrieving_data,
                      font=(None,font_body)).grid(row=3, column=1)
