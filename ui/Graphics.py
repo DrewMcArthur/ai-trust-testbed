@@ -9,6 +9,7 @@ from PIL import Image, ImageTk
 from lib.load_ai import get_positions
 from pydoc import locate
 import pickle
+import csv
 
 def check():
     # checks every 50 milliseconds for keyboard interrupts (ctrl+q)
@@ -794,6 +795,7 @@ class MainWindow:
         for horse in self.superhorses:
             if (horse['B_ProgNum'] in nums):
                 self.horses_racing.append(horse)
+        self.output['horses_racing'] = self.horses_racing
 
         # find actual winning horse
         self.horses_racing.sort(key=lambda x:x['L_Rank'])
@@ -805,26 +807,7 @@ class MainWindow:
             for horse in self.horses_racing[:-1]:
                 self.horse_winl += (horse['B_Horse'] + "\n")
             self.horse_winl += self.horses_racing[-1]['B_Horse']
-
-        # if show time, find times
-        if self.Settings.displaytime:
-            self.horse_time = ""
-            if not self.Settings.displayorder:
-                self.horse_time += self.horses_racing[0]['P_Time']
-            else:
-                for horse in self.horses_racing[:-1]:
-                    self.horse_time += (horse['L_Time'] + "\n")
-                self.horse_time += self.horses_racing[-1]['P_Time']
-
-        # if show beyer, find beyer figures
-        if self.Settings.displaybeyer:
-            self.horse_beyer = ""
-            if not self.Settings.displayorder:
-                self.horse_beyer += str(self.horses_racing[0]['P_BSF'])
-            else:
-                for horse in self.horses_racing[:-1]:
-                    self.horse_beyer += (str(horse['P_BSF']) + "\n")
-                self.horse_beyer += str(self.horses_racing[-1]['P_BSF'])
+        self.output['actual_outcome'] = self.horse_win
 
         # find predicted winning horse
         if self.Settings.checkaccuracy:
@@ -841,6 +824,7 @@ class MainWindow:
                 else:
                     horse_list += ([horse['B_Horse']]*probablity)
             self.horse_pwin = random.choice(horse_list)
+        self.output['predicted_outcome'] = self.horse_pwin
 
         # find odds and winnings for horses
         self.horses_odds = ""
@@ -1061,20 +1045,22 @@ class MainWindow:
 
             # Complete Order
             if self.Settings.displayorder: 
-                lines.insert(1, "Predicted placing:")
+                lines.insert(1, "\nPredicted placing:")
 
-                header = " "*25 # 18 spaces
+                spacing = " "*40 # 40 spaces
+                header = spacing + spacing[:10]
                 if self.Settings.displaytime:
-                    header += "(T)"
+                    header += "(T)             "
                 if self.Settings.displaybeyer:
-                    header += "          (B)"
+                    header += "(B)"
                 lines.insert(2, header)
 
                 pRank = len(self.horses_racing)
                 for horse in sorted(self.horses_racing, 
                                     key=lambda h:h['P_Time'], reverse=True):
-                    hStr = "{}: {:>18}".format(pRank, horse['B_Horse'])
+                    hStr = "{}: {:18}\n".format(pRank, horse['B_Horse'])
                     if self.Settings.displaytime:
+                       hStr += spacing
                        hStr += "      {}".format(horse['P_Time'])
                     if self.Settings.displaybeyer:
                        hStr += "      {:.2f}".format(horse['P_BSF'])
@@ -1089,21 +1075,22 @@ class MainWindow:
                     if self.Settings.displaybeyer:
                         # change last character of previous line to a comma
                         lines[1] = lines[1][:-1] + ","
-                        lines.insert(2, "and a BSF of {}."
+                        lines.insert(2, "and a BSF of {:.2f}."
                                    .format(self.horses_racing[0]['P_BSF']))
                 else:
                     # Beyer
                     if self.Settings.displaybeyer: 
-                        lines.insert(1, "With a BSF of {}."
+                        lines.insert(1, "With a BSF of {:.2f}."
                                    .format(self.horses_racing[0]['P_BSF']))
 
             suggestion_text = "\n".join(lines)
 
-            tk.Label(self.s_suggest, font=(None,font_title), text=suggestion_text)\
+            tk.Label(self.s_suggest, font=(None,font_body), text=suggestion_text,
+                     justify='left')\
                     .grid(row=1, column=1)
             self.horse_select = tk.OptionMenu(self.s_suggest, self.horsemenu, 
                                           *self.horse_names)
-            self.horse_select.config(font=(None,font_body+5))
+            self.horse_select.config(font=(None,font_body))
             self.horse_select.grid(row=2, column=1)
             tk.Button(self.s_suggest, text="Submit", command=self.retrieving_data,
                      font=(None,font_body)).grid(row=3, column=1)
@@ -1114,6 +1101,7 @@ class MainWindow:
         if hasattr(self, 's_suggest'):
             # check how long the user took to submit
             print(self.timer_label['text'])
+            self.output['time_suggest'] = str(self.Settings.time_limit*60 - self.t)
             self.s_suggest.destroy()
             self.t = self.Settings.time_limit * 60
         else:
@@ -1255,10 +1243,13 @@ class MainWindow:
                      .grid(row=6, column=1, columnspan=2, pady=10, sticky=tk.N)
 
     def races(self):
+        global data 
         # if there are more races, decrement trials and load another race
         if self.Settings.trials > 0:
-            self.betting_screen()
             self.Settings.trials -= 1
+            self.output['trial_number'] = str(self.Settings.trials)
+            self.betting_screen()
+        data.append(self.output)
 
     def exit(self):
         # destroy result screen and make a new exit screen
@@ -1309,9 +1300,13 @@ class MainWindow:
             # check if entry is numbers
             try:
                 int(self.save.get())
+                for trial in data:
+                    print(trial, "\n\n")
+                self.output['ID_number'] = str(self.save.get())
                 print("SAVE")
                 print(self.output_settings)
                 print(self.output)
+                header = True
                 if not os.path.isfile('sample_output.csv'):
                     header = True
                 with open('sample_output.csv','w') as csvfile:
@@ -1321,6 +1316,7 @@ class MainWindow:
                     fieldnames.append('trial number')
                     
                     fieldnames+= data[0].keys()
+                    print(fieldnames)
                     writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
                     if header:
                         writer.writeheader()
@@ -1328,6 +1324,9 @@ class MainWindow:
                         lineDict = self.output_settings
                         lineDict.update(data[i])
                         lineDict['trial number'] = i + 1
+                        writer.writerow(lineDict)
+
+
 
 
                 self.master.destroy()
@@ -1353,6 +1352,7 @@ elif screen_height >= 801:
     font_body=22
     font_title=30
 
+data=[]
 
 def run():
     root.title("Horse Racing")
