@@ -172,7 +172,8 @@ class MainWindow:
                 name.delete(0,'end')
                 name.grid_remove()
                 lb.insert('end', n)
-                lb.config(height=lb.size()+1)
+                if lb.size() > 9:
+                    scrollbar.activate('slider')
                 self.Settings.name = n
                 self.load_defaults()
                 self.Settings.save(self.Settings, self.Settings.name)
@@ -182,35 +183,41 @@ class MainWindow:
                 cancel_button.grid()
                 
         def add():
-            name.grid(row=1,column=1,sticky=tk.S)
+            name.grid(row=1,column=1,sticky=tk.S,padx=(20,0))
             add_button.grid_remove()
             cancel_button.grid_remove()
             remove_button.grid_remove()
             done_button.grid(row=2,column=1,padx=(0,20),sticky=tk.E)
 
         save_window = tk.Tk()
+        scrollbar = tk.Scrollbar(save_window)
+        scrollbar.grid(row=1, column=2, padx=(0,20), sticky=tk.NS)
+        #scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         save_window.wm_attributes("-topmost", 1)
         save_window.geometry('315x290')
         save_window.grid()
         save_window.title('Edit Settings')
         save_window.bind('<Control-q>', sys.exit)
-        lb = tk.Listbox(save_window,width=30)
-        lb.grid(row=1,column=1,sticky=tk.N,padx=20)
+        lb = tk.Listbox(save_window,yscrollcommand=scrollbar.set, height=10,width=30)
+        lb.grid(row=1,column=1,sticky=tk.N,padx=(20,0),pady=(0,5))
         tk.Label(save_window,text='Files:').grid(
                                 row=0,column=1,sticky=tk.W,padx=20,pady=(10,0))
         for f in [f.replace('_s.p','') for f in os.listdir(self.Settings.path) \
                                                 if f.endswith('_s.p')]:
             print(f)
             lb.insert('end',f)
-        lb.config(height=lb.size()+1)
+        scrollbar.config(command=lb.yview)
+        lb.config(yscrollcommand=scrollbar.set)
+
         cancel_button = tk.Button(save_window, text='Done',command=close)
         cancel_button.grid(row=2,column=1,padx=(1,20),sticky=tk.E)
         add_button = tk.Button(save_window, text='Add',command=add)
-        add_button.grid(row=2,column=1,padx=(20,1),sticky=tk.W)
+        add_button.grid(row=2,column=1,padx=(25,1),sticky=tk.W)
         remove_button = tk.Button(save_window, text='Remove',command=remove)
         remove_button.grid(row=2,column=1,padx=1)
         done_button = tk.Button(save_window, text='Enter',command=save_file)
         name = tk.Entry(save_window,width=30)
+        save_window.resizable(width=False, height=False)
 
     def update_settings(self):
         self.Settings.load(self.Settings,self.Settings.name)
@@ -629,6 +636,8 @@ class MainWindow:
             font = (None, 20)).pack(padx = 10, pady = 10)
         tk.Button(error, text='OK', command=lambda : 
             error.destroy()).pack(padx=10, pady=10)
+        error.resizable(width=False,height=False)
+        error.wm_attributes("-topmost", 1)
 
 
     def errorcheck(self):
@@ -1319,6 +1328,7 @@ def run():
     root.geometry("%dx%d+0+0" % (screen_width, screen_height))
     root.bind('<Control-q>', sys.exit)
     app = MainWindow(root)
+    root.resizable(width=False, height=False)
     root.mainloop()
 
 if __name__ == "__main__":
