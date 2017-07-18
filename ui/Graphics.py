@@ -181,14 +181,12 @@ class MainWindow:
                 remove_button.grid()
                 cancel_button.grid()
                 
-
         def add():
             name.grid(row=1,column=1,sticky=tk.S)
             add_button.grid_remove()
             cancel_button.grid_remove()
             remove_button.grid_remove()
             done_button.grid(row=2,column=1,padx=(0,20),sticky=tk.E)
-
 
         save_window = tk.Tk()
         save_window.wm_attributes("-topmost", 1)
@@ -317,7 +315,8 @@ class MainWindow:
         self.enable_checking()
 
     def toggleapplyrevert(self,*a):
-        if (self.errorcheck() is None and self.check_settings()) or self.Settings.name == 'None':
+        if (self.errorcheck() is None and self.check_settings()) or \
+                                          self.Settings.name == 'None':
             self.revert.config(state='disabled')
             self.apply.config(state='disabled')
         else:
@@ -372,6 +371,10 @@ class MainWindow:
         self.Settings.path = os.path.join('ui','settings')
         self.Settings.name = 'None'
         self.load_defaults()
+
+        def update():
+            l.config(text=str(random.random()))
+            root.after(1000, update)
 
         # create settings window
         self.master.geometry("635x700")
@@ -461,7 +464,8 @@ class MainWindow:
                   " when the system guesses correctly")
 
         # accuracy slider
-        self.accuracy = tk.Scale(self.settings, orient=tk.HORIZONTAL, command=self.toggleapplyrevert,
+        self.accuracy = tk.Scale(self.settings, orient=tk.HORIZONTAL, 
+                                 command=self.toggleapplyrevert,
                                  resolution=10, showvalue=0, tickinterval=10, 
                                  length=300)
         self.accuracy.grid(row=6, column=2, columnspan=2, padx=10, sticky=tk.W)
@@ -1091,6 +1095,7 @@ class MainWindow:
         # check if suggestion screen needs to be deleted
         if hasattr(self, 's_suggest'):
             self.s_suggest.destroy()
+            print(self.timer_label['text'])
             self.t = self.Settings.time_limit * 60
         else:
             # check how long the user took to submit
