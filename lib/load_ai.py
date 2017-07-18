@@ -151,9 +151,9 @@ def get_ai():
             joblib.load("ai/models/ai_time_linear.pickle"))
 
 def formatTime(t):
-    huns = int((t % 100) * 10)
-    secs = int(t // 100)
-    mins = int(secs // 60)
+    huns = (int(t) % 1000)
+    secs = int(t) // 1000
+    mins = int(secs) // 60
     secs = secs % 60
 
     return "{}:{}.{}".format(mins, secs, huns)
@@ -242,7 +242,7 @@ def main():
             .format(horse['B_Horse'], horse['L_Rank'], horse['L_Time'], 
                     horse['L_BSF'], horse['P_Rank'], horse['P_Time'], 
                     horse['P_BSF']))
-            for horse in sorted(horses, key=lambda h: h['L_Rank'])]
+        for horse in sorted(horses, key=lambda h: h['L_Rank'])]
 
 if __name__ == "__main__":
     main()
