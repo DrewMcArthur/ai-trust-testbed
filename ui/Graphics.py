@@ -384,8 +384,6 @@ class MainWindow:
                                      sticky=tk.N+tk.S+tk.W+tk.E)
 
         # drop-down of default settings
-        
-
         select_settings = tk.Label(self.settings, text="Select settings: ")
         select_settings.grid(row=0, column=1, padx=10, pady=5, sticky=tk.W)
         HoverInfo(select_settings, "Select settings from previous stored saves")
@@ -668,9 +666,10 @@ class MainWindow:
         if hasattr(self, 'settings'):
             self.settings.destroy()
         else:
-            self.welcome.destroy()
             self.Settings.path = os.path.join('ui','settings')
             self.load_defaults()
+
+        self.welcome.destroy()
 
         # checking values
         print("Trials: ", self.Settings.trials, 
