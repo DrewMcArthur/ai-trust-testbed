@@ -1052,20 +1052,22 @@ class MainWindow:
 
             # Complete Order
             if self.Settings.displayorder: 
-                lines.insert(1, "Predicted placing:")
+                lines.insert(1, "\nPredicted placing:")
 
-                header = " "*25 # 18 spaces
+                spacing = " "*40 # 40 spaces
+                header = spacing + spacing[:10]
                 if self.Settings.displaytime:
-                    header += "(T)"
+                    header += "(T)             "
                 if self.Settings.displaybeyer:
-                    header += "          (B)"
+                    header += "(B)"
                 lines.insert(2, header)
 
                 pRank = len(self.horses_racing)
                 for horse in sorted(self.horses_racing, 
                                     key=lambda h:h['P_Time'], reverse=True):
-                    hStr = "{}: {:>18}".format(pRank, horse['B_Horse'])
+                    hStr = "{}: {:18}\n".format(pRank, horse['B_Horse'])
                     if self.Settings.displaytime:
+                       hStr += spacing
                        hStr += "      {}".format(horse['P_Time'])
                     if self.Settings.displaybeyer:
                        hStr += "      {:.2f}".format(horse['P_BSF'])
@@ -1080,21 +1082,22 @@ class MainWindow:
                     if self.Settings.displaybeyer:
                         # change last character of previous line to a comma
                         lines[1] = lines[1][:-1] + ","
-                        lines.insert(2, "and a BSF of {}."
+                        lines.insert(2, "and a BSF of {:.2f}."
                                    .format(self.horses_racing[0]['P_BSF']))
                 else:
                     # Beyer
                     if self.Settings.displaybeyer: 
-                        lines.insert(1, "With a BSF of {}."
+                        lines.insert(1, "With a BSF of {:.2f}."
                                    .format(self.horses_racing[0]['P_BSF']))
 
             suggestion_text = "\n".join(lines)
 
-            tk.Label(self.s_suggest, font=(None,font_title), text=suggestion_text)\
+            tk.Label(self.s_suggest, font=(None,font_body), text=suggestion_text,
+                     justify='left')\
                     .grid(row=1, column=1)
             self.horse_select = tk.OptionMenu(self.s_suggest, self.horsemenu, 
                                           *self.horse_names)
-            self.horse_select.config(font=(None,font_body+5))
+            self.horse_select.config(font=(None,font_body))
             self.horse_select.grid(row=2, column=1)
             tk.Button(self.s_suggest, text="Submit", command=self.retrieving_data,
                      font=(None,font_body)).grid(row=3, column=1)
