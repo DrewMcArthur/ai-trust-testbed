@@ -9,8 +9,9 @@ from itertools import permutations
 from collections import OrderedDict
 from joblib import dump, load
 from sklearn.metrics import accuracy_score, explained_variance_score, r2_score
-from sklearn.preprocessing import (LabelEncoder, OneHotEncoder, Imputer, MinMaxScaler)
+from sklearn.preprocessing import (LabelEncoder, OneHotEncoder, Imputer, MinMaxScaler) 
 from sklearn.feature_extraction import FeatureHasher
+from sklearn.feature_selection import SelectKBest
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import make_pipeline
 
@@ -48,9 +49,9 @@ def get_comparison(horses):
         i.e. true if horseA finished before horseB                  """
     horseA, horseB = horses
     if 'L_Position' not in horseA:
-        return 0
+        return -1
     if 'L_Position' not in horseB:
-        return 1
+        return -1
     return 1 if horseA['L_Position'] < horseB['L_Position'] else 0
 
 def get_label(horse):
@@ -63,18 +64,12 @@ def read_output(filename, races):
     with open(filename) as lFile:
         labelreader = csv.DictReader(lFile, dialect='unix')
         r = []
-#       print(races.keys())
         # iterate through the file and keep track of times
         for row in labelreader:
             ID = get_raceID(row)
-#           print("Getting label for: ", ID)
             if ID in races:
                 for horse in races[ID]:
-#                   print("applying label to ", horse['B_Horse'], " in ", ID)
-#                   print("IDs:", horse['ID'], row['ID'])
-#                   print("Names:", horse['B_Horse'], row['B_Horse'])
                     if horse['ID'] == row['ID']:
-#                       print("gave horse position",horse['B_Horse'])
                         horse.update({"L_Position": row['L_Position']})
         return races
 
@@ -90,10 +85,15 @@ def remove_raceInfo(l):
         that give information on the race.  This is necessary since 
         the race info is already provided in the other horse. 
         this preserves ID, however """
-    ID = l[0]
-    name = l[4]
-    newlist = l[30:]
-    return [ID] + [name] + newlist
+    [l.pop(k, None) for k in ["R_RCTrack","R_RCDate","R_RCRace","R_Starters",
+                        "R_TrackName","R_RaceState","R_Division","R_RaceBred",
+                        "R_StateBred","R_RaceSex","R_RaceAge","R_Class",
+                        "R_Purse","R_HiClaim","R_LoClaim","R_Distance",
+                        "R_Inner","R_Surface","R_RaceType","R_GradedRace",
+                        "R_GradedRaceDesc","R_SimTrack","R_TrackRecord",
+                        "R_DayOfWeek","R_PostTime","R_LongClass","R_TrkAbbrev",
+                        "R_DistUnit","R_TimeUnit"]]
+    return l
 
 def format_pair(pair):
     """ given a tuple of two horses (dictionaries), return a single list
@@ -103,15 +103,18 @@ def format_pair(pair):
     A.pop('L_Position', None)
     B.pop('L_Position', None)
 
-    # get the values in each dictionary, then sort them by the original order
-    keys, ret = zip(*A.items())
-    keys, items = zip(*B.items())
-
     # remove duplicate information from the beginning of the list
-    items = remove_raceInfo(list(items))
+    B = remove_raceInfo(B)
 
-    # combine the lists and return them
-    return list(ret) + items
+    # merge dictionaries
+    final = OrderedDict()
+    for key, item in A.items():
+        final.update({"A_" + key: item})
+    for key, item in B.items():
+        final.update({"B_" + key: item})
+
+    # return the merged dict
+    return final
 
 def isint(x):
     """ returns true if x is probably an int hidden in a string """
@@ -122,11 +125,11 @@ def isint(x):
         return False
 
 def format_data(horse):
-    for i in range(len(horse)):
-        if horse[i] == '':
-            horse[i] = None
-        elif isint(horse[i]):
-            horse[i] = int(horse[i])
+    for key, item in horse.items():
+        if item == '':
+            horse.update({key: None})
+        elif isint(item):
+            horse.update({key: int(item)})
     return horse
 
 def get_model(Xs, Ys):
@@ -142,11 +145,13 @@ def get_model(Xs, Ys):
     imp = Imputer(missing_values='', strategy='mean', axis=0)
     scaler = MinMaxScaler()
     nn = MLPClassifier()
+    kBest = SelectKBest(k=3500)
 
     # construct a pipe from previous objects
-    model = make_pipeline(fh, enc, imp, scaler, nn)
+    model = make_pipeline(enc, kBest, nn)
 
     # train the model
+    Xs = [[item for key, item in row.items] for row in Xs]
     model.fit(Xs, Ys)
 
     return model
@@ -159,21 +164,21 @@ def test_model(model, x_test, y_test):
     y_pred = model.predict(x_test)
 
     print("results for classifying winners")
-    print(accuracy_score(y_test, y_pred))
-    print(explained_variance_score(y_test, y_pred))
-    print(r2_score(y_test, y_pred))
+    print("accuracy: ", accuracy_score(y_test, y_pred))
+    print("variance: ", explained_variance_score(y_test, y_pred))
+    print("r square: ", r2_score(y_test, y_pred))
     print("=== pickle dump of model ===")
     print(pickle.dumps(model))
     print("=== end pickle dump ===")
 
-def write_compiled(data, labels):
+def write_compiled(headers, data, labels):
     """ given a dictionary and a list, write each to file.
         dictionary -> csv, list to file in rows. """
     f = open("compiled_labels.txt", 'w')
     for l in labels:
-        f.write(str(l))
+        f.write(str(l) + "\n")
     w = csv.DictWriter(open("compiled_data.csv", 'w'), dialect='unix', 
-                       fieldnames=data.keys())
+                       fieldnames=headers, extrasaction='ignore')
     w.writeheader()
     for d in data:
         w.writerow(d)
@@ -185,13 +190,12 @@ def load_compiled():
     for line in f:
         labels.append(int(line))
 
-    r = csv.DictReader(open("compiled_data.csv"), dialect='unix')
     data = []
+    r = csv.DictReader(open("compiled_data.csv"), dialect='unix')
     for row in r:
         data.append(row)
 
     return (data, labels)
-    
 
 def generate_datadump(toFile=False):
     """ loads data from file, formats it, and if toFile is set to true, 
@@ -199,7 +203,7 @@ def generate_datadump(toFile=False):
     print("  Generating data...")
     # read the data and labels from file
     config = yaml.safe_load(open("./config.yml"))
-    races = read_data(config['final_data_filename'])
+    races = read_data("nn" + config['final_data_filename'])
     races = read_output("LABELS." + config['final_data_filename'], races)
 
     print("x Read data from file.")
@@ -211,18 +215,19 @@ def generate_datadump(toFile=False):
 
     data = []
     labels = []
-    i = 0
+    print("length of pairs, labels, and data twice. what are the differences?")
+    totalpairs = 0
     for ID, race in races.items():
         pairs = generate_pairs(race)
+        totalpairs += len(pairs)
         for pair in pairs:
-            a, b = pair
             labels.append(get_comparison(pair))
+        for pair in pairs:
             data.append(format_pair(pair))
-#       print("Parsed {0:.2f}% of races.".format(i / (len(races)/100)), 
-#             end='\r')
-        i += 1
 
+    print(len(data))
     data = [format_data(d) for d in data]
+    print(len(data))
     
     print("x Formatted Data.")
 
@@ -255,32 +260,34 @@ def generate_datadump(toFile=False):
 #   np.delete(a, todelete)
 
 #   data = a.tolist()
-    newdata = []
-    for d in data:
-        newd = []
-        for i in range(len(d)):
-            if i not in todelete:
-                newd.append(d[i])
-        newdata.append(newd)
-    data = newdata
+    keys = data[0].keys()
+    headers = []
+    for i in range(len(keys)):
+        if i not in todelete:
+            headers.append(keys[i])
+        
+    print(len(data))
 
     print("x Deleted extraneous columns.")
 
     if toFile:
-        write_compiled(data, labels)
+        write_compiled(headers, data, labels)
         #dump((data, labels), 'classifier_data.pickle')
     return (data, labels)
 
 def main():
+    print("  Beginning nn script.")
+
     # load the data from file if it exists, or re-generate it. 
-    data, labels = (load_compiled()
-                    if os.path.isfile('compiled_data.csv')
-                    else generate_datadump(True))
+    if not os.path.isfile('compiled_data.csv'):
+        generate_datadump(True)
+    data, labels = load_compiled()
 
     print("x Loaded data. ")
 
     # split the data
-    training, test = split_data(data, labels, .9)
+    splitData = split_data(data, labels, .9)
+    training, test = splitData
     x_train, y_train = training
     x_test, y_test = test
 
