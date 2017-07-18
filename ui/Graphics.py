@@ -1022,8 +1022,8 @@ class MainWindow:
             self.t = 120
             self.timer_label = tk.Label(self.s_suggest, textvariable="", 
                                         font=(None,font_body), justify='right')
-            self.timer_label.grid(row=0, column=2, 
-                                  sticky=tk.N + tk.E)
+            self.timer_label.grid(row=0, column=0, 
+                                  sticky=tk.N + tk.W)
             self.countdown()
 
             suggestion_text = "AIde's suggestion: {}\n\nYour choice: {}" +\
@@ -1283,7 +1283,7 @@ class MainWindow:
             try:
                 int(self.save.get())
                 print("SAVE")
-                sys.exit()
+                self.master.destroy()
             except ValueError:
                 error = tk.Tk()
                 error.title("ERROR")
@@ -1291,7 +1291,7 @@ class MainWindow:
                 error.resizable(width=False, height=False)
                 tk.Label(error, text="Please insert numbers.", font=(None,font_body))\
                         .pack(padx=10, pady=10)
-                tk.Button(error, text="OK", command=lambda: sys.exit())\
+                tk.Button(error, text="OK", command=lambda: self.master.destroy())\
                          .pack(padx=10, pady=10)
 
 
@@ -1305,8 +1305,6 @@ if screen_height <= 800:
 elif screen_height >= 801:
     font_body=22
     font_title=30
-print(screen_width)
-print(screen_height)
 
 
 def run():
