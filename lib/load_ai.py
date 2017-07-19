@@ -12,6 +12,7 @@
 """
 
 import joblib, csv, os
+from ai.compare import ColWiseEncoder, format_pair
 from lib.compile_data import get_race_info
 
 class Horse:
@@ -19,13 +20,13 @@ class Horse:
         self.horse = horse
         self.nn = nn
     def __lt__(self, other):
-        return aWins(self.nn, self, other)
+        return aWins(self.nn, self.horse, other.horse)
 
 def remove_raceInfo(d):
     """ removes the columns relating race info from d """
-    ID = l[0]
-    name = l[4]
-    newlist = l[30:]
+    ID = d[0]
+    name = d[4]
+    newlist = d[30:]
     return [ID] + [name] + newlist
 
 def remove_columns(d):
@@ -77,8 +78,8 @@ def makepair(a, b):
 
 def aWins(nn, horseA, horseB):
     """ returns true if the first horse would win, or false otherwise. """
-    d = makepair(horseA, horseB)
-    return nn.predict(d) == 1
+    d = format_pair(horseA, horseB)
+    return nn.predict([d]) == 1
 
 def format_data(row):
     """ formats a row (dictionary) of data to our standards. """

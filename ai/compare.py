@@ -56,7 +56,9 @@ class ColWiseEncoder(TransformerMixin):
             col = list(map(lambda s: 'other' if s not in self.mapper[i].classes_ 
                                         else s, col.tolist()))
 
-            print(col)
+            le_classes = self.mapper[i].classes_.tolist()
+            bisect.insort_left(le_classes, 'other')
+            self.mapper[i].classes_ = le_classes
             # transform the columns
             nArray[:,i] = self.mapper[i].transform(col)
         return nArray
