@@ -8,13 +8,16 @@
 import numpy as np
 import csv
 
-def isDicrete(l):
+def isDiscrete(l):
     for item in l:
         try:
             float(item)
         except ValueError:
-            return False
-    return True
+            if item != "":
+                # not continuous
+                return True
+    # is continuous
+    return False
 
 def main():
     datafile = open('data.csv')
@@ -22,7 +25,7 @@ def main():
 
     headers = next(datareader)
     data = []
-    for row in reader:
+    for row in datareader:
         data.append(row)
 
     data = np.array(data)
