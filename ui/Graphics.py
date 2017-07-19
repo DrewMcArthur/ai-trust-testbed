@@ -9,6 +9,7 @@ from PIL import Image, ImageTk
 from lib.load_ai import get_positions
 from pydoc import locate
 import pickle
+import csv
 
 def check():
     # checks every 50 milliseconds for keyboard interrupts (ctrl+q)
@@ -47,7 +48,7 @@ class MainWindow:
     def __init__(self, master):
         # setting up first windows (welcome and settings)
         self.master = master
-
+        self.output = {}
         # go to settings screen
         self.s_welcome()
 
@@ -59,9 +60,20 @@ class MainWindow:
 
         def load(self, filename):
             if filename == 'None':
-                files = [f for f in  os.listdir(self.path) if f.endswith('_s.p')]
-                filename = files[0].replace('_s.p','')
-            temp = pickle.load(open(os.path.join(self.path,filename+'_s.p'), 'rb'))
+
+                self.name = 'None'
+                MainWindow.load_defaults
+            else: 
+                temp = pickle.load(open(os.path.join(self.path,filename+'_s.p'), 'rb'))
+                print(temp)
+                for i in temp.keys():
+                    setattr(self, i, temp[i])
+
+        def output(self):
+            print( {i: getattr(self,i) for i in self.__dict__ \
+                if not callable(getattr(self, i)) and not i.startswith('__')and not 'path' in i} )
+            return {i: getattr(self,i) for i in self.__dict__ \
+                if not callable(getattr(self, i)) and not i.startswith('__') and not 'path' in i}
 
             print(temp)
             for i in temp.keys():
@@ -83,8 +95,6 @@ class MainWindow:
 
     def save_settings(self):
         # saving data from settings
-        #if not self.errorcheck():
-        print(self.Settings.name)
         self.Settings.system_name = self.system_name.get()
         self.Settings.trials = int(self.trials.get())
         self.Settings.accuracy = int(self.accuracy.get())
@@ -108,16 +118,18 @@ class MainWindow:
         print(self.Settings.name)
         return (self.Settings.trials == int(self.trials.get()) \
            and self.Settings.system_name == self.system_name.get() \
-           and self.Settings.betting_amount == int(self.betting.get()) \
+           and self.Settings.betting_option == self.option_betting.get() \
+           and (self.Settings.betting_option == '0' \
+            or self.Settings.betting_amount == int(self.betting.get())) \
            and self.Settings.purse == float(self.purse.get()) \
            and self.Settings.time_limit == int(self.time.get()) \
            and self.Settings.num_of_horses == int(self.horses.get()) \
            and self.Settings.checkaccuracy == int(self.checkaccuracy.get()) \
-           and self.Settings.accuracy == int(self.accuracy.get()) \
+           and (self.Settings.checkaccuracy == '1' \
+            or self.Settings.accuracy == int(self.accuracy.get())) \
            and self.Settings.displaytime == int(self.displaytime.get()) \
            and self.Settings.displaybeyer == int(self.displaybeyer.get()) \
            and self.Settings.displayorder == int(self.displayorder.get()) \
-           and self.Settings.betting_option == self.option_betting.get() \
            and self.Settings.option_suggestion == self.option_suggestion.get())
 
     def load_defaults(self):
@@ -171,7 +183,8 @@ class MainWindow:
                 name.delete(0,'end')
                 name.grid_remove()
                 lb.insert('end', n)
-                lb.config(height=lb.size()+1)
+                if lb.size() > 9:
+                    scrollbar.activate('slider')
                 self.Settings.name = n
                 self.load_defaults()
                 self.Settings.save(self.Settings, self.Settings.name)
@@ -180,38 +193,42 @@ class MainWindow:
                 remove_button.grid()
                 cancel_button.grid()
                 
-
         def add():
-            name.grid(row=1,column=1,sticky=tk.S)
+            name.grid(row=1,column=1,sticky=tk.S,padx=(20,0))
             add_button.grid_remove()
             cancel_button.grid_remove()
             remove_button.grid_remove()
             done_button.grid(row=2,column=1,padx=(0,20),sticky=tk.E)
 
-
         save_window = tk.Tk()
+        scrollbar = tk.Scrollbar(save_window)
+        scrollbar.grid(row=1, column=2, padx=(0,20), sticky=tk.NS)
+        #scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         save_window.wm_attributes("-topmost", 1)
         save_window.geometry('315x290')
         save_window.grid()
         save_window.title('Edit Settings')
         save_window.bind('<Control-q>', sys.exit)
-        lb = tk.Listbox(save_window,width=30)
-        lb.grid(row=1,column=1,sticky=tk.N,padx=20)
+        lb = tk.Listbox(save_window,yscrollcommand=scrollbar.set, height=10,width=30)
+        lb.grid(row=1,column=1,sticky=tk.N,padx=(20,0),pady=(0,5))
         tk.Label(save_window,text='Files:').grid(
                                 row=0,column=1,sticky=tk.W,padx=20,pady=(10,0))
         for f in [f.replace('_s.p','') for f in os.listdir(self.Settings.path) \
                                                 if f.endswith('_s.p')]:
             print(f)
             lb.insert('end',f)
-        lb.config(height=lb.size()+1)
+        scrollbar.config(command=lb.yview)
+        lb.config(yscrollcommand=scrollbar.set)
+
         cancel_button = tk.Button(save_window, text='Done',command=close)
         cancel_button.grid(row=2,column=1,padx=(1,20),sticky=tk.E)
         add_button = tk.Button(save_window, text='Add',command=add)
-        add_button.grid(row=2,column=1,padx=(20,1),sticky=tk.W)
+        add_button.grid(row=2,column=1,padx=(25,1),sticky=tk.W)
         remove_button = tk.Button(save_window, text='Remove',command=remove)
         remove_button.grid(row=2,column=1,padx=1)
         done_button = tk.Button(save_window, text='Enter',command=save_file)
         name = tk.Entry(save_window,width=30)
+        save_window.resizable(width=False, height=False)
 
     def update_settings(self):
         self.Settings.load(self.Settings,self.Settings.name)
@@ -316,7 +333,8 @@ class MainWindow:
         self.enable_checking()
 
     def toggleapplyrevert(self,*a):
-        if (self.errorcheck() is None and self.check_settings()) or self.Settings.name == 'None':
+        if (self.errorcheck() is None and self.check_settings()) or \
+                                          self.Settings.name == 'None':
             self.revert.config(state='disabled')
             self.apply.config(state='disabled')
         else:
@@ -371,6 +389,10 @@ class MainWindow:
         self.Settings.path = os.path.join('ui','settings')
         self.Settings.name = 'None'
         self.load_defaults()
+
+        def update():
+            l.config(text=str(random.random()))
+            root.after(1000, update)
 
         # create settings window
         self.master.geometry("635x700")
@@ -461,6 +483,7 @@ class MainWindow:
 
         # accuracy slider
         self.accuracy = tk.Scale(self.settings, orient=tk.HORIZONTAL, 
+                                 command=self.toggleapplyrevert,
                                  resolution=10, showvalue=0, tickinterval=10, 
                                  length=300)
         self.accuracy.grid(row=6, column=2, columnspan=2, padx=10, sticky=tk.W)
@@ -623,11 +646,14 @@ class MainWindow:
             font = (None, 20)).pack(padx = 10, pady = 10)
         tk.Button(error, text='OK', command=lambda : 
             error.destroy()).pack(padx=10, pady=10)
+        error.resizable(width=False,height=False)
+        error.wm_attributes("-topmost", 1)
 
 
     def errorcheck(self):
         # checks to make sure the settings were correct
-        elementlist = [(self.trials.get(),'number of trials',int,1,50), 
+        elementlist = [(self.system_name.get(),'system name',str),
+                       (self.trials.get(),'number of trials',int,1,50), 
                        (self.purse.get(),'purse',float,2), 
                        (self.horses.get(),'number of horses',int,2), 
                        (self.time.get(),'time limit',int,1,60)]
@@ -642,7 +668,7 @@ class MainWindow:
             name = element[1]
             t = element[2]
             # check if any element is empty
-            if not e:
+            if e != 0 and not e:
                 #display the error essage
                 return "Enter a value for {}".format(name)
             else:
@@ -661,38 +687,15 @@ class MainWindow:
     def instructions(self):
         # screen that displays the instructions
         # clearing screen and making a new instructions window
+       
         if hasattr(self, 'settings'):
             self.settings.destroy()
         else:
             self.Settings.path = os.path.join('ui','settings')
 
             self.load_defaults()
-
+        self.output_settings = self.Settings.output(self.Settings)
         self.welcome.destroy()
-
-        # checking values
-        print("Trials: ", self.Settings.trials, 
-            "\nAccuracy: ", self.Settings.accuracy,
-            "\nCheck Accuracy: ", self.Settings.checkaccuracy,
-            "\nTime: ", self.Settings.displaytime,
-            "\nBeyer: ", self.Settings.displaybeyer,
-            "\nOrder: ", self.Settings.displayorder,
-            "\nBetting Style: ", self.Settings.betting_option,
-            "\nBetting Amount: ", self.Settings.betting_amount,
-            "\nPurse: ", self.Settings.purse,
-            "\nNumber of Horses: ", self.Settings.num_of_horses,
-            "\nTime Limit per Race: ", self.Settings.time_limit)
-
-        self.window = tk.Tk()
-        self.window.title('Horse Racing')
-        self.window.bind('<Control-q>', sys.exit)
-
-        # fit to screen
-        global screen_width
-        global screen_height
-
-        print(screen_width, screen_height)
-        print(self.Settings.__dict__)
 
         # configure instructions frame
         self.instructions = tk.Frame(self.master)
@@ -715,11 +718,11 @@ class MainWindow:
 
         tk.Label(self.instructions, 
                  text=welcomeText.format(betValue, self.Settings.time_limit),
-                 font=(None,font_title))\
+                 font=(None,font_body))\
                 .grid(row=1, column=0, columnspan=3)
 
         tk.Button(self.instructions, text='Start', 
-                  font=(None,font_body), command=self.betting_screen)\
+                  font=(None,font_body-5), command=self.betting_screen)\
                  .grid(row=1, column=0, columnspan=3, sticky=tk.S)
 
     def generateforms(self):
@@ -797,6 +800,11 @@ class MainWindow:
             if (horse['B_ProgNum'] in nums):
                 self.horses_racing.append(horse)
 
+        horse_names = []
+        for horse in self.horses_racing:
+            horse_names.append(horse['B_Horse'])
+        self.output['horse_names'] = horse_names
+
         # find actual winning horse
         self.horses_racing.sort(key=lambda x:x['L_Rank'])
         if not self.Settings.displayorder:
@@ -807,40 +815,24 @@ class MainWindow:
             for horse in self.horses_racing[:-1]:
                 self.horse_winl += (horse['B_Horse'] + "\n")
             self.horse_winl += self.horses_racing[-1]['B_Horse']
-
-        # if show time, find times
-        if self.Settings.displaytime:
-            self.horse_time = ""
-            if not self.Settings.displayorder:
-                self.horse_time += self.horses_racing[0]['P_Time']
-            else:
-                for horse in self.horses_racing[:-1]:
-                    self.horse_time += (horse['L_Time'] + "\n")
-                self.horse_time += self.horses_racing[-1]['P_Time']
-
-        # if show beyer, find beyer figures
-        if self.Settings.displaybeyer:
-            self.horse_beyer = ""
-            if not self.Settings.displayorder:
-                self.horse_beyer += str(self.horses_racing[0]['P_BSF'])
-            else:
-                for horse in self.horses_racing[:-1]:
-                    self.horse_beyer += (str(horse['P_BSF']) + "\n")
-                self.horse_beyer += str(self.horses_racing[-1]['P_BSF'])
+        self.output['actual_outcome'] = self.horse_win
 
         # find predicted winning horse
         if self.Settings.checkaccuracy:
             self.horses_racing.sort(key=lambda x:x['P_Time'])
             self.horse_pwin = self.horses_racing[0]['B_Horse']
+        elif self.Settings.accuracy == 100:
+            self.horse_pwin = self.horse_win
         else:
             horse_list = []
             probablity= int((100-self.Settings.accuracy)/(len(self.horses_racing)-1))
             for horse in self.horses_racing:
-                if horse == self.horse_win:
+                if horse['B_Horse'] == self.horse_win:
                     horse_list += ([self.horse_win]*self.Settings.accuracy)
                 else:
                     horse_list += ([horse['B_Horse']]*probablity)
             self.horse_pwin = random.choice(horse_list)
+        self.output['predicted_outcome'] = self.horse_pwin
 
         # find odds and winnings for horses
         self.horses_odds = ""
@@ -976,7 +968,8 @@ class MainWindow:
 
         if self.Settings.option_suggestion == "Bet":
             tk.Label(self.bet, justify='left', font=(None,font_body),
-                     text="AIde's Suggestion: {}".format(self.horse_pwin))\
+                     text="{}'s' Suggestion: {}".format \
+                     (self.Settings.system_name, self.horse_pwin))\
                     .grid(row=4, column=1, columnspan=2, padx=20, pady=10, 
                           sticky=tk.W)
             tk.Label(self.bet, text="Horse you want to bet on:", 
@@ -995,12 +988,12 @@ class MainWindow:
                      font=(None,font_body))\
                     .grid(row=4, column=1, columnspan=2, padx=20, sticky=tk.W)
 
-            self.horse_select.grid(row=4, column=1, columnspan=2, 
-                                   padx=35, pady=5, sticky=tk.W + tk.S)
+            self.horse_select.grid(row=5, column=1, columnspan=2, 
+                                   padx=35, sticky=tk.W + tk.N)
 
             # submit button
             tk.Button(self.bet, text='Submit', 
-                      command=self.s_suggestion, font=(None,font_body-5))\
+                      command=self.s_suggestion, font=(None,font_body))\
                      .grid(row=6, column=1, columnspan=2, padx=10, pady=10)
 
     def s_suggestion(self):
@@ -1019,41 +1012,37 @@ class MainWindow:
         else:
             # check how long the user took to submit
             print(self.timer_label['text'])
-
+            print(self.t)
+            self.output['time_taken'] = str(self.Settings.time_limit*60 - self.t)
+            self.output['initial_choice'] = self.horsemenu.get()
             if self.Settings.betting_option == 'Variable':
                 self.Settings.betting_amount = float(self.new_bet.get())
-
+                self.output['betting_amount'] = self.Settings.betting_amount
             # delete old frame
             self.bet.destroy()
 
             # create new frame for suggestion
             self.s_suggest = tk.Frame(self.master)
             self.s_suggest.grid()
+            for i in range(3):
+                self.s_suggest.grid_columnconfigure(
+                        i, minsize=int(screen_width/3))
             for i in range(4):
                 if i == 0 or i == 3:
-                    self.s_suggest.grid_columnconfigure(
-                        i, minsize=int(screen_width/3))
-                else:
-                    self.s_suggest.grid_columnconfigure(
-                         i, minsize=int(((1/3)*screen_width)/2))
-            for i in range(5):
-                if i == 0 or i == 4:
                     self.s_suggest.grid_rowconfigure(
                         i, minsize=int(screen_height/4))
-                else:
-                    self.s_suggest.grid_rowconfigure(
-                         i, minsize=int(((1/2)*screen_height)/3))
 
             self.t = 120
             self.timer_label = tk.Label(self.s_suggest, textvariable="", 
                                         font=(None,font_body), justify='right')
-            self.timer_label.grid(row=0, column=3, padx=15, pady=10, 
-                                  sticky=tk.N + tk.E)
+            self.timer_label.grid(row=0, column=0, 
+                                  sticky=tk.N + tk.W)
             self.countdown()
 
-            suggestion_text = "AIde's suggestion: {}\n\nYour choice: {}" +\
-                              "\nWould you like to change your choice?"
-            suggestion_text = suggestion_text.format(self.horse_pwin, 
+            suggestion_text = "{}'s suggestion: {}\n\nYour choice: {}" +\
+                              "\n\nWould you like to change your choice?"
+            suggestion_text = suggestion_text.format(self.Settings.system_name,
+                                                     self.horse_pwin, 
                                                      self.horsemenu.get())
             lines = suggestion_text.split("\n")
 
@@ -1064,20 +1053,22 @@ class MainWindow:
 
             # Complete Order
             if self.Settings.displayorder: 
-                lines.insert(1, "Predicted placing:")
+                lines.insert(1, "\nPredicted placing:")
 
-                header = " "*25 # 18 spaces
+                spacing = " "*40 # 40 spaces
+                header = spacing + spacing[:10]
                 if self.Settings.displaytime:
-                    header += "(T)"
+                    header += "(T)             "
                 if self.Settings.displaybeyer:
-                    header += "          (B)"
+                    header += "(B)"
                 lines.insert(2, header)
 
                 pRank = len(self.horses_racing)
                 for horse in sorted(self.horses_racing, 
                                     key=lambda h:h['P_Time'], reverse=True):
-                    hStr = "{}: {:>18}".format(pRank, horse['B_Horse'])
+                    hStr = "{}: {:18}\n".format(pRank, horse['B_Horse'])
                     if self.Settings.displaytime:
+                       hStr += spacing
                        hStr += "      {}".format(horse['P_Time'])
                     if self.Settings.displaybeyer:
                        hStr += "      {:.2f}".format(horse['P_BSF'])
@@ -1092,37 +1083,42 @@ class MainWindow:
                     if self.Settings.displaybeyer:
                         # change last character of previous line to a comma
                         lines[1] = lines[1][:-1] + ","
-                        lines.insert(2, "and a BSF of {}."
+                        lines.insert(2, "and a BSF of {:.2f}."
                                    .format(self.horses_racing[0]['P_BSF']))
                 else:
                     # Beyer
                     if self.Settings.displaybeyer: 
-                        lines.insert(1, "With a BSF of {}."
+                        lines.insert(1, "With a BSF of {:.2f}."
                                    .format(self.horses_racing[0]['P_BSF']))
 
             suggestion_text = "\n".join(lines)
 
-            tk.Label(self.s_suggest, font=(None,font_title), text=suggestion_text)\
-                    .grid(row=1, column=1, columnspan=2)
+            tk.Label(self.s_suggest, font=(None,font_body), text=suggestion_text,
+                     justify='left')\
+                    .grid(row=1, column=1)
             self.horse_select = tk.OptionMenu(self.s_suggest, self.horsemenu, 
                                           *self.horse_names)
             self.horse_select.config(font=(None,font_body))
-            self.horse_select.grid(row=2, column=1, columnspan=2)
+            self.horse_select.grid(row=2, column=1)
             tk.Button(self.s_suggest, text="Submit", command=self.retrieving_data,
-                     font=(None,font_body)).grid(row=3, column=1, columnspan=2)
+                     font=(None,font_body)).grid(row=3, column=1)
 
     def retrieving_data(self):
 
         # check if suggestion screen needs to be deleted
         if hasattr(self, 's_suggest'):
+            # check how long the user took to submit
+            print(self.timer_label['text'])
+            self.output['time_suggest'] = str(self.Settings.time_limit*60 - self.t)
             self.s_suggest.destroy()
             self.t = self.Settings.time_limit * 60
         else:
             # check how long the user took to submit
             print(self.timer_label['text'])
-
+            self.output['time_taken'] = str(self.Settings.time_limit*60 - self.t)
             if self.Settings.betting_option == 'Variable':
                 self.Settings.betting_amount = float(self.new_bet.get())
+                self.output['betting_amount'] = self.Settings.betting_amount
 
         # check if a horse is selected
         if self.horsemenu.get() == "Select horse" and self.t != -1:
@@ -1141,7 +1137,7 @@ class MainWindow:
 
             # variable to keep track if there are more races
             self.next_race = True
-
+            self.output['final_choice'] = self.horsemenu.get()
             # create a new window for retrieving data
             self.retrieve = tk.Tk()
             self.retrieve.title("Retrieving Data")
@@ -1182,6 +1178,7 @@ class MainWindow:
             tk.Button(no_money, text='OK', command=lambda : 
                     no_money.destroy()).pack(padx=10, pady=10)
             self.Settings.trials = 1
+        self.output['final_purse'] = self.Settings.purse
 
     def results(self):
         """ displays the results of the race """
@@ -1217,7 +1214,8 @@ class MainWindow:
                  font=(None,font_body), fg='red', justify='left')\
                 .grid(row=2, column=2, pady=10, sticky=tk.N + tk.W)
 
-        tk.Label(self.result, text="AIde's suggestion: ", font=(None,font_body))\
+        tk.Label(self.result, text="{}'s suggestion: ".format\
+                (self.Settings.system_name), font=(None,font_body))\
                 .grid(row=3, column=1, pady=10, sticky=tk.N + tk.W)
 
         tk.Label(self.result, text='{}'.format(self.horse_pwin), 
@@ -1253,11 +1251,17 @@ class MainWindow:
                       font=(None,font_body), command=self.races)\
                      .grid(row=6, column=1, columnspan=2, pady=10, sticky=tk.N)
 
+        global data 
+        self.output['trial_number'] = str(self.Settings.trials)
+        data.append(self.output)
+        print(self.output)
+        print(data)
+
     def races(self):
         # if there are more races, decrement trials and load another race
         if self.Settings.trials > 0:
-            self.betting_screen()
             self.Settings.trials -= 1
+            self.betting_screen()
 
     def exit(self):
         # destroy result screen and make a new exit screen
@@ -1290,7 +1294,7 @@ class MainWindow:
         # check if -0 
         if self.save.get() == "-0":
             print("NO SAVE")
-            self.exit.destroy()
+            self.master.destroy()
 
         # check if no entry
         elif self.save.get() == "":
@@ -1308,8 +1312,34 @@ class MainWindow:
             # check if entry is numbers
             try:
                 int(self.save.get())
+
+                for trial in data:
+                    print(trial, "\n\n")
+                self.output['ID_number'] = str(self.save.get())
                 print("SAVE")
-                self.exit.destroy()
+                print(self.output_settings)
+                print(self.output)
+                header = True
+                if not os.path.isfile('sample_output.csv'):
+                    header = True
+                with open('sample_output.csv','w') as csvfile:
+                    fieldnames = ['ID number']
+                    fieldnames += self.output_settings.keys()
+                    self.output_settings['ID number'] = self.save.get()
+                    fieldnames.append('trial number')
+                    
+                    fieldnames+= data[0].keys()
+                    print(fieldnames)
+                    writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
+                    if header:
+                        writer.writeheader()
+                    for i in range(len(data)):
+                        lineDict = self.output_settings
+                        lineDict.update(data[i])
+                        lineDict['trial number'] = i + 1
+                        writer.writerow(lineDict)
+
+                self.master.destroy()
             except ValueError:
                 error = tk.Tk()
                 error.title("ERROR")
@@ -1326,12 +1356,13 @@ root = tk.Tk()
 screen_height = root.winfo_screenheight()
 screen_width = root.winfo_screenwidth()
 if screen_height <= 800:
-    font_body=20
+    font_body=15
     font_title=25
 elif screen_height >= 801:
     font_body=22
     font_title=30
 
+data=[]
 
 def run():
     root.title("Horse Racing")
@@ -1339,6 +1370,7 @@ def run():
     root.geometry("%dx%d+0+0" % (screen_width, screen_height))
     root.bind('<Control-q>', sys.exit)
     app = MainWindow(root)
+    root.resizable(width=False, height=False)
     root.mainloop()
 
 if __name__ == "__main__":
