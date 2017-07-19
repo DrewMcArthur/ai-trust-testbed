@@ -1105,7 +1105,7 @@ class MainWindow:
         if hasattr(self, 's_suggest'):
             # check how long the user took to submit
             print(self.timer_label['text'])
-            self.output['time_suggest'] = str(self.Settings.time_limit*60 - self.t)
+            self.output['time_suggest'] = str(120 - self.t)
             self.s_suggest.destroy()
             self.t = self.Settings.time_limit * 60
         else:
@@ -1247,7 +1247,6 @@ class MainWindow:
                      .grid(row=6, column=1, columnspan=2, pady=10, sticky=tk.N)
 
         global data 
-        self.output['trial_number'] = str(self.Settings.trials)
         data.append(self.output.copy())
         print(self.output)
         print(data)
@@ -1293,57 +1292,44 @@ class MainWindow:
 
         # check if no entry
         elif self.save.get() == "":
-            error = tk.Tk()
-            error.title("ERROR")
-            error.bind('<Control-q>', sys.exit)
-            error.resizable(width=False, height=False)
-            tk.Label(error, text="Please insert ID number.", font=(None,font_body))\
-                    .pack(padx=10, pady=10)
-            tk.Button(error, text="OK", command=lambda: error.destroy())\
-                     .pack(padx=10, pady=10)
-
+            self.error_window("Please insert ID number.")
         # save if pass all tests
         else:
             # check if entry is numbers
             try:
-                int(self.save.get())
-
-                for trial in data:
-                    print(trial, "\n\n")
-                self.output['ID_number'] = str(self.save.get())
-                print("SAVE")
-                print(self.output_settings)
-                print(self.output)
-                header = True
-                if not os.path.isfile('sample_output.csv'):
+                id_num = int(self.save.get())
+                if id_num < 0:
+                    self.error_window("ID numbers must be non-negative.")
+                else:
+                    for trial in data:
+                        print(trial, "\n\n")
+                    self.output['ID_number'] = str(self.save.get())
+                    print("SAVE")
+                    print(self.output_settings)
+                    print(self.output)
                     header = True
-                with open('sample_output.csv','w') as csvfile:
-                    fieldnames = ['ID number']
-                    fieldnames += self.output_settings.keys()
-                    self.output_settings['ID number'] = self.save.get()
-                    fieldnames.append('trial number')
-                    
-                    fieldnames+= data[0].keys()
-                    print(fieldnames)
-                    writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
-                    if header:
-                        writer.writeheader()
-                    for i in range(len(data)):
-                        lineDict = self.output_settings
-                        lineDict.update(data[i])
-                        lineDict['trial number'] = i + 1
-                        writer.writerow(lineDict)
+                    if not os.path.isfile('sample_output.csv'):
+                        header = True
+                    with open('sample_output.csv','w') as csvfile:
+                        fieldnames = ['ID number']
+                        fieldnames += self.output_settings.keys()
+                        self.output_settings['ID number'] = self.save.get()
+                        fieldnames.append('trial number')
+                        
+                        fieldnames+= data[0].keys()
+                        print(fieldnames)
+                        writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
+                        if header:
+                            writer.writeheader()
+                        for i in range(len(data)):
+                            lineDict = self.output_settings
+                            lineDict.update(data[i])
+                            lineDict['trial number'] = i + 1
+                            writer.writerow(lineDict)
 
-                self.master.destroy()
+                    self.master.destroy()
             except ValueError:
-                error = tk.Tk()
-                error.title("ERROR")
-                error.bind('<Control-q>', sys.exit)
-                error.resizable(width=False, height=False)
-                tk.Label(error, text="Please insert numbers.", font=(None,font_body))\
-                        .pack(padx=10, pady=10)
-                tk.Button(error, text="OK", command=lambda: error.destroy())\
-                         .pack(padx=10, pady=10)
+                self.error_window("ID numbers must be integers.")
 
 
 root = tk.Tk()
