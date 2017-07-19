@@ -28,9 +28,9 @@ def read_data(filename):
 def get_label(horse):
     """ returns the time and beyer figure for the given horse. """
     # time
-    return float(horse['L_Time'])
+    #return float(horse['L_Time'])
     # Beyer Figure
-    #return int(horse['L_BSF'])
+    return int(horse['L_BSF'])
 
 def read_output(filename, data):
     """ returns an array of outputs """
@@ -129,8 +129,8 @@ if __name__ == "__main__":
     print("x read data and labels.")
 
     Ns = range(1700, 1810, 10)
-    Cs = [1.0, 10.0, 100.0, 1000.0, 10000.0]
-    Es = [.1, .01, .001, .0001, .00001]
+    Cs = [1.0, 10.0, 100.0, 1000.0]
+    Es = [.1, .01, .001, .0001]
     Parallel(n_jobs=8)((delayed(test_n_features)(data, targets, c, e) 
                             for c in Cs) for e in Es)
     #test_n_features(1750, data, targets)
