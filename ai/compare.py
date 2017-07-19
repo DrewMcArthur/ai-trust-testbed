@@ -14,9 +14,75 @@ from sklearn.feature_extraction import FeatureHasher
 from sklearn.feature_selection import SelectKBest
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import make_pipeline
-
-import yaml, os, csv 
+from sklearn.base import TransformerMixin
+import yaml, os, csv, pickle, bisect
 import numpy as np
+
+class ColWiseEncoder(TransformerMixin):
+    def __init__(self):
+        pass
+
+    def isContinuous(self, col):
+        """ return true if the column represents continuous data """
+        for _ in range(50):
+            try:
+                float(random.choice(col))
+            except:
+                return False
+        return True
+
+    def fit(self, Xs, Ys=None):
+        # convert the list of dicts to a list of lists
+        listXs = [[item for key, item in row.items()] for row in Xs]
+        # convert 2d list to 2d numpy array
+        nArray = np.array(listXs)
+        # create a list of labelencoders, one for each column
+        self.mapper= []
+        # for each column, fit a labelencoder to that column
+        for i in range(len(Xs[0])):
+            self.mapper.append(LabelEncoder())
+            col = nArray[:,i]
+            self.mapper[i].fit(col)
+            le_classes = self.mapper[i].classes_.tolist()
+            bisect.insort_left(le_classes, 'other')
+            self.mapper[i].classes_ = le_classes
+
+    def transform(self, Xs, Ys=None):
+        # convert the list of dicts to a list of lists
+        listXs = [[item for key, item in row.items()] for row in Xs]
+        nArray = np.array(listXs)
+        for i in range(len(Xs[0])):
+            col = nArray[:,i]
+            col = map(lambda s: 'other' if s not in self.mapper[i].classes_ 
+                                            else s, col.tolist())
+            le_classes = self.mapper[i].classes_.tolist()
+            bisect.insort_left(le_classes, 'other')
+            self.mapper[i].classes_ = le_classes
+            nArray[:,i] = self.mapper[i].transform(col)
+        return nArray
+        
+    def fit_transform(self, Xs, Ys=None):
+        """ applies labelencoder to each column, if the column is determined
+            to be continuous variables """
+        # convert the list of dicts to a list of lists
+        listXs = [[item for key, item in row.items()] for row in Xs]
+        # convert 2d list to 2d numpy array
+        nArray = np.array(listXs)
+        # create a list of labelencoders, one for each column
+        self.mapper= []
+        # get first row, which is all headers
+        headers = nArray[0]
+
+        # for each column, fit and transform using its respective labelencoder
+        for i in range(len(headers)):
+            col = nArray[:,i]
+            if self.isContinuous(col):
+                self.mapper.append(False)
+            else:
+                self.mapper.append(LabelEncoder())
+                nArray[:,i] = self.mapper[i].fit_transform(col)
+
+        return nArray
 
 def get_raceID(horse):
     """ returns a string ID for the race the horse is in. """
@@ -137,9 +203,9 @@ def get_model(Xs, Ys):
         that classifies winners of horse races. 
         each row consists of information on two horses
     """
+
     # create necessary sklearn objects
-    cat_feats = []
-    #enc = OneHotEncoder(categorical_features=cat_feats)
+    cwe = ColWiseEncoder()
     fh = FeatureHasher()
     enc = OneHotEncoder()
     imp = Imputer(missing_values='', strategy='mean', axis=0)
@@ -148,10 +214,9 @@ def get_model(Xs, Ys):
     kBest = SelectKBest(k=3500)
 
     # construct a pipe from previous objects
-    model = make_pipeline(enc, kBest, nn)
-
+    model = make_pipeline(cwe, enc, kBest, nn)
+    
     # train the model
-    Xs = [[item for key, item in row.items] for row in Xs]
     model.fit(Xs, Ys)
 
     return model
@@ -160,6 +225,9 @@ def test_model(model, x_test, y_test):
     """ given a model and test values, predict the Ys and print out a report
         of accuracy.
     """
+    f = open("nn.pickle", 'w')
+    pickle.dump(model, f)
+
     # get accuracy and predictions
     y_pred = model.predict(x_test)
 
@@ -167,9 +235,6 @@ def test_model(model, x_test, y_test):
     print("accuracy: ", accuracy_score(y_test, y_pred))
     print("variance: ", explained_variance_score(y_test, y_pred))
     print("r square: ", r2_score(y_test, y_pred))
-    print("=== pickle dump of model ===")
-    print(pickle.dumps(model))
-    print("=== end pickle dump ===")
 
 def write_compiled(headers, data, labels):
     """ given a dictionary and a list, write each to file.
@@ -260,7 +325,7 @@ def generate_datadump(toFile=False):
 #   np.delete(a, todelete)
 
 #   data = a.tolist()
-    keys = data[0].keys()
+    keys = list(data[0].keys())
     headers = []
     for i in range(len(keys)):
         if i not in todelete:
@@ -279,7 +344,7 @@ def main():
     print("  Beginning nn script.")
 
     # load the data from file if it exists, or re-generate it. 
-    if not os.path.isfile('compiled_data.csv'):
+    if not os.path.isfile('compiled_data.csv') or os.stat('compiled_data.csv').st_size < 10:
         generate_datadump(True)
     data, labels = load_compiled()
 
