@@ -4,7 +4,7 @@
         choose the one that will finish first
 """
 
-from learn import split_data
+from ai.learn import split_data
 from itertools import permutations
 from collections import OrderedDict
 from joblib import dump, load
