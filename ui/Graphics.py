@@ -1253,7 +1253,7 @@ class MainWindow:
 
         global data 
         self.output['trial_number'] = str(self.Settings.trials)
-        data.append(self.output)
+        data.append(self.output.copy())
         print(self.output)
         print(data)
 
