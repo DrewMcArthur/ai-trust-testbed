@@ -14,10 +14,10 @@ from sklearn.feature_extraction import FeatureHasher
 from sklearn.feature_selection import SelectKBest
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import make_pipeline
-from sklearn.base import TransformerMixin
 import yaml, os, csv, pickle, bisect
 import numpy as np
 
+from sklearn.base import TransformerMixin
 class ColWiseEncoder(TransformerMixin):
     def __init__(self):
         pass
@@ -53,11 +53,11 @@ class ColWiseEncoder(TransformerMixin):
         nArray = np.array(listXs)
         for i in range(len(Xs[0])):
             col = nArray[:,i]
-            col = map(lambda s: 'other' if s not in self.mapper[i].classes_ 
-                                            else s, col.tolist())
-            le_classes = self.mapper[i].classes_.tolist()
-            bisect.insort_left(le_classes, 'other')
-            self.mapper[i].classes_ = le_classes
+            col = list(map(lambda s: 'other' if s not in self.mapper[i].classes_ 
+                                        else s, col.tolist()))
+
+            print(col)
+            # transform the columns
             nArray[:,i] = self.mapper[i].transform(col)
         return nArray
         
@@ -161,11 +161,14 @@ def remove_raceInfo(l):
                         "R_DistUnit","R_TimeUnit"]]
     return l
 
-def format_pair(pair):
+def format_pair(pair, B=None):
     """ given a tuple of two horses (dictionaries), return a single list
         containing all the information. """
     # split the tuple and remove labels.
-    A, B = pair
+    if B:
+        A = pair
+    else:
+        A, B = pair
     A.pop('L_Position', None)
     B.pop('L_Position', None)
 
@@ -225,7 +228,7 @@ def test_model(model, x_test, y_test):
     """ given a model and test values, predict the Ys and print out a report
         of accuracy.
     """
-    f = open("nn.pickle", 'w')
+    f = open("nn.pickle", 'wb')
     pickle.dump(model, f)
 
     # get accuracy and predictions
