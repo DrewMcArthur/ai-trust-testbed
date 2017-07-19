@@ -805,10 +805,7 @@ class MainWindow:
         self.t -= 1
         mins, secs = divmod(self.t, 60)
         self.timer_label['text'] = '{:02d}:{:02d}'.format(mins, secs)
-        if hasattr(self, 'bet'):
-            self.bet.after(1000, self.countdown)
-        else:
-            self.s_suggest.after(1000, self.countdown)
+        self.identifer = self.bet.after(1000, self.countdown)
         if self.t == -1:
             if self.horsemenu.get() == "Select horse...":
                 error = tk.Tk()
@@ -819,9 +816,7 @@ class MainWindow:
                         .pack(padx=10, pady=10)
                 tk.Button(error, text="OK", command=lambda: error.destroy())\
                          .pack(padx=10, pady=10)
-                if self.Settings.option_suggestion == 'Bet':
-                    self.retrieving_data()
-                elif hasattr(self,'s_suggest'):
+                if self.Settings.option_suggestion == 'Bet' or hasattr(self,'s_suggest'):
                     self.retrieving_data()
                 else:
                     self.s_suggestion()
@@ -857,17 +852,6 @@ class MainWindow:
         # show forms
         self.scrolledcanvas()
 
-        # drop down menu of horses
-        self.horse_names = []
-        for horse in self.horses_racing:
-            self.horse_names.append(horse['B_Horse'])
-
-        self.horsemenu = tk.StringVar(self.bet)
-        self.horsemenu.set("Select horse...")
-        self.horse_select = tk.OptionMenu(self.bet, self.horsemenu, 
-                                          *self.horse_names)
-        self.horse_select.config(font=(None,font_body))
-
         # show race information on side
         tk.Label(self.bet, font=(None,font_body),
                  text="Purse Total: ${:.2f}".format(self.Settings.purse))\
@@ -895,40 +879,51 @@ class MainWindow:
                  text="Possible Winnings:\n ${}".format(self.horses_winnings))\
                 .grid(row=3, column=2, padx=20, sticky=tk.W)
 
+        self.f_betting=tk.Frame(self.bet)
+        self.f_betting.grid(row=4, column=1, rowspan=3, columnspan=2, sticky=tk.W+tk.E)
+
+        # drop down menu of horses
+        self.horse_names = []
+        for horse in self.horses_racing:
+            self.horse_names.append(horse['B_Horse'])
+
+        self.horsemenu = tk.StringVar(self.f_betting)
+        self.horsemenu.set("Select horse...")
+        self.horse_select = tk.OptionMenu(self.f_betting, self.horsemenu, 
+                                          *self.horse_names)
+        self.horse_select.config(font=(None,font_body))
+
         if self.Settings.option_suggestion == "Bet":
-            tk.Label(self.bet, justify='left', font=(None,font_body),
+            tk.Label(self.f_betting, justify='left', font=(None,font_body),
                      text="{}'s' Suggestion: {}".format \
                      (self.Settings.system_name, self.horse_pwin))\
-                    .grid(row=4, column=1, columnspan=2, padx=20, pady=10, 
+                    .grid(row=0, column=1, columnspan=2, padx=20, pady=10, 
                           sticky=tk.W)
-            tk.Label(self.bet, text="Horse you want to bet on:", 
+            tk.Label(self.f_betting, text="Horse you want to bet on:", 
                      font=(None,font_body))\
-                    .grid(row=5, column=1, columnspan=2, padx=20, sticky=tk.W)
+                    .grid(row=0, column=1, columnspan=2, padx=20, sticky=tk.W)
 
-            self.horse_select.grid(row=5, column=1, columnspan=2, 
+            self.horse_select.grid(row=1, column=1, columnspan=2, 
                                    padx=35, pady=5, sticky=tk.W + tk.S)
 
             # submit button
-            tk.Button(self.bet, text='Submit', 
+            tk.Button(self.f_betting, text='Submit', 
                       command=self.retrieving_data, font=(None,font_body-5))\
-                     .grid(row=7, column=1, columnspan=2, padx=10, pady=10)
+                     .grid(row=2, column=1, columnspan=2, padx=10, pady=10)
         else:
-            tk.Label(self.bet, text="Horse you want to bet on:", 
+            tk.Label(self.f_betting, text="Horse you want to bet on:", 
                      font=(None,font_body))\
-                    .grid(row=4, column=1, columnspan=2, padx=20, sticky=tk.W)
+                    .grid(row=0, column=1, columnspan=2, padx=20, sticky=tk.W)
 
-            self.horse_select.grid(row=5, column=1, columnspan=2, 
+            self.horse_select.grid(row=1, column=1, columnspan=2, 
                                    padx=35, sticky=tk.W + tk.N)
 
             # submit button
-            tk.Button(self.bet, text='Submit', 
+            tk.Button(self.f_betting, text='Submit', 
                       command=self.s_suggestion, font=(None,font_body))\
-                     .grid(row=6, column=1, columnspan=2, padx=10, pady=10)
+                     .grid(row=2, column=1, columnspan=2, padx=10, pady=30)
 
     def s_suggestion(self):
-        # check how long the user took to submit
-        print(self.timer_label['text'])
-        print(self.t)
         self.output['time_taken'] = str(self.Settings.time_limit*60 - self.t)
         if self.horsemenu.get() == 'Select horse...':
             self.output['initial_choice'] = "None"
@@ -937,26 +932,17 @@ class MainWindow:
         if self.Settings.betting_option == 'Variable':
             self.Settings.betting_amount = float(self.new_bet.get())
             self.output['betting_amount'] = self.Settings.betting_amount
+
         # delete old frame
-        self.bet.destroy()
+        self.bet.after_cancel(self.identifer)
+        self.f_betting.destroy()
 
         # create new frame for suggestion
-        self.s_suggest = tk.Frame(self.master)
-        self.s_suggest.grid()
-        for i in range(3):
-            self.s_suggest.grid_columnconfigure(
-                    i, minsize=int(screen_width/3))
-        for i in range(4):
-            if i == 0 or i == 3:
-                self.s_suggest.grid_rowconfigure(
-                i, minsize=int(screen_height/4))
+        self.s_suggest = tk.Frame(self.bet)
+        self.s_suggest.grid(row=4, column=1, rowspan=3, columnspan=2, sticky=tk.W+tk.E)
 
+        # set up for countdown timer
         self.t = 120
-        self.timer_label = tk.Label(self.s_suggest, textvariable="", 
-                                    font=(None,font_title), justify='right',
-                                    fg='red')
-        self.timer_label.grid(row=0, column=0, 
-                              sticky=tk.N + tk.W)
         self.countdown()
 
         if self.horsemenu.get() != "Select horse...":
@@ -971,21 +957,20 @@ class MainWindow:
             suggestion_text = suggestion_text.format(self.Settings.system_name,
                                                      self.horse_pwin)
 
-        tk.Label(self.s_suggest, font=(None,font_body), text=suggestion_text)\
-                .grid(row=1, column=1)
+        tk.Label(self.s_suggest, font=(None,font_body), text=suggestion_text,
+                justify='left')\
+                .grid(row=1, column=1, padx=15, pady=10, sticky=tk.W)
         self.horse_select = tk.OptionMenu(self.s_suggest, self.horsemenu, 
                                       *self.horse_names)
         self.horse_select.config(font=(None,font_body))
         self.horse_select.grid(row=2, column=1)
         tk.Button(self.s_suggest, text="Submit", command=self.retrieving_data,
-                 font=(None,font_body)).grid(row=3, column=1)
+                 font=(None,font_body)).grid(row=3, column=1, pady=20)
 
     def retrieving_data(self):
 
         # check if suggestion screen needs to be deleted
         if hasattr(self, 's_suggest'):
-            # check how long the user took to submit
-            print(self.timer_label['text'])
             self.output['time_suggest'] = str(self.Settings.time_limit*60 - self.t)
             self.s_suggest.destroy()
             self.t = self.Settings.time_limit * 60
@@ -1133,7 +1118,10 @@ class MainWindow:
         self.exit = tk.Frame(self.master)
         self.exit.grid()
         for i in range(3):
-            self.exit.grid_rowconfigure(i, minsize=int(screen_height/3))
+            if i == 0 or i == 2:
+                self.exit.grid_rowconfigure(i, minsize=int(screen_height/3))
+            else:
+                self.exit.grid_rowconfigure(i, minsize=int((screen_height/3)/2))
             self.exit.grid_columnconfigure(i, minsize=int(screen_width/3))
             
         # instructions for inserting ID number
