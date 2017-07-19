@@ -795,7 +795,11 @@ class MainWindow:
         for horse in self.superhorses:
             if (horse['B_ProgNum'] in nums):
                 self.horses_racing.append(horse)
-        self.output['horses_racing'] = self.horses_racing
+
+        horse_names = []
+        for horse in self.horses_racing:
+            horse_names.append(horse['B_Horse'])
+        self.output['horse_names'] = horse_names
 
         # find actual winning horse
         self.horses_racing.sort(key=lambda x:x['L_Rank'])
@@ -1242,14 +1246,17 @@ class MainWindow:
                       font=(None,font_body), command=self.races)\
                      .grid(row=6, column=1, columnspan=2, pady=10, sticky=tk.N)
 
-    def races(self):
         global data 
+        self.output['trial_number'] = str(self.Settings.trials)
+        data.append(self.output.copy())
+        print(self.output)
+        print(data)
+
+    def races(self):
         # if there are more races, decrement trials and load another race
         if self.Settings.trials > 0:
             self.Settings.trials -= 1
-            self.output['trial_number'] = str(self.Settings.trials)
             self.betting_screen()
-        data.append(self.output.copy())
 
     def exit(self):
         # destroy result screen and make a new exit screen
@@ -1300,6 +1307,7 @@ class MainWindow:
             # check if entry is numbers
             try:
                 int(self.save.get())
+
                 for trial in data:
                     print(trial, "\n\n")
                 self.output['ID_number'] = str(self.save.get())
@@ -1325,9 +1333,6 @@ class MainWindow:
                         lineDict.update(data[i])
                         lineDict['trial number'] = i + 1
                         writer.writerow(lineDict)
-
-
-
 
                 self.master.destroy()
             except ValueError:
