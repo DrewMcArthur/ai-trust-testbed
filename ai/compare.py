@@ -20,7 +20,8 @@ import numpy as np
 from sklearn.base import TransformerMixin
 class ColWiseEncoder(TransformerMixin):
     def __init__(self):
-        self.mask = yaml.safe_load(open("config.yml"))['data_is_categorical']
+        cat_feats = yaml.safe_load(open("config.yml"))['data_is_categorical']
+        self.mask = [eval(x) for x in cat_feats[:-1].split(', ')]
 
     def isContinuous(self, col):
         """ return true if the column represents continuous data """
@@ -58,6 +59,7 @@ class ColWiseEncoder(TransformerMixin):
         nArray = np.array(listXs)
         print("there are {} columns".format(len(nArray[0])))
         print("there are {} mappers".format(len(self.mapper)))
+        print("there are {} maskitems".format(len(self.mask)))
         for i in range(len(nArray[0])):
             col = nArray[:,i]
             col = list(map(lambda s: 'other' if s not in self.mapper[i].classes_ 
@@ -85,6 +87,8 @@ class ColWiseEncoder(TransformerMixin):
         # get first row, which is all headers
         headers = nArray[0]
 
+        print("there are {} columns".format(len(nArray[0])))
+        print("there are {} maskitems".format(len(self.mask)))
         # for each column, fit and transform using its respective labelencoder
         for i in range(len(headers)):
             col = nArray[:,i]
@@ -230,10 +234,12 @@ def get_model(Xs, Ys):
         each row consists of information on two horses
     """
 
+    config = yaml.safe_load(open("./config.yml"))
+    
     # create necessary sklearn objects
     cwe = ColWiseEncoder()
     fh = FeatureHasher()
-    enc = OneHotEncoder()
+    enc = OneHotEncoder(handle_unknown='ignore', categorical_features=config['data_is_categorical'])
     imp = Imputer(missing_values='', strategy='mean', axis=0)
     scaler = MinMaxScaler()
     nn = MLPClassifier()
@@ -276,6 +282,7 @@ def write_compiled(headers, data, labels):
 
 def load_compiled():
     """ read formatted data from file.  UNTESTED"""
+    print("loading data from compiled_data.csv")
     f = open("compiled_labels.txt")
     labels = []
     for line in f:
