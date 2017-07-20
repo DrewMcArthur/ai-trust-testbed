@@ -58,7 +58,6 @@ def writeLabelInfo(f, folder, LABELWRITER):
         for b in beyerreader:
             # TODO figure out why this shit isn't working
             if ord(b['Horse'][0]) > 127:
-                print("AHH THE dreaded QUESTION MARK")
                 t = next(timereader)
                 continue
 
