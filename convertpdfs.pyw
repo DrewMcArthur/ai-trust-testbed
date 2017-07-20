@@ -11,7 +11,8 @@ if not os.path.exists(folder2):
 # convert pdfs to jpgs
 for filename in [f for f in os.listdir(folder) if f.endswith(".pdf") and os.path.isfile(os.path.join(folder, f))]:
     filepath = os.path.join(folder, filename)
-    os.system("convert -density 300 " + filepath + " -quality 100 " + os.path.join(folder2, filename.replace(".pdf", ".jpg")))
+    print(filename)
+    os.system("convert -density 250 " + filepath + " -quality 100 " + os.path.join(folder2, filename.replace(".pdf", ".jpg")))
     if not filename.endswith('_header.pdf'):
         col = Image.open(os.path.join(folder2, filename.replace(".pdf", ".jpg")))
         gray = col.convert('L')

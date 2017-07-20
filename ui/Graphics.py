@@ -5,6 +5,7 @@ import re
 import random
 import os
 import sys
+import yaml
 from PIL import Image, ImageTk
 from lib.load_ai import get_positions
 from pydoc import locate
@@ -580,7 +581,6 @@ class MainWindow:
         tk.Button(self.settings, text='Continue', command=self.close_settings).grid \
                  (row=19, column=3, padx=10, pady=10, sticky=tk.E)
 
-
         # set all of the defaults
         self.enable_checking()
         self.set_all_defaults()
@@ -664,11 +664,11 @@ class MainWindow:
 
         tk.Label(self.instructions, 
                  text=welcomeText.format(betValue, self.Settings.time_limit),
-                 font=(None,font_body))\
+                 font=(None,font_body+5))\
                 .grid(row=1, column=0, columnspan=3)
 
         tk.Button(self.instructions, text='Start', 
-                  font=(None,font_body-5), command=self.betting_screen)\
+                  font=(None,font_body), command=self.betting_screen)\
                  .grid(row=1, column=0, columnspan=3, sticky=tk.S)
 
     def generateforms(self):
@@ -678,9 +678,10 @@ class MainWindow:
         # randomly generate race forms
         pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?\.jpg')
 
-        #race = random.choice(os.listdir(folder))
-        race = "ARP170618_1_1.jpg"
-        m = pattern.match(race)
+        races = yaml.safe_load(open("config.yml"))['list_of_races'].split(', ')
+        races[-1] = races[-1][:-1]
+        race = random.choice(races)
+        m = pattern.match(race + "_1.jpg")
 
         # get filepaths and make sure they exist before continuing
         sep = "_" if len(m.group(1)) < 3 else ""
@@ -696,13 +697,14 @@ class MainWindow:
         print("           :",lbp)
         print("           :",folder+"/ARP170618_3_header.jpg")
         self.output["race_info"] = m.group(1)+m.group(2)+'_'+m.group(3)
+
         # find a race, and ensure that the files necessary exist
         while not (os.path.isfile(p) and os.path.isfile(ltp) 
                    and os.path.isfile(lbp)):
             # get new race
             print("File doesn't exist! Trying again...")
-            race = random.choice(os.listdir(folder))
-            m = pattern.match(race)
+            race = random.choice(races)
+            m = pattern.match(race + "_1.jpg")
 
             # get filepaths, and make sure they exist before continuing
             sep = "_" if len(m.group(1)) < 3 else ""
@@ -728,15 +730,13 @@ class MainWindow:
         # shuffle the list
         random.shuffle(filenames)
         nums = []
-        # 
+        
         for filename in sorted(filenames[:self.Settings.num_of_horses]):
             convert_string += os.path.join(folder, filename) + " "
             m = pattern.match(filename)
             nums += m.group(4)
 
         convert_string += "test.jpg"
-        # TODO: why does this convert the jpgs while running? 
-        #       conversion should be done beforehand for limited cases
         os.system(convert_string)
 
         # find horses in csv files
@@ -939,7 +939,7 @@ class MainWindow:
             # submit button
             tk.Button(self.f_betting, text='Submit', 
                       command=self.s_suggestion, font=(None,font_body))\
-                     .grid(row=2, column=1, columnspan=2, padx=10, pady=30)
+                     .grid(row=2, column=1, columnspan=2, padx=10, pady=10)
 
     def s_suggestion(self):
         self.output['time_taken'] = str(self.Settings.time_limit*60 - self.t)
@@ -957,7 +957,7 @@ class MainWindow:
 
         # create new frame for suggestion
         self.s_suggest = tk.Frame(self.bet)
-        self.s_suggest.grid(row=4, column=1, rowspan=3, columnspan=2, sticky=tk.W+tk.E)
+        self.s_suggest.grid(row=4, column=1, rowspan=4, columnspan=2, sticky=tk.W+tk.E)
 
         # set up for countdown timer
         self.t = 120
@@ -977,13 +977,13 @@ class MainWindow:
 
         tk.Label(self.s_suggest, font=(None,font_body), text=suggestion_text,
                 justify='left')\
-                .grid(row=1, column=1, padx=15, pady=10, sticky=tk.W)
+                .grid(row=0, column=1, padx=15, pady=10, sticky=tk.W)
         self.horse_select = tk.OptionMenu(self.s_suggest, self.horsemenu, 
                                       *self.horse_names)
         self.horse_select.config(font=(None,font_body))
-        self.horse_select.grid(row=2, column=1)
+        self.horse_select.grid(row=1, column=1)
         tk.Button(self.s_suggest, text="Submit", command=self.retrieving_data,
-                 font=(None,font_body)).grid(row=3, column=1, pady=20)
+                 font=(None,font_body)).grid(row=2, column=1, pady=10)
 
     def retrieving_data(self):
 
@@ -1146,8 +1146,8 @@ class MainWindow:
         # instructions for inserting ID number
         tk.Label(self.exit, text='Thank you!\nPlease notify the researcher.'
                  '\nPlease enter the ID number in order to save.',
-                 font=(None,font_title+5))\
-                .grid(row=1, column=0, columnspan=3)
+                 font=(None,font_body+1))\
+                .grid(row=1, column=0, columnspan=3, pady=15)
 
         self.save=tk.Entry(self.exit, width=30)
         self.save.grid(row=1, column=0, columnspan=3, sticky=tk.S)
