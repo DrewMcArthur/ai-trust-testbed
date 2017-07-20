@@ -5,6 +5,7 @@ import re
 import random
 import os
 import sys
+import yaml
 from PIL import Image, ImageTk
 from lib.load_ai import get_positions
 from pydoc import locate
@@ -676,9 +677,10 @@ class MainWindow:
         # randomly generate race forms
         pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?\.jpg')
 
-        #race = random.choice(os.listdir(folder))
-        race = "ARP170618_1_1.jpg"
-        m = pattern.match(race)
+        races = yaml.safe_load(open("config.yml"))['list_of_races'].split(', ')
+        races[-1] = races[-1][:-1]
+        race = random.choice(races)
+        m = pattern.match(race + "_1.jpg")
 
         # get filepaths and make sure they exist before continuing
         sep = "_" if len(m.group(1)) < 3 else ""
@@ -692,15 +694,15 @@ class MainWindow:
         print("Looking for:",p)
         print("           :",ltp)
         print("           :",lbp)
-        print("           :",folder+"/ARP170618_3_header.jpg")
+        print("           :",folder)
 
         # find a race, and ensure that the files necessary exist
         while not (os.path.isfile(p) and os.path.isfile(ltp) 
                    and os.path.isfile(lbp)):
             # get new race
             print("File doesn't exist! Trying again...")
-            race = random.choice(os.listdir(folder))
-            m = pattern.match(race)
+            race = random.choice(races)
+            m = pattern.match(race + "_1.jpg")
 
             # get filepaths, and make sure they exist before continuing
             sep = "_" if len(m.group(1)) < 3 else ""
@@ -726,15 +728,13 @@ class MainWindow:
         # shuffle the list
         random.shuffle(filenames)
         nums = []
-        # 
+        
         for filename in sorted(filenames[:self.Settings.num_of_horses]):
             convert_string += os.path.join(folder, filename) + " "
             m = pattern.match(filename)
             nums += m.group(4)
 
         convert_string += "test.jpg"
-        # TODO: why does this convert the jpgs while running? 
-        #       conversion should be done beforehand for limited cases
         os.system(convert_string)
 
         # find horses in csv files
