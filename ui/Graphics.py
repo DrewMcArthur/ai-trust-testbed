@@ -366,6 +366,7 @@ class MainWindow:
         if hasattr(self, 'welcome'):
             self.welcome.destroy()
 
+        # initialize Settings
         self.Settings.path = os.path.join('ui','settings')
         self.Settings.name = 'None'
         self.load_defaults()
