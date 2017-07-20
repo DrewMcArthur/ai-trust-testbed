@@ -51,8 +51,8 @@ class ColWiseEncoder(TransformerMixin):
         nArray = np.array(listXs)
         for i in range(len(Xs[0])):
             col = nArray[:,i]
-            col = list(map(lambda s: 'other' if s not in self.mapper[i].classes_ 
-                                        else s, col.tolist()))
+            col = list(map(lambda s: 'other' if s not in self.mapper[i].classes_
+                                             else s, col.tolist()))
 
             print(col)
             # transform the columns
