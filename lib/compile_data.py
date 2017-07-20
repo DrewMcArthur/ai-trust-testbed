@@ -59,14 +59,17 @@ def writeLabelInfo(f, folder, LABELWRITER):
             # TODO figure out why this shit isn't working
             if ord(b['Horse'][0]) > 127:
                 print("AHH THE dreaded QUESTION MARK")
+                t = next(timereader)
                 continue
 
             # add race ID and horse's rank to entry
             entry = raceIDInfo.copy()
             entry.update({"L_Position": rank, 
-                          "B_Horse": t["Horse"],          
-                          "L_Time": t["Fin"]
+                          "B_Horse": b["Horse"],          
+                          "L_BSF": b["Chart"]
                          })
+
+            entry = fixLabelName(entry)
 
             # read one line from timereader and add time to entry
             try:
@@ -77,12 +80,13 @@ def writeLabelInfo(f, folder, LABELWRITER):
 
             if entry is None:
                 print("Timefile ended early. ", timepath)
-            elif (t['Horse'] != entry['B_Horse'] or not entry['B_Horse']):
+            elif (t['Horse'] != b['Horse'] or not entry['B_Horse']):
                 print("Error! reading entries from two label files and ")
                 print("       the horse names don't match! You screwed up!")
                 print("Race: " + str(raceIDInfo))
                 print("beyer's horse: " + b['Horse'])
                 print("time's horse: " + t['Horse'])
+                entry = None
             else:
                 entry.update({"L_Time": t["Fin"]})
                 entry = formatData(entry)

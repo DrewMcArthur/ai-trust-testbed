@@ -1,7 +1,8 @@
 import yaml, csv
 from ai.learn import read_data, read_output, split_data
 from ai.compare import ColWiseEncoder
-from sklearn.preprocessing import OneHotEncoder, SelectKBest
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.feature_selection import SelectKBest
 
 config = yaml.safe_load(open("./config.yml"))
 
@@ -9,6 +10,8 @@ data = read_data(config['final_data_filename'])
 targets = read_output("LABELS." + config['final_data_filename'], data)
 
 print("Read data.")
+
+cat_feats = config['data_is_categorical']
 
 cwe = ColWiseEncoder()
 ohe = OneHotEncoder(categorical_features=cat_feats, 

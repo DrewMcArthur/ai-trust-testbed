@@ -34,7 +34,10 @@ class ColWiseEncoder(TransformerMixin):
     def fit(self, Xs, Ys=None):
         print("Fitting model!")
         # convert the list of dicts to a list of lists
-        listXs = [[item for key, item in row.items()] for row in Xs]
+        if not isinstance(Xs[0], list):
+            listXs = [[item for key, item in row.items()] for row in Xs]
+        else:
+            listXs = Xs
         # convert 2d list to 2d numpy array
         nArray = np.array(listXs)
         # create a list of labelencoders, one for each column
@@ -54,7 +57,10 @@ class ColWiseEncoder(TransformerMixin):
     def transform(self, Xs, Ys=None):
         print("Transforming data!")
         # convert the list of dicts to a list of lists
-        listXs = [[item for key, item in row.items()] for row in Xs]
+        if not isinstance(Xs[0], list):
+            listXs = [[item for key, item in row.items()] for row in Xs]
+        else:
+            listXs = Xs
         nArray = np.array(listXs)
         print("there are {} columns".format(len(nArray[0])))
         print("there are {} mappers".format(len(self.mapper)))
@@ -77,7 +83,10 @@ class ColWiseEncoder(TransformerMixin):
             to be continuous variables """
         print("Fit_transforming the model and data!")
         # convert the list of dicts to a list of lists
-        listXs = [[item for key, item in row.items()] for row in Xs]
+        if not isinstance(Xs[0], list):
+            listXs = [[item for key, item in row.items()] for row in Xs]
+        else:
+            listXs = Xs
         # convert 2d list to 2d numpy array
         nArray = np.array(listXs)
         # create a list of labelencoders, one for each column
