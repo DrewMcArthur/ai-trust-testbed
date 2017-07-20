@@ -4,7 +4,7 @@
         choose the one that will finish first
 """
 
-from learn import split_data
+from ai.learn import split_data
 from itertools import permutations
 from collections import OrderedDict
 from joblib import dump, load
@@ -20,7 +20,7 @@ import numpy as np
 from sklearn.base import TransformerMixin
 class ColWiseEncoder(TransformerMixin):
     def __init__(self):
-        pass
+        self.mask = yaml.safe_load(open("config.yml"))['data_is_categorical']
 
     def isContinuous(self, col):
         """ return true if the column represents continuous data """
@@ -32,6 +32,7 @@ class ColWiseEncoder(TransformerMixin):
         return True
 
     def fit(self, Xs, Ys=None):
+        print("Fitting model!")
         # convert the list of dicts to a list of lists
         listXs = [[item for key, item in row.items()] for row in Xs]
         # convert 2d list to 2d numpy array
@@ -39,24 +40,34 @@ class ColWiseEncoder(TransformerMixin):
         # create a list of labelencoders, one for each column
         self.mapper= []
         # for each column, fit a labelencoder to that column
-        for i in range(len(Xs[0])):
-            self.mapper.append(LabelEncoder())
-            col = nArray[:,i]
-            self.mapper[i].fit(col)
-            le_classes = self.mapper[i].classes_.tolist()
-            bisect.insort_left(le_classes, 'other')
-            self.mapper[i].classes_ = le_classes
+        for i in range(len(nArray[0])):
+            if not self.mask[i]:
+                self.mapper.append(False)
+            else:
+                self.mapper.append(LabelEncoder())
+                col = nArray[:,i]
+                self.mapper[i].fit(col)
+                le_classes = self.mapper[i].classes_.tolist()
+                bisect.insort_left(le_classes, 'other')
+                self.mapper[i].classes_ = le_classes
 
     def transform(self, Xs, Ys=None):
+        print("Transforming data!")
         # convert the list of dicts to a list of lists
         listXs = [[item for key, item in row.items()] for row in Xs]
         nArray = np.array(listXs)
-        for i in range(len(Xs[0])):
+        print("there are {} columns".format(len(nArray[0])))
+        print("there are {} mappers".format(len(self.mapper)))
+        for i in range(len(nArray[0])):
             col = nArray[:,i]
             col = list(map(lambda s: 'other' if s not in self.mapper[i].classes_ 
                                         else s, col.tolist()))
 
-            print(col)
+            if 'other' not in self.mapper[i].classes_:
+                le_classes = self.mapper[i].classes_.tolist()
+                bisect.insort_left(le_classes, 'other')
+                self.mapper[i].classes_ = le_classes
+
             # transform the columns
             nArray[:,i] = self.mapper[i].transform(col)
         return nArray
@@ -64,6 +75,7 @@ class ColWiseEncoder(TransformerMixin):
     def fit_transform(self, Xs, Ys=None):
         """ applies labelencoder to each column, if the column is determined
             to be continuous variables """
+        print("Fit_transforming the model and data!")
         # convert the list of dicts to a list of lists
         listXs = [[item for key, item in row.items()] for row in Xs]
         # convert 2d list to 2d numpy array
@@ -76,12 +88,17 @@ class ColWiseEncoder(TransformerMixin):
         # for each column, fit and transform using its respective labelencoder
         for i in range(len(headers)):
             col = nArray[:,i]
-            if self.isContinuous(col):
+            if not self.mask[i]:
                 self.mapper.append(False)
             else:
                 self.mapper.append(LabelEncoder())
-                nArray[:,i] = self.mapper[i].fit_transform(col)
+                self.mapper[i].fit(col)
 
+                le_classes = self.mapper[i].classes_.tolist()
+                bisect.insort_left(le_classes, 'other')
+                self.mapper[i].classes_ = le_classes
+
+                nArray[:,i] = self.mapper[i].transform(col)
         return nArray
 
 def get_raceID(horse):
@@ -169,6 +186,10 @@ def format_pair(pair, B=None):
         A = pair
     else:
         A, B = pair
+
+    print(A)
+    print(B)
+
     A.pop('L_Position', None)
     B.pop('L_Position', None)
 
@@ -181,6 +202,8 @@ def format_pair(pair, B=None):
         final.update({"A_" + key: item})
     for key, item in B.items():
         final.update({"B_" + key: item})
+
+    print(final)
 
     # return the merged dict
     return final
