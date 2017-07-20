@@ -70,27 +70,32 @@ class MainWindow:
 
         def output(self):
             print( {i: getattr(self,i) for i in self.__dict__ \
-                if not callable(getattr(self, i)) and not i.startswith('__')and not 'path' in i} )
+                if not callable(getattr(self, i)) and not i.startswith('__')\
+                								  and not 'path' in i} )
             return {i: getattr(self,i) for i in self.__dict__ \
-                if not callable(getattr(self, i)) and not i.startswith('__') and not 'path' in i}
+                if not callable(getattr(self, i)) and not i.startswith('__')\
+                								  and not 'path' in i}
 
     def load_settings(self, *event):
+    	# gets a the option selected in the 'Select settings' dropdown and 
+    	# updates Settings appropriately
         name = self.defaultmenu.get()
+        # disable apply and revert changes
         self.revert.config(state='disabled')
         self.apply.config(state='disabled')
         if name == 'None':
+        	# update name if None is selected
             self.Settings.name = name
-        elif name == 'Edit Settings':
+        elif name == 'Edit Settings...':
+        	# open 'Edit Settings...' window if selected
             self.edit_settings()
-        elif os.path.isfile(os.path.join(self.Settings.path, 
-                            name + '_s.p')):
+        elif os.path.isfile(os.path.join(self.Settings.path, name + '_s.p')):
+        	# load selected setting and update Settings page
             self.Settings.name = name
-            self.Settings.load(self.Settings,self.defaultmenu.get())
-            self.set_all_defaults()
-            self.Settings.name = self.defaultmenu.get()
+            self.update_settings()
 
     def save_settings(self):
-        # saving data from settings
+        # saving data from settings window to settings variables
         self.Settings.system_name = self.system_name.get()
         self.Settings.trials = int(self.trials.get())
         self.Settings.accuracy = int(self.accuracy.get())
@@ -107,8 +112,7 @@ class MainWindow:
         self.apply.config(state='disabled')
 
     def check_settings(self):
-        # check if settings have changed
-        print(self.Settings.name)
+        # check if settings have changed.
         return (self.Settings.trials == int(self.trials.get()) \
            and self.Settings.system_name == self.system_name.get() \
            and self.Settings.betting_option == self.option_betting.get() \
@@ -123,6 +127,7 @@ class MainWindow:
            and self.Settings.option_suggestion == self.option_suggestion.get())
 
     def load_defaults(self):
+    	# set Settings variables with the default values.
         self.Settings.system_name = 'AIde'
         self.Settings.trials = 3
         self.Settings.accuracy = 50
@@ -136,8 +141,9 @@ class MainWindow:
         self.Settings.option_suggestion = 'After'
 
     def edit_settings(self):
-        #make pop up window to enter name of settings
+        # make pop up window to add and remove saved settings
         def remove():
+        	# remove the selected setting from folder and dropdown
             f = lb.curselection()
             filen= lb.get(int(f[0]))
             os.remove(os.path.join(self.Settings.path, filen)+'_s.p')
@@ -149,18 +155,20 @@ class MainWindow:
                     self.Settings.name = 'None'
 
         def close():
+        	# close the window and apply the changes to the Settings window
             self.Settings.load(self.Settings, self.Settings.name)
             self.defaultmenu.set(self.Settings.name)       
             self.defaultmenu.set(self.Settings.name)
             self.default_select.destroy()
             defaults = [f.replace('_s.p','') for f in os.listdir(self.Settings.path) \
-                if f.endswith('_s.p')]+['None', 'Edit Settings']
+                if f.endswith('_s.p')]+['None', 'Edit Settings...']
             self.default_select = tk.OptionMenu(self.settings, self.defaultmenu, 
                                           *defaults, command=self.load_settings)
             self.default_select.grid(row=0, column=2, pady=10, sticky = tk.W)
             save_window.destroy()
 
         def save_file():
+        	# add a new file to the folder and dropdown with default values
             n = name.get()
             if n == '':
                 self.error_window("Enter a file name")
@@ -181,21 +189,22 @@ class MainWindow:
                 cancel_button.grid()
                 
         def add():
+        	# show entry box and done button to add new setting name
             name.grid(row=1,column=1,sticky=tk.S,padx=(20,0))
             add_button.grid_remove()
             cancel_button.grid_remove()
             remove_button.grid_remove()
             done_button.grid(row=2,column=1,padx=(0,20),sticky=tk.E)
-
+        # make edit settings window
         save_window = tk.Tk()
         scrollbar = tk.Scrollbar(save_window)
         scrollbar.grid(row=1, column=2, padx=(0,20), sticky=tk.NS)
-        #scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        save_window.wm_attributes("-topmost", 1)
+        save_window.wm_attributes("-topmost", 1) # window stays on top
         save_window.geometry('315x290')
         save_window.grid()
         save_window.title('Edit Settings')
         save_window.bind('<Control-q>', sys.exit)
+        # add box with all saved settings
         lb = tk.Listbox(save_window,yscrollcommand=scrollbar.set, height=10,width=30)
         lb.grid(row=1,column=1,sticky=tk.N,padx=(20,0),pady=(0,5))
         tk.Label(save_window,text='Files:').grid(
@@ -206,7 +215,7 @@ class MainWindow:
             lb.insert('end',f)
         scrollbar.config(command=lb.yview)
         lb.config(yscrollcommand=scrollbar.set)
-
+        # add buttons to screen
         cancel_button = tk.Button(save_window, text='Done',command=close)
         cancel_button.grid(row=2,column=1,padx=(1,20),sticky=tk.E)
         add_button = tk.Button(save_window, text='Add',command=add)
@@ -218,10 +227,12 @@ class MainWindow:
         save_window.resizable(width=False, height=False)
 
     def update_settings(self):
+    	# load a new setting 
         self.Settings.load(self.Settings,self.Settings.name)
         self.set_all_defaults()
 
     def enable_checking(self):
+    	# start checking entry boxes whenever text is entered
          self.trials.trace_id = self.trials.trace('w',self.toggleapplyrevert)
          self.betting.trace_id = self.betting.trace('w',self.toggleapplyrevert)
          self.purse.trace_id = self.purse.trace('w',self.toggleapplyrevert)
@@ -233,6 +244,7 @@ class MainWindow:
          self.system_name.trace_id = self.system_name.trace('w',self.toggleapplyrevert)
 
     def disable_checking(self):
+    	# stop checking entry boxes whenever txt is entered
         self.trials.trace_vdelete("w", self.trials.trace_id)
         self.betting.trace_vdelete('w', self.betting.trace_id)
         self.purse.trace_vdelete('w', self.purse.trace_id)
@@ -244,7 +256,7 @@ class MainWindow:
         self.system_name.trace_vdelete('w', self.system_name.trace_id)
 
     def set_all_defaults(self):
-        print('setting defaults')
+    	# set all the values in the settings window to those saves in self.Settings
         self.disable_checking()
         self.system_name.set(self.Settings.system_name)
         # trials entry box
@@ -296,11 +308,15 @@ class MainWindow:
         self.enable_checking()
 
     def toggleapplyrevert(self,*a):
+    	# enable or disable revert and apply as necessary
         if (self.errorcheck() is None and self.check_settings()) or \
                                           self.Settings.name == 'None':
+            # is there isn't an error and the settings haven't changes
+            # or None is selected--> disable
             self.revert.config(state='disabled')
             self.apply.config(state='disabled')
         else:
+        	# if there is an error disable apply
             self.revert.config(state='normal')
             if self.errorcheck() is None:
                 self.apply.config(state='normal')
@@ -333,7 +349,7 @@ class MainWindow:
                   command=self.instructions)\
                  .grid(row=1, column=1, padx=30, pady=10, sticky=tk.N + tk.W)
 
-    def load_instructions(self):
+    def close_settings(self):
         error = self.errorcheck()
         if error != None:
             self.error_window(error)
@@ -374,7 +390,7 @@ class MainWindow:
         defaults = [f.replace('_s.p', '') for f in os.listdir(self.Settings.path)\
                     if f.endswith('_s.p')]
         defaults.append('None')
-        defaults.append('Edit Settings')
+        defaults.append('Edit Settings...')
         self.defaultmenu = tk.StringVar(self.settings)
        
         self.defaultmenu.set(self.Settings.name)
@@ -560,7 +576,7 @@ class MainWindow:
                                command=self.save_settings)
         self.apply.grid(row=19, column=2, padx=10, pady=10, sticky=tk.E)
 
-        tk.Button(self.settings, text='Continue', command=self.load_instructions).grid \
+        tk.Button(self.settings, text='Continue', command=self.close_settings).grid \
                  (row=19, column=3, padx=10, pady=10, sticky=tk.E)
 
         # set all of the defaults
@@ -646,11 +662,11 @@ class MainWindow:
 
         tk.Label(self.instructions, 
                  text=welcomeText.format(betValue, self.Settings.time_limit),
-                 font=(None,font_body))\
+                 font=(None,font_body+5))\
                 .grid(row=1, column=0, columnspan=3)
 
         tk.Button(self.instructions, text='Start', 
-                  font=(None,font_body-5), command=self.betting_screen)\
+                  font=(None,font_body), command=self.betting_screen)\
                  .grid(row=1, column=0, columnspan=3, sticky=tk.S)
 
     def generateforms(self):
@@ -921,7 +937,7 @@ class MainWindow:
             # submit button
             tk.Button(self.f_betting, text='Submit', 
                       command=self.s_suggestion, font=(None,font_body))\
-                     .grid(row=2, column=1, columnspan=2, padx=10, pady=30)
+                     .grid(row=2, column=1, columnspan=2, padx=10, pady=10)
 
     def s_suggestion(self):
         self.output['time_taken'] = str(self.Settings.time_limit*60 - self.t)
@@ -939,7 +955,7 @@ class MainWindow:
 
         # create new frame for suggestion
         self.s_suggest = tk.Frame(self.bet)
-        self.s_suggest.grid(row=4, column=1, rowspan=3, columnspan=2, sticky=tk.W+tk.E)
+        self.s_suggest.grid(row=4, column=1, rowspan=4, columnspan=2, sticky=tk.W+tk.E)
 
         # set up for countdown timer
         self.t = 120
@@ -959,19 +975,21 @@ class MainWindow:
 
         tk.Label(self.s_suggest, font=(None,font_body), text=suggestion_text,
                 justify='left')\
-                .grid(row=1, column=1, padx=15, pady=10, sticky=tk.W)
+                .grid(row=0, column=1, padx=15, pady=10, sticky=tk.W)
         self.horse_select = tk.OptionMenu(self.s_suggest, self.horsemenu, 
                                       *self.horse_names)
         self.horse_select.config(font=(None,font_body))
-        self.horse_select.grid(row=2, column=1)
+        self.horse_select.grid(row=1, column=1)
         tk.Button(self.s_suggest, text="Submit", command=self.retrieving_data,
-                 font=(None,font_body)).grid(row=3, column=1, pady=20)
+                 font=(None,font_body)).grid(row=2, column=1, pady=10)
 
     def retrieving_data(self):
 
         # check if suggestion screen needs to be deleted
         if hasattr(self, 's_suggest'):
-            self.output['time_suggest'] = str(self.Settings.time_limit*60 - self.t)
+            # check how long the user took to submit
+            print(self.timer_label['text'])
+            self.output['time_suggest'] = str(120 - self.t)
             self.s_suggest.destroy()
             self.t = self.Settings.time_limit * 60
         else:
@@ -1102,7 +1120,6 @@ class MainWindow:
                      .grid(row=6, column=1, columnspan=2, pady=10, sticky=tk.N)
 
         global data 
-        self.output['trial_number'] = str(self.Settings.trials)
         data.append(self.output.copy())
 
     def races(self):
@@ -1127,8 +1144,8 @@ class MainWindow:
         # instructions for inserting ID number
         tk.Label(self.exit, text='Thank you!\nPlease notify the researcher.'
                  '\nPlease enter the ID number in order to save.',
-                 font=(None,font_title+5))\
-                .grid(row=1, column=0, columnspan=3)
+                 font=(None,font_body+1))\
+                .grid(row=1, column=0, columnspan=3, pady=15)
 
         self.save=tk.Entry(self.exit, width=30)
         self.save.grid(row=1, column=0, columnspan=3, sticky=tk.S)
@@ -1149,55 +1166,44 @@ class MainWindow:
 
         # check if no entry
         elif self.save.get() == "":
-            error = tk.Tk()
-            error.title("ERROR")
-            error.bind('<Control-q>', sys.exit)
-            error.resizable(width=False, height=False)
-            tk.Label(error, text="Please insert ID number.", font=(None,font_body))\
-                    .pack(padx=10, pady=10)
-            tk.Button(error, text="OK", command=lambda: error.destroy())\
-                     .pack(padx=10, pady=10)
-
+            self.error_window("Please insert ID number.")
         # save if pass all tests
         else:
             # check if entry is numbers
             try:
-                int(self.save.get())
-
-                self.output['ID_number'] = str(self.save.get())
-                print("SAVE")
-                print(self.output_settings)
-                print(self.output)
-                header = True
-                if not os.path.isfile('sample_output.csv'):
+                id_num = int(self.save.get())
+                if id_num < 0:
+                    self.error_window("ID numbers must be non-negative.")
+                else:
+                    for trial in data:
+                        print(trial, "\n\n")
+                    self.output['ID_number'] = str(self.save.get())
+                    print("SAVE")
+                    print(self.output_settings)
+                    print(self.output)
                     header = True
-                with open('sample_output.csv','w') as csvfile:
-                    fieldnames = ['ID number']
-                    fieldnames += self.output_settings.keys()
-                    self.output_settings['ID number'] = self.save.get()
-                    fieldnames.append('trial number')
-                    
-                    fieldnames+= data[0].keys()
-                    print(fieldnames)
-                    writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
-                    if header:
-                        writer.writeheader()
-                    for i in range(len(data)):
-                        lineDict = self.output_settings
-                        lineDict.update(data[i])
-                        lineDict['trial number'] = i + 1
-                        writer.writerow(lineDict)
+                    if not os.path.isfile('sample_output.csv'):
+                        header = True
+                    with open('sample_output.csv','w') as csvfile:
+                        fieldnames = ['ID number']
+                        fieldnames += self.output_settings.keys()
+                        self.output_settings['ID number'] = self.save.get()
+                        fieldnames.append('trial number')
+                        
+                        fieldnames+= data[0].keys()
+                        print(fieldnames)
+                        writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
+                        if header:
+                            writer.writeheader()
+                        for i in range(len(data)):
+                            lineDict = self.output_settings
+                            lineDict.update(data[i])
+                            lineDict['trial number'] = i + 1
+                            writer.writerow(lineDict)
 
-                self.master.destroy()
+                    self.master.destroy()
             except ValueError:
-                error = tk.Tk()
-                error.title("ERROR")
-                error.bind('<Control-q>', sys.exit)
-                error.resizable(width=False, height=False)
-                tk.Label(error, text="Please insert numbers.", font=(None,font_body))\
-                        .pack(padx=10, pady=10)
-                tk.Button(error, text="OK", command=lambda: error.destroy())\
-                         .pack(padx=10, pady=10)
+                self.error_window("ID numbers must be integers.")
 
 
 root = tk.Tk()
