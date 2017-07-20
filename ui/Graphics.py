@@ -71,26 +71,26 @@ class MainWindow:
         def output(self):
             print( {i: getattr(self,i) for i in self.__dict__ \
                 if not callable(getattr(self, i)) and not i.startswith('__')\
-                								  and not 'path' in i} )
+                                                  and not 'path' in i} )
             return {i: getattr(self,i) for i in self.__dict__ \
                 if not callable(getattr(self, i)) and not i.startswith('__')\
-                								  and not 'path' in i}
+                                                  and not 'path' in i}
 
     def load_settings(self, *event):
-    	# gets a the option selected in the 'Select settings' dropdown and 
-    	# updates Settings appropriately
+        # gets a the option selected in the 'Select settings' dropdown and 
+        # updates Settings appropriately
         name = self.defaultmenu.get()
         # disable apply and revert changes
         self.revert.config(state='disabled')
         self.apply.config(state='disabled')
         if name == 'None':
-        	# update name if None is selected
+            # update name if None is selected
             self.Settings.name = name
         elif name == 'Edit Settings...':
-        	# open 'Edit Settings...' window if selected
+            # open 'Edit Settings...' window if selected
             self.edit_settings()
         elif os.path.isfile(os.path.join(self.Settings.path, name + '_s.p')):
-        	# load selected setting and update Settings page
+            # load selected setting and update Settings page
             self.Settings.name = name
             self.update_settings()
 
@@ -99,7 +99,7 @@ class MainWindow:
         self.Settings.system_name = self.system_name.get()
         self.Settings.trials = int(self.trials.get())
         self.Settings.accuracy = int(self.accuracy.get())
-        self.Settings.checkaccuracy = int(self.checkaccuracy.get())
+        self.Settings.use_sys_accuracy = int(self.use_sys_accuracy.get())
         self.Settings.purse = round(float(self.purse.get()), 2)
         self.Settings.betting_option = self.option_betting.get()
         self.Settings.betting_amount = int(self.betting.get())
@@ -121,17 +121,17 @@ class MainWindow:
            and self.Settings.purse == float(self.purse.get()) \
            and self.Settings.time_limit == int(self.time.get()) \
            and self.Settings.num_of_horses == int(self.horses.get()) \
-           and self.Settings.checkaccuracy == int(self.checkaccuracy.get()) \
-           and (self.Settings.checkaccuracy == '1' \
+           and self.Settings.use_sys_accuracy == int(self.use_sys_accuracy.get()) \
+           and (self.Settings.use_sys_accuracy == '1' \
             or self.Settings.accuracy == int(self.accuracy.get())) \
            and self.Settings.option_suggestion == self.option_suggestion.get())
 
     def load_defaults(self):
-    	# set Settings variables with the default values.
+        # set Settings variables with the default values.
         self.Settings.system_name = 'AIde'
         self.Settings.trials = 3
         self.Settings.accuracy = 50
-        self.Settings.checkaccuracy = 0
+        self.Settings.use_sys_accuracy = 0
         self.Settings.purse = 25
         self.Settings.purse = round(self.Settings.purse, 2)
         self.Settings.betting_option = 'Fixed'
@@ -143,7 +143,7 @@ class MainWindow:
     def edit_settings(self):
         # make pop up window to add and remove saved settings
         def remove():
-        	# remove the selected setting from folder and dropdown
+            # remove the selected setting from folder and dropdown
             f = lb.curselection()
             filen= lb.get(int(f[0]))
             os.remove(os.path.join(self.Settings.path, filen)+'_s.p')
@@ -155,7 +155,7 @@ class MainWindow:
                     self.Settings.name = 'None'
 
         def close():
-        	# close the window and apply the changes to the Settings window
+            # close the window and apply the changes to the Settings window
             self.Settings.load(self.Settings, self.Settings.name)
             self.defaultmenu.set(self.Settings.name)       
             self.defaultmenu.set(self.Settings.name)
@@ -168,7 +168,7 @@ class MainWindow:
             save_window.destroy()
 
         def save_file():
-        	# add a new file to the folder and dropdown with default values
+            # add a new file to the folder and dropdown with default values
             n = name.get()
             if n == '':
                 self.error_window("Enter a file name")
@@ -189,7 +189,7 @@ class MainWindow:
                 cancel_button.grid()
                 
         def add():
-        	# show entry box and done button to add new setting name
+            # show entry box and done button to add new setting name
             name.grid(row=1,column=1,sticky=tk.S,padx=(20,0))
             add_button.grid_remove()
             cancel_button.grid_remove()
@@ -227,36 +227,36 @@ class MainWindow:
         save_window.resizable(width=False, height=False)
 
     def update_settings(self):
-    	# load a new setting 
+        # load a new setting 
         self.Settings.load(self.Settings,self.Settings.name)
         self.set_all_defaults()
 
     def enable_checking(self):
-    	# start checking entry boxes whenever text is entered
+        # start checking entry boxes whenever text is entered
          self.trials.trace_id = self.trials.trace('w',self.toggleapplyrevert)
          self.betting.trace_id = self.betting.trace('w',self.toggleapplyrevert)
          self.purse.trace_id = self.purse.trace('w',self.toggleapplyrevert)
          self.time.trace_id = self.time.trace('w',self.toggleapplyrevert)
          self.horses.trace_id = self.horses.trace('w',self.toggleapplyrevert)
-         self.checkaccuracy.trace_id = self.checkaccuracy.trace('w',self.toggleapplyrevert)
+         self.use_sys_accuracy.trace_id = self.use_sys_accuracy.trace('w',self.toggleapplyrevert)
          self.option_betting.trace_id = self.option_betting.trace('w',self.toggleapplyrevert)
          self.option_suggestion.trace_id = self.option_suggestion.trace('w',self.toggleapplyrevert)
          self.system_name.trace_id = self.system_name.trace('w',self.toggleapplyrevert)
 
     def disable_checking(self):
-    	# stop checking entry boxes whenever txt is entered
+        # stop checking entry boxes whenever txt is entered
         self.trials.trace_vdelete("w", self.trials.trace_id)
         self.betting.trace_vdelete('w', self.betting.trace_id)
         self.purse.trace_vdelete('w', self.purse.trace_id)
         self.time.trace_vdelete('w', self.time.trace_id)
         self.horses.trace_vdelete('w', self.horses.trace_id)
-        self.checkaccuracy.trace_vdelete('w', self.checkaccuracy.trace_id)
+        self.use_sys_accuracy.trace_vdelete('w', self.use_sys_accuracy.trace_id)
         self.option_betting.trace_vdelete('w', self.option_betting.trace_id)
         self.option_suggestion.trace_vdelete('w', self.option_suggestion.trace_id)
         self.system_name.trace_vdelete('w', self.system_name.trace_id)
 
     def set_all_defaults(self):
-    	# set all the values in the settings window to those saves in self.Settings
+        # set all the values in the settings window to those saves in self.Settings
         self.disable_checking()
         self.system_name.set(self.Settings.system_name)
         # trials entry box
@@ -265,7 +265,7 @@ class MainWindow:
         self.accuracy.set(self.Settings.accuracy)
 
         # use accuracy of classifer
-        if not self.Settings.checkaccuracy:
+        if not self.Settings.use_sys_accuracy:
             self.CA.deselect()
         else:
             self.CA.select()
@@ -292,7 +292,7 @@ class MainWindow:
             self.betting_box.configure(state='disabled')
             self.betting_box.update()
 
-        if self.checkaccuracy.get() == '1':
+        if self.use_sys_accuracy.get() == '1':
             self.accuracy.config(state='disabled')
             
             #grey out the bar
@@ -308,7 +308,7 @@ class MainWindow:
         self.enable_checking()
 
     def toggleapplyrevert(self,*a):
-    	# enable or disable revert and apply as necessary
+        # enable or disable revert and apply as necessary
         if (self.errorcheck() is None and self.check_settings()) or \
                                           self.Settings.name == 'None':
             # is there isn't an error and the settings haven't changes
@@ -316,7 +316,7 @@ class MainWindow:
             self.revert.config(state='disabled')
             self.apply.config(state='disabled')
         else:
-        	# if there is an error disable apply
+            # if there is an error disable apply
             self.revert.config(state='normal')
             if self.errorcheck() is None:
                 self.apply.config(state='normal')
@@ -435,7 +435,7 @@ class MainWindow:
         # disabling and enabling accuracy bar
         def toggleslider():
             self.toggleapplyrevert()
-            if self.checkaccuracy.get() == '1':
+            if self.use_sys_accuracy.get() == '1':
                 self.accuracy.config(state='disabled')
                 
                 #grey out the bar
@@ -448,10 +448,10 @@ class MainWindow:
 
         # check button for using accuracy of classifer
         # if checked, accuracy bar is disabled
-        self.checkaccuracy = tk.StringVar(self.settings)
+        self.use_sys_accuracy = tk.StringVar(self.settings)
         self.CA = tk.Checkbutton(self.settings, 
                                  text="Use accuracy of classifer.", 
-                                 variable=self.checkaccuracy, onvalue=True, 
+                                 variable=self.use_sys_accuracy, onvalue=True, 
                                  offvalue=False, command=toggleslider)
         self.CA.grid(row=7, column=2, columnspan=2, sticky=tk.W)
 
@@ -604,7 +604,7 @@ class MainWindow:
                        (self.purse.get(),'purse',float,2), 
                        (self.horses.get(),'number of horses',int,2), 
                        (self.time.get(),'time limit',int,1,60)]
-        if self.checkaccuracy.get() == '0':
+        if self.use_sys_accuracy.get() == '0':
             elementlist.append((self.accuracy.get(),'accuracy of the classifier',int,0,100))
         if self.option_betting.get() == 'Fixed':
             elementlist.append((self.betting.get(),'betting amount',int,2,self.purse.get()))
@@ -695,7 +695,7 @@ class MainWindow:
         print("           :",ltp)
         print("           :",lbp)
         print("           :",folder+"/ARP170618_3_header.jpg")
-
+        self.output["race_info"] = m.group(1)+m.group(2)+'_'+m.group(3)
         # find a race, and ensure that the files necessary exist
         while not (os.path.isfile(p) and os.path.isfile(ltp) 
                    and os.path.isfile(lbp)):
@@ -757,7 +757,7 @@ class MainWindow:
         self.output['actual_outcome'] = self.horse_win
 
         # find predicted winning horse
-        if self.Settings.checkaccuracy:
+        if self.Settings.use_sys_accuracy:
             self.horses_racing.sort(key=lambda x:x['P_Time'])
             self.horse_pwin = self.horses_racing[0]['B_Horse']
         elif self.Settings.accuracy == 100:
@@ -1174,38 +1174,38 @@ class MainWindow:
             # check if entry is numbers
             try:
                 id_num = int(self.save.get())
-                if id_num < 0:
-                    self.error_window("ID numbers must be non-negative.")
-                else:
-                    for trial in data:
-                        print(trial, "\n\n")
-                    self.output['ID_number'] = str(self.save.get())
-                    print("SAVE")
-                    print(self.output_settings)
-                    print(self.output)
-                    header = True
-                    if not os.path.isfile('sample_output.csv'):
-                        header = True
-                    with open('sample_output.csv','w') as csvfile:
-                        fieldnames = ['ID number']
-                        fieldnames += self.output_settings.keys()
-                        self.output_settings['ID number'] = self.save.get()
-                        fieldnames.append('trial number')
-                        
-                        fieldnames+= data[0].keys()
-                        print(fieldnames)
-                        writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
-                        if header:
-                            writer.writeheader()
-                        for i in range(len(data)):
-                            lineDict = self.output_settings
-                            lineDict.update(data[i])
-                            lineDict['trial number'] = i + 1
-                            writer.writerow(lineDict)
-
-                    self.master.destroy()
             except ValueError:
                 self.error_window("ID numbers must be integers.")
+                return
+            if id_num < 0:
+                self.error_window("ID numbers must be non-negative.")
+            else:
+                filepath = os.path.join('output', str(id_num)+'.csv')
+                with open(filepath,'w') as csvfile:
+                    fieldnames = ['id_num','trial_num','system_name','purse',
+                                  'betting_option','betting_amount','num_of_horses',
+                                  'accuracy','time_limit','race_info','horse_names','predicted_outcome',
+                                  'actual_outcome']
+                    if self.Settings.use_sys_accuracy:
+                        self.output_settings['accuracy'] = 'system'
+                    if self.Settings.option_suggestion == 'After':
+                        fieldnames.append('initial_choice')
+                    fieldnames.append('time_taken')
+                    fieldnames.append('final_choice')
+                    if self.Settings.option_suggestion == 'After':
+                        fieldnames.append('time_suggest')
+                    fieldnames.append('final_purse')
+                    self.output_settings['id_num'] = self.save.get()
+                    print(fieldnames)
+                    writer = csv.DictWriter(csvfile,fieldnames=fieldnames, extrasaction='ignore')
+                    writer.writeheader()
+                    for i in range(len(data)):
+                        lineDict = self.output_settings
+                        lineDict.update(data[i])
+                        lineDict['trial_num'] = i + 1
+                        writer.writerow(lineDict)
+                self.master.destroy()
+            
 
 
 root = tk.Tk()
