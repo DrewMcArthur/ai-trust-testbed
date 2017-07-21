@@ -14,20 +14,13 @@ from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.base import TransformerMixin
 from joblib import Parallel, delayed, dump, load
 from itertools import product
-import yaml, csv, random, time
+import bisect
+import yaml, csv, random, time, sys
+import numpy as np
 
 class ColWiseEncoder(TransformerMixin):
-    def __init__(self):
-        pass
-
-    def isContinuous(self, col):
-        """ return true if the column represents continuous data """
-        for _ in range(50):
-            try:
-                float(random.choice(col))
-            except:
-                return False
-        return True
+    def __init__(self, cat_feats):
+        self.mask = cat_feats
 
     def fit(self, Xs, Ys=None):
         # convert the list of dicts to a list of lists
@@ -38,25 +31,29 @@ class ColWiseEncoder(TransformerMixin):
         self.mapper= []
         # for each column, fit a labelencoder to that column
         for i in range(len(Xs[0])):
-            self.mapper.append(LabelEncoder())
-            col = nArray[:,i]
-            self.mapper[i].fit(col)
-            le_classes = self.mapper[i].classes_.tolist()
-            bisect.insort_left(le_classes, 'other')
-            self.mapper[i].classes_ = le_classes
+            if self.mask[i]:
+                self.mapper.append(LabelEncoder())
+                col = nArray[:,i]
+                self.mapper[i].fit(col)
+                le_classes = self.mapper[i].classes_.tolist()
+                bisect.insort_left(le_classes, 'other')
+                self.mapper[i].classes_ = le_classes
+            else:
+                self.mapper.append(False)
 
     def transform(self, Xs, Ys=None):
         # convert the list of dicts to a list of lists
         listXs = [[item for key, item in row.items()] for row in Xs]
         nArray = np.array(listXs)
         for i in range(len(Xs[0])):
-            col = nArray[:,i]
-            col = list(map(lambda s: 'other' if s not in self.mapper[i].classes_
-                                             else s, col.tolist()))
+            if self.mask[i]:
+                col = nArray[:,i]
+                col = list(map(lambda s: 'other' if s not in self.mapper[i].classes_
+                                                 else s, col.tolist()))
 
-            print(col)
-            # transform the columns
-            nArray[:,i] = self.mapper[i].transform(col)
+                # transform the columns
+                nArray[:,i] = self.mapper[i].transform(col)
+        nArray = list(map(lambda x: "NaN" if x == '' else x, nArray))
         return nArray
         
     def fit_transform(self, Xs, Ys=None):
@@ -74,24 +71,29 @@ class ColWiseEncoder(TransformerMixin):
         # for each column, fit and transform using its respective labelencoder
         for i in range(len(headers)):
             col = nArray[:,i]
-            if self.isContinuous(col):
-                self.mapper.append(False)
-            else:
+            if self.mask[i]:
                 self.mapper.append(LabelEncoder())
-                nArray[:,i] = self.mapper[i].fit_transform(col)
+                self.mapper[i].fit(col)
 
+                le_classes = self.mapper[i].classes_.tolist()
+                bisect.insort_left(le_classes, 'other')
+                self.mapper[i].classes_ = le_classes
+                
+                nArray[:,i] = self.mapper[i].transform(col)
+            else:
+                self.mapper.append(False)
+
+        nArray = list(map(lambda x: "NaN" if x == '' else x, nArray))
         return nArray
-
 
 def read_data(filename):
     """ returns an array of the data """
     with open(filename) as dataFile:
-        datareader = csv.reader(dataFile, dialect='unix')
-        next(datareader)
+        datareader = csv.DictReader(dataFile, dialect='unix')
         r = []
         for row in datareader:
             r.append(row)
-        r.sort(key=lambda x:x[0])
+        r.sort(key=lambda x:x['ID'])
         return r
 
 def get_label(horse):
@@ -104,7 +106,7 @@ def get_label(horse):
 def read_output(filename, data):
     """ returns an array of outputs """
 
-    IDs = [d[0] for d in data]
+    IDs = [d['ID'] for d in data]
 
     # read labels.data.csv
     with open(filename) as lFile:
@@ -143,11 +145,11 @@ def test_n_features(Xs, Ys, c, e):
 
     # TODO: get array of indices that represents the categorical columns
     #       this would go second, after feature hashing
-    cat_feats = config['data_is_continuous']
+    cat_feats = [eval(x) for x in config['data_is_categorical'][:-1].split(', ')]
 
     enc = OneHotEncoder(cat_feats)
     fh = FeatureHasher(input_type='string')
-    cwe = ColWiseEncoder()
+    cwe = ColWiseEncoder(cat_feats)
     kBest = SelectKBest(k=1750)
     estimator = SVR(kernel="linear", C=c, epsilon=e)
 
@@ -197,10 +199,12 @@ if __name__ == "__main__":
 
     print("x read data and labels.")
 
-    Ns = range(1700, 1810, 10)
-    Cs = [1.0, 10.0, 100.0, 1000.0]
-    Es = [.1, .01, .001, .0001]
-    args = list(product(Cs, Es))
-    Parallel(n_jobs=8)(delayed(test_n_features)(data, targets, c, e) 
-                                                for c, e in args)
+    print("c={}, e={}".format(sys.argv[1], sys.argv[2]))
+    #Ns = range(1700, 1810, 10)
+    #Cs = [1.0, 10.0, 100.0, 1000.0]
+    #Es = [.1, .01, .001, .0001]
+    #args = list(product(Cs, Es))
+    test_n_features(data, targets, sys.argv[1], sys.argv[2])
+    #Parallel(n_jobs=8)(delayed(test_n_features)(data, targets, c, e) 
+                                                #for c, e in args)
     #test_n_features(1750, data, targets)

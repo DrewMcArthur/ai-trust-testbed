@@ -20,7 +20,7 @@ def isDiscrete(l):
     return False
 
 def main():
-    datafile = open('data.csv')
+    datafile = open('compiled_data.csv')
     datareader = csv.reader(datafile, dialect='unix')
 
     headers = next(datareader)
