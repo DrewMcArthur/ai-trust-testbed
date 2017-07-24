@@ -758,7 +758,7 @@ class MainWindow:
 
         # find predicted winning horse
         if self.Settings.use_sys_accuracy:
-            self.horses_racing.sort(key=lambda x:x['P_Time'])
+            self.horses_racing.sort(key=lambda x:x['P_BSF'], reverse=True)
             self.horse_pwin = self.horses_racing[0]['B_Horse']
         elif self.Settings.accuracy == 100:
             self.horse_pwin = self.horse_win
