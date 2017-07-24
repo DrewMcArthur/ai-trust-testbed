@@ -676,7 +676,7 @@ class MainWindow:
         # folder where forms are found
         folder = "data/split_jpgs"
         # randomly generate race forms
-        pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?\.jpg')
+        pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\da?b?c?*|header)?\.jpg')
 
         races = yaml.safe_load(open("config.yml"))['list_of_races'].split(', ')
         races[-1] = races[-1][:-1]
