@@ -99,7 +99,7 @@ def get_positions(track, date, n_race):
     datapath = "data/" + track + "/" + date + "/" + \
                     track + sep + date + "_SF.CSV"
     labelpath = "data/" + track + "/" + date + "/" + \
-                    track + sep + date + "_" + n_race 
+                    track + date + "_" + n_race 
 
     # get the data on horses in the race
     horses = load_horsedata(datapath, n_race)

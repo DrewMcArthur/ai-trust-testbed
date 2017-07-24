@@ -104,7 +104,7 @@ class MainWindow:
         self.Settings.purse = round(float(self.purse.get()), 2)
         self.Settings.betting_option = self.option_betting.get()
         self.Settings.betting_amount = int(self.betting.get())
-        self.Settings.num_of_horses = int(self.horses.get())
+        self.Settings.num_of_horses = self.horses.get()
         self.Settings.time_limit = int(self.time.get())
         self.Settings.option_suggestion = self.option_suggestion.get()
         if self.Settings.name != 'None':
@@ -121,7 +121,7 @@ class MainWindow:
             or self.Settings.betting_amount == int(self.betting.get())) \
            and self.Settings.purse == float(self.purse.get()) \
            and self.Settings.time_limit == int(self.time.get()) \
-           and self.Settings.num_of_horses == int(self.horses.get()) \
+           and self.Settings.num_of_horses == self.horses.get() \
            and self.Settings.use_sys_accuracy == int(self.use_sys_accuracy.get()) \
            and (self.Settings.use_sys_accuracy == '1' \
             or self.Settings.accuracy == int(self.accuracy.get())) \
@@ -137,7 +137,7 @@ class MainWindow:
         self.Settings.purse = round(self.Settings.purse, 2)
         self.Settings.betting_option = 'Fixed'
         self.Settings.betting_amount = 2
-        self.Settings.num_of_horses = 3
+        self.Settings.num_of_horses = '3_horses'
         self.Settings.time_limit = 15
         self.Settings.option_suggestion = 'After'
 
@@ -544,12 +544,12 @@ class MainWindow:
         num_horses.grid(row=15, column=1, padx=10, pady=5, sticky=tk.W)
         HoverInfo(num_horses, "Number of horses per race")
 
+
         # number of horses entry box
-        self.horses = tk.StringVar() 
-        horse_box = tk.Entry(self.settings, text=self.horses, width=3)
+        self.horses = tk.StringVar()
+        self.horses.set("3_horses")
+        horse_box = tk.OptionMenu(self.settings, self.horses, *os.listdir("data/forms"))
         horse_box.grid(row=15, column=2, sticky=tk.W)
-        tk.Label(self.settings, text='horses').grid(row=15, column=2,
-                 padx=40, sticky=tk.W)
 
         ttk.Separator(self.settings)\
            .grid(row=16, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
@@ -602,7 +602,7 @@ class MainWindow:
         elementlist = [(self.system_name.get(),'system name',str),
                        (self.trials.get(),'number of trials',int,1,50), 
                        (self.purse.get(),'purse',float,2), 
-                       (self.horses.get(),'number of horses',int,2), 
+                       (self.horses.get(),'number of horses',str), 
                        (self.time.get(),'time limit',int,1,60)]
         if self.use_sys_accuracy.get() == '0':
             elementlist.append((self.accuracy.get(),'accuracy of the classifier',int,0,100))
@@ -674,28 +674,34 @@ class MainWindow:
     def generateforms(self):
         # creates forms with random horses
         # folder where forms are found
-        folder = "data/split_jpgs"
+        folder = "data/forms/"+self.Settings.num_of_horses
         # randomly generate race forms
-        pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?\.jpg')
+        pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)((_\d)*)')
 
-        races = yaml.safe_load(open("config.yml"))['list_of_races'].split(', ')
-        races[-1] = races[-1][:-1]
+        #races = yaml.safe_load(open("config.yml"))['list_of_races'].split(', ')
+        races = os.listdir(folder)
+        print(races)
         race = random.choice(races)
-        m = pattern.match(race + "_1.jpg")
+        print(race)
+        m = pattern.search(race)
+        print()
+        [print(m.group(n)) for n in range(5)]
 
         # get filepaths and make sure they exist before continuing
         sep = "_" if len(m.group(1)) < 3 else ""
         p = "data/" + m.group(1) + "/" + m.group(2) + "/" + m.group(1) + sep + \
             m.group(2) + "_SF.CSV"
         ltp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
-              m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LT.CSV"
+              m.group(1) + m.group(2) + "_" + m.group(3) + "_LT.CSV"
         lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
-              m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LB.CSV"
+              m.group(1) + m.group(2) + "_" + m.group(3) + "_LB.CSV"
 
         print("Looking for:",p)
+        print(os.path.isfile(p))
         print("           :",ltp)
+        print(os.path.isfile(ltp))
         print("           :",lbp)
-        print("           :",folder+"/ARP170618_3_header.jpg")
+        print(os.path.isfile(lbp))
         self.output["race_info"] = m.group(1)+m.group(2)+'_'+m.group(3)
 
         # find a race, and ensure that the files necessary exist
@@ -704,47 +710,61 @@ class MainWindow:
             # get new race
             print("File doesn't exist! Trying again...")
             race = random.choice(races)
-            m = pattern.match(race + "_1.jpg")
+            m = pattern.search(race)
 
             # get filepaths, and make sure they exist before continuing
             sep = "_" if len(m.group(1)) < 3 else ""
             p = "data/" + m.group(1) + "/" + m.group(2) + "/" + m.group(1) + \
                 sep + m.group(2) + "_SF.CSV"
             ltp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
-                  m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LT.CSV"
+                  m.group(1) +  m.group(2) + "_" + m.group(3) + "_LT.CSV"
             lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
-                  m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LB.CSV"
+                  m.group(1) +  m.group(2) + "_" + m.group(3) + "_LB.CSV"
 
         beginning = time.time()
+        # the 4th group is the horse numbers in the picture, in form '_1_2_3'
+        # so we skip the first char ('_') and split the rest by '_' to yield
+        # [1,2,3]
+        nums = m.group(4)[1:].split('_')
+        print(nums)
 
-        # pick random horses and make a form
-        convert_string = "convert -append " + os.path.join(folder, m.group(1) \
-                         + m.group(2) + '_' + m.group(3) + "_header.jpg ")
-            
-        # generate a list of possible filenames
-        filenames = [f for f in os.listdir(folder) 
-                        if f.endswith(".jpg") and \
-                           f.startswith(m.group(1)+m.group(2)+'_'+m.group(3)) \
-                           and not f.endswith("_header.jpg")]
+        self.superhorses = get_positions(m.group(1), m.group(2), m.group(3))
 
-        # shuffle the list
-        random.shuffle(filenames)
-        nums = []
-        
-        for filename in sorted(filenames[:self.Settings.num_of_horses]):
-            convert_string += os.path.join(folder, filename) + " "
-            m = pattern.match(filename)
-            nums += m.group(4)
+        runagain = True
+        while runagain:
+            runagain = False
+            for num in nums:
+                if num not in [h['B_ProgNum'] for h in self.superhorses]:
+                    print("Race is bad!!!!")
+                    print(race)
+                    os.system('rm -f data/forms/'+self.Settings.num_of_horses + '/' + race)
+                    races = os.listdir('data/forms/'+self.Settings.num_of_horses)
+                    race = random.choice(races)
+                    m = pattern.search(race)
 
-        convert_string += "test.jpg"
-        os.system(convert_string)
+                    # get filepaths, and make sure they exist before continuing
+                    sep = "_" if len(m.group(1)) < 3 else ""
+                    p = "data/" + m.group(1) + "/" + m.group(2) + "/" + m.group(1) + \
+                        sep + m.group(2) + "_SF.CSV"
+                    ltp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
+                          m.group(1) +  m.group(2) + "_" + m.group(3) + "_LT.CSV"
+                    lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
+                          m.group(1) +  m.group(2) + "_" + m.group(3) + "_LB.CSV"
+                    runagain = True
+
+        self.raceImageName = race
 
         # find horses in csv files
-        self.superhorses = get_positions(m.group(1), m.group(2), m.group(3))
         self.horses_racing = []
         for horse in self.superhorses:
-            if (horse['B_ProgNum'] in nums):
+            if horse['B_ProgNum'] in nums:
                 self.horses_racing.append(horse)
+
+        [print(h['B_ProgNum']+":  "+h['B_Horse']) for h in self.superhorses]
+        print()
+        print()
+        print()
+        [print(h['B_ProgNum']+":  "+h['B_Horse']) for h in self.horses_racing]
 
         horse_names = []
         for horse in self.horses_racing:
@@ -811,7 +831,7 @@ class MainWindow:
                        sticky=tk.N + tk.S + tk.W + tk.E)
 
         # opening image of joined PDFs for user.
-        self.im = Image.open("test.jpg")
+        self.im = Image.open("data/forms/"+self.Settings.num_of_horses+"/"+self.raceImageName)
         self.im = self.im.resize((int(screen_width*(5/7)), 
                                   int((int(screen_width*(5/7))/self.im.width)*self.im.height)),
                                  Image.ANTIALIAS)
@@ -900,7 +920,7 @@ class MainWindow:
                 .grid(row=3, column=2, padx=20, sticky=tk.W)
 
         self.f_betting=tk.Frame(self.bet)
-        self.f_betting.grid(row=4, column=1, rowspan=3, columnspan=2, sticky=tk.W+tk.E)
+        self.f_betting.grid(row=4, column=1, rowspan=4, columnspan=2, sticky=tk.W+tk.E)
 
         # drop down menu of horses
         self.horse_names = []
