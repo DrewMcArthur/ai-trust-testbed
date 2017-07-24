@@ -674,13 +674,14 @@ class MainWindow:
     def generateforms(self):
         # creates forms with random horses
         # folder where forms are found
-        folder = "data/split_jpgs"
+        folder = "data/split_jpgs/split_jpgs"
         # randomly generate race forms
-        pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\da?b?c?*|header)?\.jpg')
+        pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*a?b?c?|header)?\.jpg')
 
         races = yaml.safe_load(open("config.yml"))['list_of_races'].split(', ')
         races[-1] = races[-1][:-1]
         race = random.choice(races)
+        print(race)
         m = pattern.match(race + "_1.jpg")
 
         # get filepaths and make sure they exist before continuing
@@ -692,10 +693,6 @@ class MainWindow:
         lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
               m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LB.CSV"
 
-        print("Looking for:",p)
-        print("           :",ltp)
-        print("           :",lbp)
-        print("           :",folder+"/ARP170618_3_header.jpg")
         self.output["race_info"] = m.group(1)+m.group(2)+'_'+m.group(3)
 
         # find a race, and ensure that the files necessary exist
@@ -900,7 +897,7 @@ class MainWindow:
                 .grid(row=3, column=2, padx=20, sticky=tk.W)
 
         self.f_betting=tk.Frame(self.bet)
-        self.f_betting.grid(row=4, column=1, rowspan=3, columnspan=2, sticky=tk.W+tk.E)
+        self.f_betting.grid(row=4, column=1, rowspan=4, columnspan=2, sticky=tk.W+tk.E)
 
         # drop down menu of horses
         self.horse_names = []
