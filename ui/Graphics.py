@@ -809,6 +809,8 @@ class MainWindow:
         # load the form onto the canvas and resize it to fit the screen
         self.canv.grid(row=0, column=0, rowspan=10, 
                        sticky=tk.N + tk.S + tk.W + tk.E)
+
+        # opening image of joined PDFs for user.
         self.im = Image.open("test.jpg")
         self.im = self.im.resize((int(screen_width*(5/7)), 
                                   int((int(screen_width*(5/7))/self.im.width)*self.im.height)),

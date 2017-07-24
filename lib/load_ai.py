@@ -12,9 +12,9 @@
 """
 
 import joblib, csv, os
-from ai.compare import ColWiseEncoder, format_pair
+#from ai.compare import ColWiseEncoder, format_pair
 from lib.compile_data import get_race_info
-from ai.compare import ColWiseEncoder, format_pair
+#from ai.compare import ColWiseEncoder, format_pair
 
 def format_data(row):
     """ formats a row (dictionary) of data to our standards. """
