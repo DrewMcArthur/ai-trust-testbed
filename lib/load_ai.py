@@ -11,14 +11,16 @@
             add more keys to keep in format data
 """
 
-import joblib, csv
+import joblib, csv, os
+from ai.compare import ColWiseEncoder, format_pair
 from lib.compile_data import get_race_info
+from ai.compare import ColWiseEncoder, format_pair
 
 def format_data(row):
     """ formats a row (dictionary) of data to our standards. """
     # list of desired keys
     keys = ['R_RCTrack', 'R_RCDate', 'B_Horse', 'L_Rank', 'L_Time', 'L_BSF', 
-            'R_RCRace', 'B_MLOdds', 'B_ProgNum', 'P_Time', 'P_BSF']
+            'R_RCRace', 'B_MLOdds', 'B_ProgNum', 'P_Rank', 'P_Time', 'P_BSF']
     toRemove = []
     # remove all keys not in the list above
     for key, item in row.items():
@@ -81,16 +83,7 @@ def get_list_data(horses):
 
 def get_ai():
     """ returns the ai object used to predict horse's ranks """
-    return (joblib.load("lib/ai_beyer.pickle"), 
-            joblib.load("lib/ai_time.pickle"))
-
-def formatTime(t):
-    huns = int((t % 100) * 10)
-    secs = int(t // 100)
-    mins = int(secs // 60)
-    secs = secs % 60
-
-    return "{}:{}.{}".format(mins, secs, huns)
+    return joblib.load("ai/models/ai_beyer.pickle")
 
 def get_positions(track, date, n_race):
     """ given identifying info on a race, (Track, Date, Number)
@@ -114,37 +107,47 @@ def get_positions(track, date, n_race):
     # format it as a 2D list, (horses is a list of dictionaries)
     data = get_list_data(horses)
 
+    # add a P_Rank value to each horse, which is 
+    # its rank predicted by a classifying nn
+#   if os.path.isfile('ai/models/classifier.pickle'):
+#       horses = nnrank(horses)
+
     # load the ai and generate predicted heuristics of their performance
-    beyer_ai, time_ai = get_ai()
+    beyer_ai = get_ai()
     beyers = beyer_ai.predict(data)
-    times = time_ai.predict(data)
 
     # add actual labels to horses
     horses = add_labels(horses, labelpath)
 
     toremove = []
     # update each horse with its heuristic, then sort to produce an ordered list
-    for beyer, time, horse in zip(beyers, times, horses):
+    for beyer, horse in zip(beyers, horses):
         if "L_Rank" not in horse:
             toremove.append(horse)
         else:
-            horse.update({"P_BSF": beyer, "P_Time": formatTime(time)})
+            horse.update({"P_BSF": beyer})
 
     for horse in toremove:
         horses.remove(horse)
 
-    #horses.sort(key=lambda horse: horse['L_BSF'], reverse=True)
-    horses.sort(key=lambda horse: horse['P_Time'])
+    horses.sort(key=lambda horse: horse['P_BSF'], reverse=True)
 
     return [format_data(horse) for horse in horses]
 
 def main():
     """ Testing functions """
     horses = get_positions("PRX", "170528", 2)
-    print("                     Actual           Predicted")
-    print("Name           Rank  Time      BSF    Time        BSF")
-    [print("{:15}   {}  {:8}  {:3}    {:8}    {:3.2f}".format(horse['B_Horse'], horse['L_Rank'], horse['L_Time'], horse['L_BSF'], horse['P_Time'], horse['P_BSF']))
-            for horse in sorted(horses, key=lambda h: h['L_Rank'])]
+    keys = ['B_Horse', 'L_Rank', 'L_Time', 'L_BSF', 'P_BSF']
+    for h in horses:
+        for k in keys:
+            if k not in h:
+                h.update({k: '-'})
+    print("               Actual                 Predicted")
+    print("Name           Rank  Time      BSF    BSF")
+    [print("{:15}   {}  {:8}  {:3}    {:3.2f}"\
+            .format(horse['B_Horse'], horse['L_Rank'], horse['L_Time'], 
+                    horse['L_BSF'], horse['P_BSF']))
+        for horse in horses]
 
 if __name__ == "__main__":
     main()
