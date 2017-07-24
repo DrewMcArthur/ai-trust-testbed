@@ -676,13 +676,11 @@ class MainWindow:
         # folder where forms are found
         folder = os.path.join("data","split_jpgs")
         # randomly generate race forms
-        pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?.jpg')
+        pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*a?b?c?|header)?.jpg')
 
-        races = yaml.safe_load(open("config.yml"))['list_of_races'].split(', ')
-        races[-1] = races[-1][:-1]
+        races = pickle.load(open("sixtonine.pkl","rb"))
         race = random.choice(races)
         race = race + "_1.jpg"
-        print(race)
         m = pattern.match(race )
 
         # get filepaths and make sure they exist before continuing
