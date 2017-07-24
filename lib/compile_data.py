@@ -163,6 +163,15 @@ def fixDate(row):
         row['R_RCDate'] = r
     return row
 
+def fixOdds(row):
+    """ given the odds in the format "A-B", return a float equal to A/B. """
+    if 'B_MLOdds' not in row:
+        return row
+    o = row['B_MLOdds']
+    a, b = [float(f) for f in o.split('-')]
+    row['B_MLOdds'] = a / b
+    return row
+
 def fixTime(row):
     """ given a row, fix the time in the row """
     if row is None:
@@ -234,6 +243,8 @@ def formatData(row):
         row = fixTime(row)
         row = fixLabelName(row)
         #row = checkBSF(row)
+    else:
+        row = fixOdds(row)
     return row
 
 def get_race_info(row):

@@ -58,8 +58,8 @@ def add_labels(horses, labelpath):
     """ given a list of horses, and a base path to the two labels files, 
         return the list with labels for each horse added to the dictionary.
     """
-    with open(labelpath + "_lt.csv") as tLabel, \
-         open(labelpath + "_lb.csv") as bLabel:
+    with open(labelpath + "_LT.CSV") as tLabel, \
+         open(labelpath + "_LB.CSV") as bLabel:
         tReader = csv.DictReader(tLabel, dialect='unix')
         bReader = csv.DictReader(bLabel, dialect='unix')
         rank = 1
@@ -83,6 +83,14 @@ def get_ai():
     """ returns the ai object used to predict horse's ranks """
     return (joblib.load("lib/ai_beyer.pickle"), 
             joblib.load("lib/ai_time.pickle"))
+
+def formatTime(t):
+    huns = int((t % 100) * 10)
+    secs = int(t // 100)
+    mins = int(secs // 60)
+    secs = secs % 60
+
+    return "{}:{}.{}".format(mins, secs, huns)
 
 def get_positions(track, date, n_race):
     """ given identifying info on a race, (Track, Date, Number)
@@ -120,7 +128,7 @@ def get_positions(track, date, n_race):
         if "L_Rank" not in horse:
             toremove.append(horse)
         else:
-            horse.update({"P_BSF": beyer, "P_Time": time})
+            horse.update({"P_BSF": beyer, "P_Time": formatTime(time)})
 
     for horse in toremove:
         horses.remove(horse)
@@ -133,8 +141,10 @@ def get_positions(track, date, n_race):
 def main():
     """ Testing functions """
     horses = get_positions("PRX", "170528", 2)
-    [print(horse['B_Horse'], horse['P_Time'], horse['P_BSF']) 
-            for horse in horses]
+    print("                     Actual           Predicted")
+    print("Name           Rank  Time      BSF    Time        BSF")
+    [print("{:15}   {}  {:8}  {:3}    {:8}    {:3.2f}".format(horse['B_Horse'], horse['L_Rank'], horse['L_Time'], horse['L_BSF'], horse['P_Time'], horse['P_BSF']))
+            for horse in sorted(horses, key=lambda h: h['L_Rank'])]
 
 if __name__ == "__main__":
     main()
