@@ -555,9 +555,9 @@ class MainWindow:
            .grid(row=16, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # time limit per race prompt
-        time_limit = tk.Label(self.settings, text='Time Limit per Race: ')
+        time_limit = tk.Label(self.settings, text='Time Limit to place bet: ')
         time_limit.grid(row=17, column=1, padx=10, pady=5, sticky=tk.W)
-        HoverInfo(time_limit, "Time limit for each race")
+        HoverInfo(time_limit, "Time limit for participant to\nplace bet")
 
         # time limit per race entry box
         self.time = tk.StringVar()
@@ -674,15 +674,16 @@ class MainWindow:
     def generateforms(self):
         # creates forms with random horses
         # folder where forms are found
-        folder = "data/split_jpgs/split_jpgs"
+        folder = os.path.join("data","split_jpgs")
         # randomly generate race forms
-        pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*a?b?c?|header)?\.jpg')
+        pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?.jpg')
 
         races = yaml.safe_load(open("config.yml"))['list_of_races'].split(', ')
         races[-1] = races[-1][:-1]
         race = random.choice(races)
+        race = race + "_1.jpg"
         print(race)
-        m = pattern.match(race + "_1.jpg")
+        m = pattern.match(race )
 
         # get filepaths and make sure they exist before continuing
         sep = "_" if len(m.group(1)) < 3 else ""
