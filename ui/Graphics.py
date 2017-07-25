@@ -5,7 +5,6 @@ import re
 import random
 import os
 import sys
-import yaml
 from PIL import Image, ImageTk
 from lib.load_ai import get_positions
 from pydoc import locate
