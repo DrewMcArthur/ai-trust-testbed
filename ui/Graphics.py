@@ -891,9 +891,9 @@ class MainWindow:
                  justify='left', font=(None,font_body))\
                 .grid(row=3, column=1, columnspan=2, padx=20, pady=10, 
                       sticky=tk.W)
-        tk.Label(self.bet, justify='left', font=(None,font_body),
+        tk.Label(self.bet, font=(None,font_body),
                  text="Possible Winnings:\n ${}".format(self.horses_winnings))\
-                .grid(row=3, column=2, padx=20, sticky=tk.W)
+                .grid(row=3, column=2, padx=20, sticky=tk.E)
 
         self.f_betting=tk.Frame(self.bet)
         self.f_betting.grid(row=4, column=1, rowspan=4, columnspan=2, sticky=tk.W+tk.E)
