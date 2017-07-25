@@ -6,6 +6,7 @@
 
 from sklearn.metrics import explained_variance_score, r2_score
 from sklearn.svm import SVR
+from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from sklearn.feature_extraction import DictVectorizer, FeatureHasher
 from sklearn.feature_selection import RFECV, SelectKBest, VarianceThreshold
@@ -77,13 +78,14 @@ def test_n_features(n, Xs, Ys):
     #cat_feats = []
 
     fh = FeatureHasher(input_type='string')
+
     enc = OneHotEncoder()
     kBest = SelectKBest(k=n)
     estimator = SVR(kernel="rbf")
 
     print("x Created sklearn objects.")
 
-    pipe = make_pipeline(fh, kBest, estimator)
+    pipe = make_pipeline(fh, kBest)
 
     print("x Created pipeline.")
 
@@ -123,8 +125,6 @@ if __name__ == "__main__":
     data = read_data(config['final_data_filename'])
     targets = read_output("LABELS." + config['final_data_filename'], data)
 
-    print("x read data and labels.")
+    Ns = range(1,51)
 
-    #Ns = range(1700, 1810, 10)
-    #Parallel(n_jobs=8)(delayed(test_n_features)(n, data, targets) for n in Ns)
     test_n_features(1750, data, targets)

@@ -65,14 +65,10 @@ class MainWindow:
                 MainWindow.load_defaults
             else: 
                 temp = pickle.load(open(os.path.join(self.path,filename+'_s.p'), 'rb'))
-                print(temp)
                 for i in temp.keys():
                     setattr(self, i, temp[i])
 
         def output(self):
-            print( {i: getattr(self,i) for i in self.__dict__ \
-                if not callable(getattr(self, i)) and not i.startswith('__')\
-                                                  and not 'path' in i} )
             return {i: getattr(self,i) for i in self.__dict__ \
                 if not callable(getattr(self, i)) and not i.startswith('__')\
                                                   and not 'path' in i}
@@ -212,7 +208,6 @@ class MainWindow:
                                 row=0,column=1,sticky=tk.W,padx=20,pady=(10,0))
         for f in [f.replace('_s.p','') for f in os.listdir(self.Settings.path) \
                                                 if f.endswith('_s.p')]:
-            print(f)
             lb.insert('end',f)
         scrollbar.config(command=lb.yview)
         lb.config(yscrollcommand=scrollbar.set)
@@ -555,9 +550,9 @@ class MainWindow:
            .grid(row=16, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
         # time limit per race prompt
-        time_limit = tk.Label(self.settings, text='Time Limit per Race: ')
+        time_limit = tk.Label(self.settings, text='Time Limit to place bet: ')
         time_limit.grid(row=17, column=1, padx=10, pady=5, sticky=tk.W)
-        HoverInfo(time_limit, "Time limit for each race")
+        HoverInfo(time_limit, "Time limit for participant to\nplace bet")
 
         # time limit per race entry box
         self.time = tk.StringVar()
@@ -610,7 +605,6 @@ class MainWindow:
             elementlist.append((self.betting.get(),'betting amount',int,2,self.purse.get()))
 
         for element in elementlist:
-            print(element)
             e = element[0]
             name = element[1]
             t = element[2]
@@ -622,7 +616,6 @@ class MainWindow:
                 # make sure elements are the right type and value.
                 try:
                     e = t(e)
-                    print(e)
                     if len(element) > 3 and e < element[3]:
                         return 'The ' + name + ' must be greater than or equal to ' + str(element[3])
                     elif len(element) > 4 and float(e) > float(element[4]):
@@ -674,14 +667,14 @@ class MainWindow:
     def generateforms(self):
         # creates forms with random horses
         # folder where forms are found
-        folder = "data/split_jpgs"
+        folder = os.path.join("data","split_jpgs")
         # randomly generate race forms
-        pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*|header)?\.jpg')
+        pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)_(\d*a?b?c?|header)?.jpg')
 
-        races = yaml.safe_load(open("config.yml"))['list_of_races'].split(', ')
-        races[-1] = races[-1][:-1]
+        races = pickle.load(open("sixtonine.pkl","rb"))
         race = random.choice(races)
-        m = pattern.match(race + "_1.jpg")
+        race = race + "_1.jpg"
+        m = pattern.match(race )
 
         # get filepaths and make sure they exist before continuing
         sep = "_" if len(m.group(1)) < 3 else ""
@@ -691,12 +684,6 @@ class MainWindow:
               m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LT.CSV"
         lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
               m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LB.CSV"
-
-        print("Looking for:",p)
-        print("           :",ltp)
-        print("           :",lbp)
-        print("           :",folder+"/ARP170618_3_header.jpg")
-        self.output["race_info"] = m.group(1)+m.group(2)+'_'+m.group(3)
 
         # find a race, and ensure that the files necessary exist
         while not (os.path.isfile(p) and os.path.isfile(ltp) 
@@ -715,32 +702,29 @@ class MainWindow:
             lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
                   m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LB.CSV"
 
+        self.superhorses = get_positions(m.group(1), m.group(2), m.group(3))
+        nums = [h['B_ProgNum'] for h in self.superhorses]
+
         beginning = time.time()
 
         # pick random horses and make a form
         convert_string = "convert -append " + os.path.join(folder, m.group(1) \
                          + m.group(2) + '_' + m.group(3) + "_header.jpg ")
-            
-        # generate a list of possible filenames
-        filenames = [f for f in os.listdir(folder) 
-                        if f.endswith(".jpg") and \
-                           f.startswith(m.group(1)+m.group(2)+'_'+m.group(3)) \
-                           and not f.endswith("_header.jpg")]
 
         # shuffle the list
-        random.shuffle(filenames)
-        nums = []
+        random.shuffle(nums)
+        nums = sorted(nums[:self.Settings.num_of_horses])
         
-        for filename in sorted(filenames[:self.Settings.num_of_horses]):
+        for num in nums:
+            filename = m.group(1) + m.group(2) + '_' + m.group(3) + '_' + str(num) + '.jpg '
             convert_string += os.path.join(folder, filename) + " "
-            m = pattern.match(filename)
-            nums += m.group(4)
 
         convert_string += "test.jpg"
         os.system(convert_string)
 
+        self.output["race_info"] = m.group(1)+m.group(2)+'_'+m.group(3)
+
         # find horses in csv files
-        self.superhorses = get_positions(m.group(1), m.group(2), m.group(3))
         self.horses_racing = []
         for horse in self.superhorses:
             if (horse['B_ProgNum'] in nums):
@@ -780,11 +764,11 @@ class MainWindow:
         for horse in self.horses_racing:
             odds = horse['B_MLOdds'].split('-')
             if horse == self.horses_racing[-1]:
-                self.horses_odds += (horse['B_Horse'] + " : " + horse['B_MLOdds'])
+                self.horses_odds += (horse['B_Horse'][:12] + " : " + horse['B_MLOdds'])
                 self.horses_winnings += (str((self.Settings.betting_amount * float(odds[0])) / 
                                     float(odds[1])))
             else:
-                self.horses_odds += (horse['B_Horse'] + " : " + 
+                self.horses_odds += (horse['B_Horse'][:12] + " : " + 
                                  horse['B_MLOdds'] + "\n ")
                 self.horses_winnings += (str((self.Settings.betting_amount * float(odds[0])) / 
                                     float(odds[1])) + "\n $")
@@ -809,6 +793,8 @@ class MainWindow:
         # load the form onto the canvas and resize it to fit the screen
         self.canv.grid(row=0, column=0, rowspan=10, 
                        sticky=tk.N + tk.S + tk.W + tk.E)
+
+        # opening image of joined PDFs for user.
         self.im = Image.open("test.jpg")
         self.im = self.im.resize((int(screen_width*(5/7)), 
                                   int((int(screen_width*(5/7))/self.im.width)*self.im.height)),
@@ -893,12 +879,12 @@ class MainWindow:
                  justify='left', font=(None,font_body))\
                 .grid(row=3, column=1, columnspan=2, padx=20, pady=10, 
                       sticky=tk.W)
-        tk.Label(self.bet, justify='left', font=(None,font_body),
+        tk.Label(self.bet, font=(None,font_body),
                  text="Possible Winnings:\n ${}".format(self.horses_winnings))\
-                .grid(row=3, column=2, padx=20, sticky=tk.W)
+                .grid(row=3, column=2, padx=20, sticky=tk.E)
 
         self.f_betting=tk.Frame(self.bet)
-        self.f_betting.grid(row=4, column=1, rowspan=3, columnspan=2, sticky=tk.W+tk.E)
+        self.f_betting.grid(row=4, column=1, rowspan=4, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S)
 
         # drop down menu of horses
         self.horse_names = []
@@ -955,10 +941,6 @@ class MainWindow:
         self.bet.after_cancel(self.identifer)
         self.f_betting.destroy()
 
-        # create new frame for suggestion
-        self.s_suggest = tk.Frame(self.bet)
-        self.s_suggest.grid(row=4, column=1, rowspan=4, columnspan=2, sticky=tk.W+tk.E)
-
         # set up for countdown timer
         self.t = 120
         self.countdown()
@@ -975,28 +957,23 @@ class MainWindow:
             suggestion_text = suggestion_text.format(self.Settings.system_name,
                                                      self.horse_pwin)
 
-        tk.Label(self.s_suggest, font=(None,font_body), text=suggestion_text,
+        tk.Label(self.bet, font=(None,font_body), text=suggestion_text,
                 justify='left')\
-                .grid(row=0, column=1, padx=15, pady=10, sticky=tk.W)
-        self.horse_select = tk.OptionMenu(self.s_suggest, self.horsemenu, 
+                .grid(row=4, column=1, columnspan=2, padx=15, pady=10, sticky=tk.W)
+        self.horse_select = tk.OptionMenu(self.bet, self.horsemenu, 
                                       *self.horse_names)
         self.horse_select.config(font=(None,font_body))
-        self.horse_select.grid(row=1, column=1)
-        tk.Button(self.s_suggest, text="Submit", command=self.retrieving_data,
-                 font=(None,font_body)).grid(row=2, column=1, pady=10)
+        self.horse_select.grid(row=5, column=1)
+        tk.Button(self.bet, text="Submit", command=self.retrieving_data,
+                 font=(None,font_body)).grid(row=6, column=1, pady=10)
 
     def retrieving_data(self):
 
         # check if suggestion screen needs to be deleted
         if hasattr(self, 's_suggest'):
-            # check how long the user took to submit
-            print(self.timer_label['text'])
             self.output['time_suggest'] = str(120 - self.t)
-            self.s_suggest.destroy()
             self.t = self.Settings.time_limit * 60
         else:
-            # check how long the user took to submit
-            print(self.timer_label['text'])
             self.output['time_taken'] = str(self.Settings.time_limit*60 - self.t)
             if self.Settings.betting_option == 'Variable':
                 self.Settings.betting_amount = float(self.new_bet.get())
@@ -1163,7 +1140,6 @@ class MainWindow:
         # otherwise, save
         # check if -0 
         if self.save.get() == "-0":
-            print("NO SAVE")
             self.master.destroy()
 
         # check if no entry
@@ -1196,7 +1172,6 @@ class MainWindow:
                         fieldnames.append('time_suggest')
                     fieldnames.append('final_purse')
                     self.output_settings['id_num'] = self.save.get()
-                    print(fieldnames)
                     writer = csv.DictWriter(csvfile,fieldnames=fieldnames, extrasaction='ignore')
                     writer.writeheader()
                     for i in range(len(data)):
