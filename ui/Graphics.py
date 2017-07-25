@@ -65,14 +65,10 @@ class MainWindow:
                 MainWindow.load_defaults
             else: 
                 temp = pickle.load(open(os.path.join(self.path,filename+'_s.p'), 'rb'))
-                print(temp)
                 for i in temp.keys():
                     setattr(self, i, temp[i])
 
         def output(self):
-            print( {i: getattr(self,i) for i in self.__dict__ \
-                if not callable(getattr(self, i)) and not i.startswith('__')\
-                                                  and not 'path' in i} )
             return {i: getattr(self,i) for i in self.__dict__ \
                 if not callable(getattr(self, i)) and not i.startswith('__')\
                                                   and not 'path' in i}
@@ -212,7 +208,6 @@ class MainWindow:
                                 row=0,column=1,sticky=tk.W,padx=20,pady=(10,0))
         for f in [f.replace('_s.p','') for f in os.listdir(self.Settings.path) \
                                                 if f.endswith('_s.p')]:
-            print(f)
             lb.insert('end',f)
         scrollbar.config(command=lb.yview)
         lb.config(yscrollcommand=scrollbar.set)
@@ -610,7 +605,6 @@ class MainWindow:
             elementlist.append((self.betting.get(),'betting amount',int,2,self.purse.get()))
 
         for element in elementlist:
-            print(element)
             e = element[0]
             name = element[1]
             t = element[2]
@@ -622,7 +616,6 @@ class MainWindow:
                 # make sure elements are the right type and value.
                 try:
                     e = t(e)
-                    print(e)
                     if len(element) > 3 and e < element[3]:
                         return 'The ' + name + ' must be greater than or equal to ' + str(element[3])
                     elif len(element) > 4 and float(e) > float(element[4]):
@@ -896,7 +889,7 @@ class MainWindow:
                 .grid(row=3, column=2, padx=20, sticky=tk.E)
 
         self.f_betting=tk.Frame(self.bet)
-        self.f_betting.grid(row=4, column=1, rowspan=4, columnspan=2, sticky=tk.W+tk.E)
+        self.f_betting.grid(row=4, column=1, rowspan=4, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S)
 
         # drop down menu of horses
         self.horse_names = []
@@ -954,8 +947,8 @@ class MainWindow:
         self.f_betting.destroy()
 
         # create new frame for suggestion
-        self.s_suggest = tk.Frame(self.bet)
-        self.s_suggest.grid(row=4, column=1, rowspan=4, columnspan=2, sticky=tk.W+tk.E)
+        #self.s_suggest = tk.Frame(self.bet)
+        #self.s_suggest.grid(row=4, column=1, rowspan=5, columnspan=2, sticky=tk.W+tk.E)
 
         # set up for countdown timer
         self.t = 120
@@ -973,28 +966,24 @@ class MainWindow:
             suggestion_text = suggestion_text.format(self.Settings.system_name,
                                                      self.horse_pwin)
 
-        tk.Label(self.s_suggest, font=(None,font_body), text=suggestion_text,
+        tk.Label(self.bet, font=(None,font_body), text=suggestion_text,
                 justify='left')\
-                .grid(row=0, column=1, padx=15, pady=10, sticky=tk.W)
-        self.horse_select = tk.OptionMenu(self.s_suggest, self.horsemenu, 
+                .grid(row=4, column=1, padx=15, pady=10, sticky=tk.W)
+        self.horse_select = tk.OptionMenu(self.bet, self.horsemenu, 
                                       *self.horse_names)
         self.horse_select.config(font=(None,font_body))
-        self.horse_select.grid(row=1, column=1)
-        tk.Button(self.s_suggest, text="Submit", command=self.retrieving_data,
-                 font=(None,font_body)).grid(row=2, column=1, pady=10)
+        self.horse_select.grid(row=5, column=1)
+        tk.Button(self.bet, text="Submit", command=self.retrieving_data,
+                 font=(None,font_body)).grid(row=6, column=1, pady=10)
 
     def retrieving_data(self):
 
         # check if suggestion screen needs to be deleted
         if hasattr(self, 's_suggest'):
-            # check how long the user took to submit
-            print(self.timer_label['text'])
             self.output['time_suggest'] = str(120 - self.t)
-            self.s_suggest.destroy()
+            #self.s_suggest.destroy()
             self.t = self.Settings.time_limit * 60
         else:
-            # check how long the user took to submit
-            print(self.timer_label['text'])
             self.output['time_taken'] = str(self.Settings.time_limit*60 - self.t)
             if self.Settings.betting_option == 'Variable':
                 self.Settings.betting_amount = float(self.new_bet.get())
@@ -1161,7 +1150,6 @@ class MainWindow:
         # otherwise, save
         # check if -0 
         if self.save.get() == "-0":
-            print("NO SAVE")
             self.master.destroy()
 
         # check if no entry
@@ -1194,7 +1182,6 @@ class MainWindow:
                         fieldnames.append('time_suggest')
                     fieldnames.append('final_purse')
                     self.output_settings['id_num'] = self.save.get()
-                    print(fieldnames)
                     writer = csv.DictWriter(csvfile,fieldnames=fieldnames, extrasaction='ignore')
                     writer.writeheader()
                     for i in range(len(data)):
