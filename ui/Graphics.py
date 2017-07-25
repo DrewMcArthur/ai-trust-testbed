@@ -769,11 +769,11 @@ class MainWindow:
         for horse in self.horses_racing:
             odds = horse['B_MLOdds'].split('-')
             if horse == self.horses_racing[-1]:
-                self.horses_odds += (horse['B_Horse'] + " : " + horse['B_MLOdds'])
+                self.horses_odds += (horse['B_Horse'][:12] + " : " + horse['B_MLOdds'])
                 self.horses_winnings += (str((self.Settings.betting_amount * float(odds[0])) / 
                                     float(odds[1])))
             else:
-                self.horses_odds += (horse['B_Horse'] + " : " + 
+                self.horses_odds += (horse['B_Horse'][:12] + " : " + 
                                  horse['B_MLOdds'] + "\n ")
                 self.horses_winnings += (str((self.Settings.betting_amount * float(odds[0])) / 
                                     float(odds[1])) + "\n $")
@@ -946,10 +946,6 @@ class MainWindow:
         self.bet.after_cancel(self.identifer)
         self.f_betting.destroy()
 
-        # create new frame for suggestion
-        #self.s_suggest = tk.Frame(self.bet)
-        #self.s_suggest.grid(row=4, column=1, rowspan=5, columnspan=2, sticky=tk.W+tk.E)
-
         # set up for countdown timer
         self.t = 120
         self.countdown()
@@ -968,7 +964,7 @@ class MainWindow:
 
         tk.Label(self.bet, font=(None,font_body), text=suggestion_text,
                 justify='left')\
-                .grid(row=4, column=1, padx=15, pady=10, sticky=tk.W)
+                .grid(row=4, column=1, columnspan=2, padx=15, pady=10, sticky=tk.W)
         self.horse_select = tk.OptionMenu(self.bet, self.horsemenu, 
                                       *self.horse_names)
         self.horse_select.config(font=(None,font_body))
@@ -981,7 +977,6 @@ class MainWindow:
         # check if suggestion screen needs to be deleted
         if hasattr(self, 's_suggest'):
             self.output['time_suggest'] = str(120 - self.t)
-            #self.s_suggest.destroy()
             self.t = self.Settings.time_limit * 60
         else:
             self.output['time_taken'] = str(self.Settings.time_limit*60 - self.t)
