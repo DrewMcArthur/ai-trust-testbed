@@ -718,7 +718,7 @@ class MainWindow:
             filename = m.group(1) + m.group(2) + '_' + m.group(3) + '_' + str(num) + '.jpg '
             convert_string += os.path.join(folder, filename) + " "
 
-        convert_string += "test.jpg"
+        convert_string += "race.jpg"
         os.system(convert_string)
 
         self.output["race_info"] = m.group(1)+m.group(2)+'_'+m.group(3)
@@ -794,7 +794,7 @@ class MainWindow:
                        sticky=tk.N + tk.S + tk.W + tk.E)
 
         # opening image of joined PDFs for user.
-        self.im = Image.open("test.jpg")
+        self.im = Image.open("race.jpg")
         self.im = self.im.resize((int(screen_width*(5/7)), 
                                   int((int(screen_width*(5/7))/self.im.width)*self.im.height)),
                                  Image.ANTIALIAS)
