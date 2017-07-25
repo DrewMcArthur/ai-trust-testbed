@@ -704,23 +704,6 @@ class MainWindow:
         print(os.path.isfile(lbp))
         self.output["race_info"] = m.group(1)+m.group(2)+'_'+m.group(3)
 
-        # find a race, and ensure that the files necessary exist
-        while not (os.path.isfile(p) and os.path.isfile(ltp) 
-                   and os.path.isfile(lbp)):
-            # get new race
-            print("File doesn't exist! Trying again...")
-            race = random.choice(races)
-            m = pattern.search(race)
-
-            # get filepaths, and make sure they exist before continuing
-            sep = "_" if len(m.group(1)) < 3 else ""
-            p = "data/" + m.group(1) + "/" + m.group(2) + "/" + m.group(1) + \
-                sep + m.group(2) + "_SF.CSV"
-            ltp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
-                  m.group(1) +  m.group(2) + "_" + m.group(3) + "_LT.CSV"
-            lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
-                  m.group(1) +  m.group(2) + "_" + m.group(3) + "_LB.CSV"
-
         beginning = time.time()
         # the 4th group is the horse numbers in the picture, in form '_1_2_3'
         # so we skip the first char ('_') and split the rest by '_' to yield
@@ -734,7 +717,8 @@ class MainWindow:
         while runagain:
             runagain = False
             for num in nums:
-                if num not in [h['B_ProgNum'] for h in self.superhorses]:
+                if (num not in [h['B_ProgNum'] for h in self.superhorses] or not
+                   (os.path.isfile(p) and os.path.isfile(ltp) and os.path.isfile(lbp))):
                     print("Race is bad!!!!")
                     print(race)
                     os.system('rm -f data/forms/'+self.Settings.num_of_horses + '/' + race)
