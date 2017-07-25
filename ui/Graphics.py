@@ -5,7 +5,6 @@ import re
 import random
 import os
 import sys
-import yaml
 from PIL import Image, ImageTk
 from lib.load_ai import get_positions
 from pydoc import locate
@@ -678,7 +677,6 @@ class MainWindow:
         # randomly generate race forms
         pattern = re.compile(r'([A-Z]+)(\d+)_(\d+)((_\d)*)')
 
-        #races = yaml.safe_load(open("config.yml"))['list_of_races'].split(', ')
         races = os.listdir(folder)
         print(races)
         race = random.choice(races)
@@ -721,11 +719,12 @@ class MainWindow:
                    (os.path.isfile(p) and os.path.isfile(ltp) and os.path.isfile(lbp))):
                     print("Race is bad!!!!")
                     print(race)
-                    os.system('rm -f data/forms/'+self.Settings.num_of_horses + '/' + race)
+                    #os.system('rm -f data/forms/'+self.Settings.num_of_horses + '/' + race)
                     races = os.listdir('data/forms/'+self.Settings.num_of_horses)
                     race = random.choice(races)
                     m = pattern.search(race)
 
+                    nums = m.group(4)[1:].split('_')
                     # get filepaths, and make sure they exist before continuing
                     sep = "_" if len(m.group(1)) < 3 else ""
                     p = "data/" + m.group(1) + "/" + m.group(2) + "/" + m.group(1) + \
@@ -784,11 +783,11 @@ class MainWindow:
         for horse in self.horses_racing:
             odds = horse['B_MLOdds'].split('-')
             if horse == self.horses_racing[-1]:
-                self.horses_odds += (horse['B_Horse'] + " : " + horse['B_MLOdds'])
+                self.horses_odds += (horse['B_Horse'][:12] + " : " + horse['B_MLOdds'])
                 self.horses_winnings += (str((self.Settings.betting_amount * float(odds[0])) / 
                                     float(odds[1])))
             else:
-                self.horses_odds += (horse['B_Horse'] + " : " + 
+                self.horses_odds += (horse['B_Horse'][:12] + " : " + 
                                  horse['B_MLOdds'] + "\n ")
                 self.horses_winnings += (str((self.Settings.betting_amount * float(odds[0])) / 
                                     float(odds[1])) + "\n $")
