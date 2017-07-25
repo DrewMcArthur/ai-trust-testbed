@@ -685,8 +685,6 @@ class MainWindow:
         lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
               m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LB.CSV"
 
-        self.output["race_info"] = m.group(1)+m.group(2)+'_'+m.group(3)
-
         # find a race, and ensure that the files necessary exist
         while not (os.path.isfile(p) and os.path.isfile(ltp) 
                    and os.path.isfile(lbp)):
@@ -704,32 +702,29 @@ class MainWindow:
             lbp = "data/" + m.group(1) + "/" + m.group(2) + "/" + \
                   m.group(1) + sep + m.group(2) + "_" + m.group(3) + "_LB.CSV"
 
+        self.superhorses = get_positions(m.group(1), m.group(2), m.group(3))
+        nums = [h['B_ProgNum'] for h in self.superhorses]
+
         beginning = time.time()
 
         # pick random horses and make a form
         convert_string = "convert -append " + os.path.join(folder, m.group(1) \
                          + m.group(2) + '_' + m.group(3) + "_header.jpg ")
-            
-        # generate a list of possible filenames
-        filenames = [f for f in os.listdir(folder) 
-                        if f.endswith(".jpg") and \
-                           f.startswith(m.group(1)+m.group(2)+'_'+m.group(3)) \
-                           and not f.endswith("_header.jpg")]
 
         # shuffle the list
-        random.shuffle(filenames)
-        nums = []
+        random.shuffle(nums)
+        nums = sorted(nums[:self.Settings.num_of_horses])
         
-        for filename in sorted(filenames[:self.Settings.num_of_horses]):
+        for num in nums:
+            filename = m.group(1) + m.group(2) + '_' + m.group(3) + '_' + str(num) + '.jpg '
             convert_string += os.path.join(folder, filename) + " "
-            m = pattern.match(filename)
-            nums += m.group(4)
 
         convert_string += "test.jpg"
         os.system(convert_string)
 
+        self.output["race_info"] = m.group(1)+m.group(2)+'_'+m.group(3)
+
         # find horses in csv files
-        self.superhorses = get_positions(m.group(1), m.group(2), m.group(3))
         self.horses_racing = []
         for horse in self.superhorses:
             if (horse['B_ProgNum'] in nums):
