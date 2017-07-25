@@ -319,14 +319,18 @@ class MainWindow:
                 self.apply.config(state='disabled')
 
     def s_welcome(self):
+        # shows the welcome screen with two buttons (settings and experiment)
+
+        # check if screen is coming from settings
         if hasattr(self, 'settings'):
             self.settings.destroy()
 
+        # reset screen to full screen
         global screen_width
         global screen_height
-
         self.master.geometry("{}x{}".format(screen_width, screen_height))
 
+        # display welcome message and buttons
         self.welcome = tk.Frame(self.master)
         self.welcome.grid()
         for i in range(2):
@@ -345,18 +349,28 @@ class MainWindow:
                  .grid(row=1, column=1, padx=30, pady=10, sticky=tk.N + tk.W)
 
     def close_settings(self):
+        # decides what to load after closing settings
+
+        # check for errors
         error = self.errorcheck()
+        # if there is an error, load the error
         if error != None:
             self.error_window(error)
+        # if no error, go back to welcome screen and save settings
         elif self.Settings.name == 'None':
             self.save_settings()
             self.s_welcome()
+        # if user didn't apply or revert changes in settings
         elif not self.check_settings():
             self.error_window("Apply or revert your changes before continuing")
+        # if everything checks out, go straight to welcome screen
         else:
             self.s_welcome()
 
     def s_settings(self):
+        # window that shows all the settings for the program
+
+        # delete welcome screen to display new screen
         if hasattr(self, 'welcome'):
             self.welcome.destroy()
 
@@ -365,6 +379,7 @@ class MainWindow:
         self.Settings.name = 'None'
         self.load_defaults()
 
+        # checks when user changes settings
         def update():
             l.config(text=str(random.random()))
             root.after(1000, update)
@@ -563,7 +578,10 @@ class MainWindow:
         ttk.Separator(self.settings)\
            .grid(row=18, columnspan=6, sticky=tk.W + tk.E, pady=10, padx=10)
 
-        # submit button
+        # revert, apply, continue buttons
+        # revert - undo changes unto last applied settings
+        # apply - save the current settings to a premade settings (not None)
+        # continue - go back to welcome screen
         self.revert = tk.Button(self.settings, text='Revert', 
                                 command=self.update_settings)
         self.revert.grid(row=19, column=1, padx=10, pady=10, sticky=tk.E)
@@ -580,6 +598,7 @@ class MainWindow:
         self.set_all_defaults()
 
     def error_window(self, message):
+        # pop up window with error message
         error = tk.Tk()
         error.title('ERROR')
         error.bind('<Control-q>', quit)
@@ -593,6 +612,7 @@ class MainWindow:
 
     def errorcheck(self):
         # checks to make sure the settings were correct
+
         elementlist = [(self.system_name.get(),'system name',str),
                        (self.trials.get(),'number of trials',int,1,50), 
                        (self.purse.get(),'purse',float,2), 
@@ -624,9 +644,9 @@ class MainWindow:
         return None
 
     def instructions(self):
-        # screen that displays the instructions
+        #screen that displays the instructions
+        
         # clearing screen and making a new instructions window
-       
         if hasattr(self, 'settings'):
             self.settings.destroy()
         else:
@@ -665,6 +685,7 @@ class MainWindow:
 
     def generateforms(self):
         # creates forms with random horses
+
         # folder where forms are found
         folder = os.path.join("data","split_jpgs")
         # randomly generate race forms
@@ -729,6 +750,7 @@ class MainWindow:
             if (horse['B_ProgNum'] in nums):
                 self.horses_racing.append(horse)
 
+        # find all horse names
         horse_names = []
         for horse in self.horses_racing:
             horse_names.append(horse['B_Horse'])
@@ -927,11 +949,17 @@ class MainWindow:
                      .grid(row=2, column=1, columnspan=2, padx=10, pady=10)
 
     def s_suggestion(self):
+        # if suggestion is after betting screen, show aide's suggestion
+
         self.output['time_taken'] = str(self.Settings.time_limit*60 - self.t)
+        # check if not horse was chosen
+        # if so, initial choice is none
         if self.horsemenu.get() == 'Select horse...':
             self.output['initial_choice'] = "None"
+        # if not, show initial choice
         else:
             self.output['initial_choice'] = self.horsemenu.get()
+        # if betting is variable, save new betting amount
         if self.Settings.betting_option == 'Variable':
             self.Settings.betting_amount = float(self.new_bet.get())
             self.output['betting_amount'] = self.Settings.betting_amount
@@ -944,6 +972,7 @@ class MainWindow:
         self.t = 120
         self.countdown()
 
+        # display prompt
         if self.horsemenu.get() != "Select horse...":
             suggestion_text = "{}'s suggestion: {}\n\nYour choice: {}" +\
                               "\n\nWould you like to change your choice?"
@@ -967,6 +996,7 @@ class MainWindow:
                  font=(None,font_body)).grid(row=6, column=1, pady=10)
 
     def retrieving_data(self):
+        # pop-up window that shows 'retrieving data' for two seconds
 
         # check if suggestion screen needs to be deleted
         if hasattr(self, 's_suggest'):
@@ -1000,7 +1030,8 @@ class MainWindow:
         self.retrieve.mainloop()
 
     def update_purse(self):
-        """ updates the purse """
+        # updates the purse
+
         # take away money used to bet
         self.Settings.purse -= self.Settings.betting_amount
 
@@ -1015,6 +1046,8 @@ class MainWindow:
                                         float(odds[1])) + 
                                        self.Settings.purse)
 
+        # check if user runs out of money
+        # if they do, print error message and end the game
         if self.Settings.purse == 0:
             no_money = tk.Tk()
             no_money.title('No Money')
@@ -1028,7 +1061,8 @@ class MainWindow:
         self.output['final_purse'] = self.Settings.purse
 
     def results(self):
-        """ displays the results of the race """
+        # displays the results of the race
+
         # destroy the retrieving screen and create a new screen for results
         self.retrieve.destroy()
         self.result = tk.Frame(self.master)
