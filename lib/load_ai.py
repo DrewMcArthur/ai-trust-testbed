@@ -12,9 +12,23 @@
 """
 
 import joblib, csv, os
-#from ai.compare import ColWiseEncoder, format_pair
-from lib.compile_data import get_race_info
-#from ai.compare import ColWiseEncoder, format_pair
+
+def get_race_info(row):
+    """ returns a dictionary, given a row, of all the race-specific information.
+        this is used to copy race info from the first row of a race to the next
+        """
+    r = {}
+    keys = ["R_RCTrack", "R_RCDate", "R_RCRace","R_Starters","R_TrackName",
+            "R_RaceState","R_Division","R_RaceBred","R_StateBred","R_RaceSex",
+            "R_RaceAge","R_Class","R_Purse","R_HiClaim","R_LoClaim",
+            "R_Distance","R_Inner","R_Surface","R_RaceType","R_GradedRace",
+            "R_GradedRaceDesc","R_SimTrack","R_SimRace","R_TrackRecord",
+            "R_DayOfWeek","R_PostTime","R_LongClass","R_TrkAbbrev","R_DistUnit",
+            "R_TimeUnit","R_Conditions"
+           ]
+    for key in keys:
+        r.update({key: row[key]})
+    return r
 
 def format_data(row):
     """ formats a row (dictionary) of data to our standards. """
